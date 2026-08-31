@@ -6,6 +6,8 @@ import { Users, Sparkles, Heart, Compass } from "lucide-react";
 interface TwoPersonSummaryProps {
   childName: string;
   momName?: string;
+  /** 관계명(예: 아빠 / 할머니 / 큰이모). 배지 문구에 사용. */
+  caregiverRoleLabel?: string;
   childKeywords: string[];
   childSummary: string;
   momKeywords: string[];
@@ -16,7 +18,8 @@ interface TwoPersonSummaryProps {
 
 export function TwoPersonSummary({
   childName,
-  momName = "엄마",
+  momName = "보호자",
+  caregiverRoleLabel = "보호자",
   childKeywords,
   childSummary,
   momKeywords,
@@ -43,10 +46,10 @@ export function TwoPersonSummary({
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-[13px] font-bold text-sage-deep">
               <Sparkles className="h-3.5 w-3.5" />
-              {childName}의 관찰된 모습
+              {childName}에게서 관찰된 모습
             </span>
             <span className="rounded-full bg-sage-tint px-2 py-0.5 text-[10.5px] font-semibold text-sage-deep">
-              엄마가 알려준 실제 모습
+              직접 알려주신 실제 모습
             </span>
           </div>
           <div className="mt-2.5 flex flex-wrap gap-1.5">
@@ -64,15 +67,15 @@ export function TwoPersonSummary({
           </p>
         </div>
 
-        {/* 엄마 카드 */}
+        {/* 보호자 카드 */}
         <div className="rounded-2xl border border-coral-tint/80 bg-milk p-4 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-[13px] font-bold text-coral-deep">
               <Heart className="h-3.5 w-3.5 fill-coral-deep/20" />
-              {momName}의 체크된 반응
+              {caregiverRoleLabel}의 이번 체크에서 보인 반응
             </span>
             <span className="rounded-full bg-coral-tint px-2 py-0.5 text-[10.5px] font-semibold text-coral-deep">
-              이번 체크에서 보인 엄마 반응
+              이번 체크에서 보인 반응
             </span>
           </div>
           <div className="mt-2.5 flex flex-wrap gap-1.5">

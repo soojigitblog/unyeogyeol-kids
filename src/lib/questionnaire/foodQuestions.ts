@@ -82,7 +82,7 @@ export const FOOD_QUESTIONS: FoodQuestion[] = [
   {
     id: "prompt_response",
     number: 3,
-    title: "엄마가 “한 입만 먹어보자”고 권하면?",
+    title: "“한 입만 먹어보자”고 권하면?",
     subtitle: "식탁에서 권유를 받았을 때의 반응",
     options: [
       {

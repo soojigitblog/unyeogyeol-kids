@@ -14,7 +14,13 @@ import { FOOD_QUESTIONS } from "@/lib/questionnaire/foodQuestions";
 import { CONFLICT_SCENARIOS, ConflictScenario } from "@/lib/interaction/conflictScenarios";
 import { computeAge } from "@/lib/age";
 import { concernLabel } from "@/lib/concerns";
-import type { ConcernId, CurrentConflictInput, FoodMicroCheckAnswers, MomProfile } from "@/lib/types";
+import { CAREGIVER_ROLE_OPTIONS, findRoleOption } from "@/lib/caregiver";
+import type {
+  CaregiverProfile,
+  ConcernId,
+  CurrentConflictInput,
+  FoodMicroCheckAnswers,
+} from "@/lib/types";
 
 const CURRENT_YEAR = new Date().getFullYear();
 const MOM_YEAR_OPTIONS = Array.from({ length: 45 }, (_, i) => CURRENT_YEAR - 18 - i);
@@ -26,7 +32,13 @@ function getDaysInMonth(y: number, m: number): number {
   return new Date(y, m, 0).getDate();
 }
 
-type SetupStep = "mom_profile" | "mom_mini_check" | "food_micro_check" | "conflict_scene" | "summary";
+type SetupStep =
+  | "relationship"
+  | "caregiver_profile"
+  | "mom_mini_check"
+  | "food_micro_check"
+  | "conflict_scene"
+  | "summary";
 
 export default function MomSetupPage() {
   const router = useRouter();
@@ -34,11 +46,11 @@ export default function MomSetupPage() {
     child,
     concern,
     ready,
-    momProfile,
+    caregiverProfile,
     momAnswers,
     conflictInput,
     foodAnswers,
-    setMomProfile,
+    setCaregiverProfile,
     setMomAnswer,
     setConflictInput,
     setFoodAnswer,
@@ -51,13 +63,31 @@ export default function MomSetupPage() {
     }
   }, [ready, child, router]);
 
-  const [step, setStep] = useState<SetupStep>("mom_profile");
+  const [step, setStep] = useState<SetupStep>("relationship");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [currentFoodQuestionIndex, setCurrentFoodQuestionIndex] = useState(0);
 
-  // 1. Mom Profile state (Child input과 동일한 구조 & validation)
-  const [momName, setMomName] = useState(momProfile?.name ?? "");
-  const initialMomParts = momProfile?.birthDate ? momProfile.birthDate.split("-") : [];
+  // 1. 아이와의 관계 (P2.2V.6 필수 입력)
+  const initialRoleOptionId =
+    CAREGIVER_ROLE_OPTIONS.find((o) => o.roleLabel === caregiverProfile?.roleLabel)?.optionId ??
+    (caregiverProfile ? "cg_other_family" : "");
+  const [roleOptionId, setRoleOptionId] = useState<string>(initialRoleOptionId);
+  const [customRoleLabel, setCustomRoleLabel] = useState<string>(
+    initialRoleOptionId === "cg_other_family" ? caregiverProfile?.roleLabel ?? "" : ""
+  );
+
+  const selectedRoleOption = findRoleOption(roleOptionId);
+  const resolvedRoleLabel = selectedRoleOption?.requiresCustomLabel
+    ? customRoleLabel.trim()
+    : selectedRoleOption?.roleLabel ?? "";
+  const canSubmitRelationship = Boolean(
+    selectedRoleOption &&
+      (!selectedRoleOption.requiresCustomLabel || customRoleLabel.trim().length > 0)
+  );
+
+  // 2. 나의 기본 정보 (Child input과 동일한 구조 & validation)
+  const [momName, setMomName] = useState(caregiverProfile?.displayName ?? "");
+  const initialMomParts = caregiverProfile?.birthDate ? caregiverProfile.birthDate.split("-") : [];
   const [momYear, setMomYear] = useState<string>(initialMomParts[0] ?? "");
   const [momMonth, setMomMonth] = useState<string>(
     initialMomParts[1] ? String(Number(initialMomParts[1])) : ""
@@ -66,10 +96,10 @@ export default function MomSetupPage() {
     initialMomParts[2] ? String(Number(initialMomParts[2])) : ""
   );
   const [birthTimeKnown, setBirthTimeKnown] = useState(
-    momProfile?.birthTimeKnown ?? false
+    caregiverProfile?.birthTimeKnown ?? false
   );
   const [hour, setHour] = useState<string>(
-    momProfile?.birthTime ? momProfile.birthTime.split(":")[0] : ""
+    caregiverProfile?.birthTime ? caregiverProfile.birthTime.split(":")[0] : ""
   );
 
   const momBirthDate = useMemo(() => {
@@ -122,7 +152,7 @@ export default function MomSetupPage() {
       };
     } else if (currentConcern === "shyness" || currentConcern === "daycare") {
       return {
-        childReaction: "새로운 장소나 사람 앞에서 엄마 뒤로 숨고 굳어짐",
+        childReaction: "새로운 장소나 사람 앞에서 내 뒤로 숨고 굳어짐",
         momReaction: "아이가 어색해할까 봐 '어서 가서 인사해보자' 하고 참여를 권함",
         escalation: "아이가 더 세게 매달리며 낯선 환경에 들어가지 못함",
         typicalPhrase: "괜찮아, 친구들이랑 가서 인사하고 놀아",
@@ -179,19 +209,22 @@ export default function MomSetupPage() {
 
   const childAgeInfo = computeAge(child.birthDate);
   const childDisplayName = child.name || "우리 아이";
-  const momDisplayName = momName.trim() || "엄마";
+  const momDisplayName = momName.trim() || resolvedRoleLabel || "보호자";
 
   // Navigation handlers
   function handleSaveProfileAndNext() {
-    if (!canSubmitProfile) return;
-    const profile: MomProfile = {
-      name: momName.trim() || "엄마",
+    // P2.2V.6 데이터 유효성: 관계 정보 없이는 리포트를 만들지 않는다.
+    if (!canSubmitProfile || !canSubmitRelationship || !selectedRoleOption) return;
+    const profile: CaregiverProfile = {
+      role: selectedRoleOption.role,
+      roleLabel: resolvedRoleLabel,
+      displayName: momName.trim() || undefined,
       birthDate: momBirthDate,
       birthTimeKnown,
       birthTime:
         birthTimeKnown && hour !== "" ? `${hour.padStart(2, "0")}:00` : undefined,
     };
-    setMomProfile(profile);
+    setCaregiverProfile(profile);
     setStep("mom_mini_check");
   }
 
@@ -256,19 +289,22 @@ export default function MomSetupPage() {
           <div className="mb-6 flex items-center justify-between border-b border-cream-dark pb-3 text-[12px] font-bold text-cocoa-soft">
             <div className="flex items-center gap-1.5">
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-coral text-[11px] text-white">
-                {step === "mom_profile"
+                {step === "relationship"
                   ? 1
-                  : step === "mom_mini_check"
+                  : step === "caregiver_profile"
                   ? 2
-                  : step === "food_micro_check"
+                  : step === "mom_mini_check"
                   ? 3
+                  : step === "food_micro_check"
+                  ? 4
                   : step === "conflict_scene"
-                  ? currentConcern === "meal" ? 4 : 3
-                  : currentConcern === "meal" ? 5 : 4}
+                  ? currentConcern === "meal" ? 5 : 4
+                  : currentConcern === "meal" ? 6 : 5}
               </span>
               <span>
-                {step === "mom_profile" && "엄마 기본 정보"}
-                {step === "mom_mini_check" && `엄마 반응 체크 (${currentQuestionIndex + 1}/5)`}
+                {step === "relationship" && "아이와 나의 관계"}
+                {step === "caregiver_profile" && `${resolvedRoleLabel || "나"}의 기본 정보`}
+                {step === "mom_mini_check" && `내 반응 체크 (${currentQuestionIndex + 1}/5)`}
                 {step === "food_micro_check" && `식습관 관찰 체크 (${currentFoodQuestionIndex + 1}/4)`}
                 {step === "conflict_scene" && `요즘 가장 힘든 장면 (${concernLabel(currentConcern)})`}
                 {step === "summary" && "관계 리포트 준비 완료"}
@@ -279,18 +315,84 @@ export default function MomSetupPage() {
             </span>
           </div>
 
-          {/* STEP 1: Mom Profile (ChildInputPage와 완전히 동일한 UX/구조) */}
-          {step === "mom_profile" && (
+          {/* STEP 1: 아이와의 관계 선택 (P2.2V.6 필수) */}
+          {step === "relationship" && (
             <div className="animate-rise space-y-6">
               <div>
-                <Eyebrow>MOM PROFILE</Eyebrow>
+                <Eyebrow>MY RELATIONSHIP</Eyebrow>
                 <h1 className="mt-2 text-[26px] font-bold leading-snug tracking-tight text-cocoa">
-                  엄마에 대해서도
+                  {childDisplayName}와
                   <br />
-                  알려 주세요
+                  어떤 관계인가요?
                 </h1>
                 <p className="mt-2.5 text-[15px] leading-relaxed text-cocoa-soft">
-                  {childDisplayName}와 엄마의 반응 방식이 어디에서 마주치고 엇갈리는지 함께 살펴볼게요.
+                  아이를 가장 가까이에서 돌보는 사람과 아이의 관계를 함께 봅니다. 고른 관계에 맞춰 리포트 문장이 만들어져요.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                {CAREGIVER_ROLE_OPTIONS.map((opt) => {
+                  const isSelected = roleOptionId === opt.optionId;
+                  return (
+                    <button
+                      key={opt.optionId}
+                      type="button"
+                      onClick={() => setRoleOptionId(opt.optionId)}
+                      className={`rounded-2xl border px-3 py-4 text-center text-[15px] font-semibold transition-all ${
+                        isSelected
+                          ? "border-coral bg-coral-tint/40 text-cocoa shadow-xs"
+                          : "border-line bg-milk text-cocoa hover:bg-cream/40"
+                      }`}
+                    >
+                      {opt.roleLabel}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {selectedRoleOption?.requiresCustomLabel && (
+                <div>
+                  <label className="text-[14px] font-semibold text-cocoa" htmlFor="custom_role">
+                    아이에게 나는 어떤 사람인가요? <span className="text-coral-deep">*</span>
+                  </label>
+                  <input
+                    id="custom_role"
+                    type="text"
+                    value={customRoleLabel}
+                    onChange={(e) => setCustomRoleLabel(e.target.value)}
+                    placeholder="예: 큰이모, 작은아빠, 외할머니, 돌봄 선생님"
+                    maxLength={12}
+                    className={inputCls}
+                  />
+                  <p className="mt-2 text-[13px] text-cocoa-faint">
+                    입력하신 관계명이 리포트 전체에 그대로 사용돼요.
+                  </p>
+                </div>
+              )}
+
+              <Button
+                size="lg"
+                disabled={!canSubmitRelationship}
+                onClick={() => setStep("caregiver_profile")}
+              >
+                다음: {resolvedRoleLabel || "나"}의 기본 정보
+                <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
+              </Button>
+            </div>
+          )}
+
+          {/* STEP 2: 나의 기본 정보 (ChildInputPage와 완전히 동일한 UX/구조) */}
+          {step === "caregiver_profile" && (
+            <div className="animate-rise space-y-6">
+              <div>
+                <Eyebrow>MY PROFILE · {resolvedRoleLabel}</Eyebrow>
+                <h1 className="mt-2 text-[26px] font-bold leading-snug tracking-tight text-cocoa">
+                  이번에는 아이와 함께 지내는
+                  <br />
+                  ‘나’의 모습도 알려주세요
+                </h1>
+                <p className="mt-2.5 text-[15px] leading-relaxed text-cocoa-soft">
+                  {childDisplayName}와 내가 어떤 순간에 엇갈리는지 함께 살펴볼게요.
                 </p>
               </div>
 
@@ -301,27 +403,29 @@ export default function MomSetupPage() {
                   handleSaveProfileAndNext();
                 }}
               >
-                {/* 엄마 호칭/이름 (선택) */}
+                {/* 나의 호칭/이름 (선택) */}
                 <div>
                   <label className="text-[14px] font-semibold text-cocoa" htmlFor="mom_name">
-                    엄마 호칭 · 이름{" "}
-                    <span className="font-medium text-cocoa-faint">(선택)</span>
+                    나의 호칭 · 이름{" "}
+                    <span className="font-medium text-cocoa-faint">
+                      (선택 · 비우면 ‘{resolvedRoleLabel}’로 표시돼요)
+                    </span>
                   </label>
                   <input
                     id="mom_name"
                     type="text"
                     value={momName}
                     onChange={(e) => setMomName(e.target.value)}
-                    placeholder="예: 지우맘, 민준맘 (미입력 시 '엄마')"
+                    placeholder={`예: 지우맘, 민준아빠 (미입력 시 ‘${resolvedRoleLabel}’)`}
                     maxLength={20}
                     className={inputCls}
                   />
                 </div>
 
-                {/* 엄마 생년월일 (년 - 월 - 일 순서) */}
+                {/* 나의 생년월일 (년 - 월 - 일 순서) */}
                 <div>
                   <span className="text-[14px] font-semibold text-cocoa">
-                    엄마 생년월일 <span className="text-coral-deep">*</span>
+                    나의 생년월일 <span className="text-coral-deep">*</span>
                   </span>
                   <div className="mt-2 grid grid-cols-3 gap-2">
                     <div>
@@ -380,7 +484,7 @@ export default function MomSetupPage() {
                   )}
                 </div>
 
-                {/* 엄마 출생시간 (Child와 동일한 UI) */}
+                {/* 나의 출생시간 (Child와 동일한 UI) */}
                 <div>
                   <span className="text-[14px] font-semibold text-cocoa">
                     태어난 시간{" "}
@@ -414,7 +518,7 @@ export default function MomSetupPage() {
                 </div>
 
                 <Button type="submit" size="lg" disabled={!canSubmitProfile}>
-                  다음: 엄마 반응 5문항 체크
+                  다음: 내 반응 5문항 체크
                   <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
                 </Button>
                 <p className="-mt-2 text-center text-[12.5px] text-cocoa-faint">
@@ -428,7 +532,7 @@ export default function MomSetupPage() {
           {step === "mom_mini_check" && (
             <div className="animate-rise space-y-6">
               <div>
-                <Eyebrow>MOM MINI CHECK · {currentQuestionIndex + 1}/5</Eyebrow>
+                <Eyebrow>MY REACTION CHECK · {currentQuestionIndex + 1}/5</Eyebrow>
                 <h1 className="mt-2 text-[22px] font-bold leading-snug tracking-tight text-cocoa">
                   {MOM_QUESTIONS[currentQuestionIndex].prompt}
                 </h1>
@@ -473,11 +577,11 @@ export default function MomSetupPage() {
                 ) : (
                   <button
                     type="button"
-                    onClick={() => setStep("mom_profile")}
+                    onClick={() => setStep("caregiver_profile")}
                     className="inline-flex items-center gap-1 text-[13px] font-bold text-cocoa-soft hover:text-cocoa"
                   >
                     <ArrowLeft className="h-3.5 w-3.5" />
-                    엄마 프로필 수정
+                    내 기본 정보 수정
                   </button>
                 )}
               </div>
@@ -540,7 +644,7 @@ export default function MomSetupPage() {
                     className="inline-flex items-center gap-1 text-[13px] font-bold text-cocoa-soft hover:text-cocoa"
                   >
                     <ArrowLeft className="h-3.5 w-3.5" />
-                    엄마 반응 체크로 돌아가기
+                    내 반응 체크로 돌아가기
                   </button>
                 )}
               </div>
@@ -595,7 +699,7 @@ export default function MomSetupPage() {
 
                 <div>
                   <label className="text-[13px] font-bold text-cocoa">
-                    C. 엄마의 첫 반응과 자주 나오는 말은 무엇인가요?
+                    C. 나의 첫 반응과 자주 나오는 말은 무엇인가요?
                   </label>
                   <input
                     type="text"
@@ -608,7 +712,7 @@ export default function MomSetupPage() {
                     type="text"
                     value={momTypicalPhrase}
                     onChange={(e) => setMomTypicalPhrase(e.target.value)}
-                    placeholder="엄마가 자주 하는 말 (예: 한 입만 먹어보자, 진짜 맛있어)"
+                    placeholder="내가 자주 하는 말 (예: 한 입만 먹어보자, 진짜 맛있어)"
                     className="mt-2 w-full rounded-[1.05rem] border border-line bg-milk px-4 py-2.5 text-[13.5px] text-cocoa focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/15"
                   />
                 </div>
@@ -668,7 +772,7 @@ export default function MomSetupPage() {
                   className="inline-flex items-center gap-1 text-[13px] font-bold text-cocoa-soft hover:text-cocoa"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
-                  {currentConcern === "meal" ? "이전: 식습관 체크" : "이전: 엄마 체크"}
+                  {currentConcern === "meal" ? "이전: 식습관 체크" : "이전: 내 반응 체크"}
                 </button>
                 <Button size="lg" onClick={handleSaveConflictAndNext}>
                   확인하고 리포트 생성하기
@@ -702,7 +806,21 @@ export default function MomSetupPage() {
                 </div>
 
                 <div className="flex items-center justify-between border-b border-cream-dark pb-3">
-                  <span className="text-[13px] font-bold text-cocoa">엄마</span>
+                  <span className="text-[13px] font-bold text-cocoa">아이와의 관계</span>
+                  <span className="flex items-center gap-2 text-[14px] font-bold text-cocoa">
+                    {resolvedRoleLabel}
+                    <button
+                      type="button"
+                      onClick={() => setStep("relationship")}
+                      className="rounded-lg bg-milk px-2 py-0.5 text-[11.5px] font-bold text-coral-deep"
+                    >
+                      수정
+                    </button>
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between border-b border-cream-dark pb-3">
+                  <span className="text-[13px] font-bold text-cocoa">나</span>
                   <span className="text-[14px] font-bold text-cocoa">
                     {momDisplayName} · 반응 체크 5문항 완료
                   </span>
@@ -716,7 +834,7 @@ export default function MomSetupPage() {
                 </div>
 
                 <div className="rounded-2xl bg-milk/80 p-3.5 text-[13px] text-cocoa-soft leading-relaxed">
-                  “{childFirstReaction}” $\leftrightarrow$ “{momFirstReaction}”
+                  “{childFirstReaction}” ↔ “{momFirstReaction}”
                 </div>
               </div>
 

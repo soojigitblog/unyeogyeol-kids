@@ -16,7 +16,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
   // 1. Friction: 아이의 완결 욕구 vs 엄마의 시간 압박 (Family A / 민준)
   {
     ruleId: "rule_friction_completion_vs_time",
-    title: "아이가 흐름을 맺으려는 순간과 엄마의 시간 관리가 마주칠 때",
+    title: "아이가 흐름을 맺으려는 순간과 {{CG의}} 시간 관리가 마주칠 때",
     requiredChildPatterns: ["needs_completion_before_transition"],
     requiredMomPatterns: [
       "fast_pace_directive",
@@ -32,7 +32,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
     momPerspectiveSummary:
       "정해진 시간과 다음 일정에 늦지 않도록 서둘러 챙겨주고 싶은 마음이에요.",
     synthesisSummary:
-      "아이는 ‘하던 일의 마침표’가 필요하고, 엄마는 ‘일정의 시작점’이 급해져 서로의 속도가 충돌하는 양상이에요.",
+      "아이는 ‘하던 일의 마침표’가 필요하고, {{CG는}} ‘일정의 시작점’이 급해져 서로의 속도가 충돌하는 양상이에요.",
     whereToBreakSummary: {
       targetStep: 2,
       breakActionTitle: "갑작스러운 개입 대신 마침표 지점 미리 확인하기",
@@ -84,7 +84,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
   // 2. Friction: 아이의 긴 탐색/신중함 vs 엄마의 참여 권유 (Family B / 서연)
   {
     ruleId: "rule_friction_observation_vs_stress",
-    title: "충분한 탐색이 필요한 아이와 참여를 권하는 엄마",
+    title: "충분한 탐색이 필요한 아이와 참여를 권하는 {{CG}}",
     requiredChildPatterns: ["takes_long_to_observe", "hides_behind_parent", "observes_then_joins"],
     requiredMomPatterns: ["immediate_stress_activation", "fast_pace_directive", "opt_rec_ruminate", "opt_emo_overwhelm", "opt_time_control"],
     applicableConcerns: ["shyness", "daycare", "all"],
@@ -95,7 +95,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
     momPerspectiveSummary:
       "아이가 머뭇거릴 때 빠르게 참여할 수 있도록 권유하려는 태도예요.",
     synthesisSummary:
-      "엄마의 빠른 권유와 아이의 신중한 탐색 속도가 겹치면서 머뭇거림이 더 길어질 수 있어요.",
+      "{{CG의}} 빠른 권유와 아이의 신중한 탐색 속도가 겹치면서 머뭇거림이 더 길어질 수 있어요.",
     whereToBreakSummary: {
       targetStep: 2,
       breakActionTitle: "참여 권유 대신 곁에서 함께 머물러주기",
@@ -107,7 +107,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
         phraseId: "phrase_observation_stay_beside",
         situation: "새로운 장소나 사람 앞에서 머뭇거릴 때",
         before: "얼른 인사해야지, 왜 그래?",
-        after: "조금 둘러보고 싶구나. 엄마 손잡고 천천히 보자.",
+        after: "조금 둘러보고 싶구나. 손잡고 천천히 보자.",
         whyItMayHelp:
           "아이가 상황을 파악할 여유를 얻어 스스로 움직일 준비를 하는 데 도움이 될 수 있어요.",
         evidenceRefs: ["child:new_environment_takes_long_to_observe"],
@@ -146,7 +146,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
   // 3. Friction: 감정 표현이 큰 아이 vs 설명이 먼저 나오는 엄마 (Family C / 도윤)
   {
     ruleId: "rule_friction_emotion_vs_explanation",
-    title: "감정이 먼저 올라오는 아이와 설명이 먼저 나오는 엄마",
+    title: "감정이 먼저 올라오는 아이와 설명이 먼저 나오는 {{CG}}",
     requiredChildPatterns: ["intense_emotional_burst", "energized_by_praise", "expressive_temper"],
     requiredMomPatterns: [
       "logical_explanation_first",
@@ -160,7 +160,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
     momPerspectiveSummary:
       "아이가 상황을 이해할 수 있도록 이유를 차근차근 설명해주려는 태도예요.",
     synthesisSummary:
-      "엄마는 상황의 이유를 풀어주려 하고 아이는 감정이 먼저 가라앉아야 해, 대화의 타이밍이 어긋나며 피로감이 커질 수 있어요.",
+      "{{CG는}} 상황의 이유를 풀어주려 하고 아이는 감정이 먼저 가라앉아야 해, 대화의 타이밍이 어긋나며 피로감이 커질 수 있어요.",
     whereToBreakSummary: {
       targetStep: 2,
       breakActionTitle: "긴 설명 전 감정이 가라앉을 작은 틈 주기",
@@ -181,7 +181,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
         phraseId: "phrase_praise_effort_recognition",
         situation: "아이가 무언가를 해내고 인정을 바랄 때",
         before: "어~ 잘했네.",
-        after: "아까 안 됐는데 다시 해봤네. 끝까지 해본 거 엄마가 봤어.",
+        after: "아까 안 됐는데 다시 해봤네. 끝까지 해본 거 다 봤어.",
         whyItMayHelp:
           "칭찬을 들었을 때 참여가 높아지는 모습이 관찰되었으므로, 결과만 칭찬하기보다 어떤 시도를 했는지 구체적으로 짚어주는 방식을 시도해볼 수 있어요.",
         evidenceRefs: ["child:praise_energized_by_praise"],
@@ -193,7 +193,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
         actionTitle: "설명 한 템포 늦추기",
         actionDetail:
           "아이가 속상해할 때는 긴 설명을 잠시 멈추고 곁에서 한 템포 숨을 고를 시간을 주세요.",
-        whyItMayHelp: "아이의 감정이 가라앉은 뒤에 엄마의 설명이 전달되는 데 도움이 될 수 있어요.",
+        whyItMayHelp: "아이의 감정이 가라앉은 뒤에 {{CG의}} 설명이 전달되는 데 도움이 될 수 있어요.",
         evidenceRefs: ["child:praise_energized_by_praise"],
       },
       {
@@ -211,7 +211,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
   // 4. Friction: 아이의 자기주도 vs 엄마의 확고한 훈육 (Family D / 하은)
   {
     ruleId: "rule_friction_autonomy_vs_firmness",
-    title: "아이의 주도성과 엄마의 규칙 강조가 맞부딪힐 때",
+    title: "아이의 주도성과 {{CG의}} 규칙 강조가 맞부딪힐 때",
     requiredChildPatterns: ["strong_independent_preference", "insists_on_own_way", "reason_seeking", "deep_single_focus"],
     requiredMomPatterns: ["firm_boundary_insistence", "opt_inst_firm"],
     applicableConcerns: ["stubborn", "discipline", "tantrum", "focus_play", "learning", "all"],
@@ -220,9 +220,9 @@ export const INTERACTION_RULES: InteractionRule[] = [
     childPerspectiveSummary:
       "자신의 생각이나 선택권이 배제된다고 느끼면 더 강하게 버틸 수 있어요.",
     momPerspectiveSummary:
-      "지켜야 할 규칙을 분명하게 가르쳐주어야 한다는 책임감이 커지는 상황이에요.",
+      "지켜야 할 규칙을 분명하게 전하려는 반응이 커지는 상황이에요.",
     synthesisSummary:
-      "엄마의 단호한 안내가 아이에게는 자신의 선택을 막아서는 신호처럼 받아들여져 버팀이 더 커질 수 있어요.",
+      "{{CG의}} 단호한 안내가 아이에게는 자신의 선택을 막아서는 신호처럼 받아들여져 버팀이 더 커질 수 있어요.",
     whereToBreakSummary: {
       targetStep: 2,
       breakActionTitle: "지시 대신 좁혀진 두 가지 선택지 제공하기",
@@ -242,7 +242,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
       {
         phraseId: "phrase_autonomy_choice",
         situation: "양치나 옷 입기를 거부하며 버틸 때",
-        before: "엄마 말 들어, 빨리 해.",
+        before: "그만하고 빨리 해.",
         after: "양치는 해야 해. 파란 칫솔로 할까, 노란 칫솔로 할까?",
         whyItMayHelp:
           "규칙의 틀 안에서 아이가 직접 고를 수 있는 작은 권한을 건네주면 실랑이를 줄이는 데 도움이 될 수 있어요.",
@@ -273,7 +273,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
   // 5. Low-Friction / Collaborative: 신중한 탐색형 아이와 기다려주는 엄마 (Family E / 지호)
   {
     ruleId: "rule_collab_observation_and_patience",
-    title: "아이의 신중한 탐색과 엄마의 묵묵한 지지가 어우러질 때",
+    title: "아이의 신중한 탐색과 {{CG의}} 묵묵한 지지가 어우러질 때",
     requiredChildPatterns: ["takes_long_to_observe", "seeks_reassurance"],
     requiredMomPatterns: [
       "patient_pace_holding",
@@ -290,7 +290,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
     momPerspectiveSummary:
       "조금 느리더라도 아이만의 페이스가 있음을 알고 묵묵히 곁을 지켜주는 태도예요.",
     synthesisSummary:
-      "지호는 새로운 환경에서 먼저 살펴보는 시간이 필요한 모습이 있었고, 엄마는 그 순간 속도를 올리기보다 기다리는 반응을 보였어요. 두 방식이 현재 장면에서는 큰 마찰 없이 이어지고 있어요.",
+      "아이는 새로운 환경에서 먼저 살펴보는 시간이 필요한 모습이 있었고, {{CG는}} 그 순간 속도를 올리기보다 기다리는 반응을 보였어요. 두 방식이 현재 장면에서는 큰 마찰 없이 이어지고 있어요.",
     whereToBreakSummary: {
       targetStep: 2,
       breakActionTitle: "현재의 차분한 기다림과 조율 방식 이어가기",
@@ -312,7 +312,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
         actionId: "action_reassurance_nod",
         actionTitle: "아이의 신중한 살핌을 존중하기",
         actionDetail: "아이가 스스로 한 발짝 다가설 때까지 눈을 맞추며 곁에서 조용히 기다려주는 방식을 이어가보세요.",
-        whyItMayHelp: "엄마의 묵묵한 눈맞춤이 아이에게 편안한 격려가 될 수 있어요.",
+        whyItMayHelp: "{{CG의}} 묵묵한 눈맞춤이 아이에게 편안한 격려가 될 수 있어요.",
         evidenceRefs: ["child:new_environment_takes_long_to_observe"],
       },
       {
@@ -329,7 +329,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
   // 6. Collaborative: 칭찬에 힘을 얻는 아이 (Fixture C 보조)
   {
     ruleId: "rule_praise_effort_and_motivation",
-    title: "아이의 성취 동기와 엄마의 긍정적 격려가 맞물릴 때",
+    title: "아이의 성취 동기와 {{CG의}} 긍정적 격려가 맞물릴 때",
     requiredChildPatterns: ["energized_by_praise"],
     requiredMomPatterns: [
       "patient_pace_holding",
@@ -368,7 +368,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
         phraseId: "phrase_praise_effort_recognition",
         situation: "아이가 무언가를 해내고 인정을 바랄 때",
         before: "어~ 잘했네.",
-        after: "아까 안 됐는데 다시 해봤네. 끝까지 해본 거 엄마가 봤어.",
+        after: "아까 안 됐는데 다시 해봤네. 끝까지 해본 거 다 봤어.",
         whyItMayHelp:
           "칭찬을 들었을 때 참여가 높아지는 모습이 관찰되었으므로, 결과만 칭찬하기보다 어떤 시도를 했는지 구체적으로 짚어주는 방식을 시도해볼 수 있어요.",
         evidenceRefs: ["child:praise_energized_by_praise"],
@@ -389,7 +389,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
   // 7. Collaborative: 이유와 맥락을 알고 싶은 아이 (Fixture D 보조)
   {
     ruleId: "rule_reason_seeking_and_explanation",
-    title: "이유를 이해하려는 아이와 차분히 안내하는 엄마",
+    title: "이유를 이해하려는 아이와 차분히 안내하는 {{CG}}",
     requiredChildPatterns: ["reason_seeking", "deep_single_focus"],
     requiredMomPatterns: [
       "patient_pace_holding",
@@ -446,7 +446,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
   // 8. Collaborative: 자기주장과 이유 조율형 아이 (Family I)
   {
     ruleId: "rule_assertion_and_negotiation",
-    title: "의사를 분명히 표현하는 아이와 경청하는 엄마",
+    title: "의사를 분명히 표현하는 아이와 경청하는 {{CG}}",
     requiredChildPatterns: ["asserts_but_negotiates", "eases_into_group"],
     requiredMomPatterns: [
       "conditional_tradeoff",
@@ -466,11 +466,11 @@ export const INTERACTION_RULES: InteractionRule[] = [
     confidence: "medium",
     interactionType: "collaborative",
     childPerspectiveSummary:
-      "자신의 의견을 분명히 말하되 엄마의 설명을 들으면 조율할 수 있는 유연함을 지니고 있어요.",
+      "자신의 의견을 분명히 말하되 {{CG의}} 설명을 들으면 조율할 수 있는 유연함을 지니고 있어요.",
     momPerspectiveSummary:
       "아이의 생각을 경청하고 상황을 차분하게 풀어가려는 태도예요.",
     synthesisSummary:
-      "아이의 의견을 먼저 충분히 들어주고 엄마의 이유를 나눌 때 서로 생각을 주고받는 대화가 이어질 수 있어요.",
+      "아이의 의견을 먼저 충분히 들어주고 {{CG의}} 이유를 나눌 때 서로 생각을 주고받는 대화가 이어질 수 있어요.",
     whereToBreakSummary: {
       targetStep: 1,
       breakActionTitle: "아이의 생각 먼저 듣고 조율하기",
@@ -482,9 +482,9 @@ export const INTERACTION_RULES: InteractionRule[] = [
         phraseId: "phrase_assertion_listen_first",
         situation: "아이가 자기 의견을 분명하게 말할 때",
         before: "안 된다고 했잖아.",
-        after: "네 생각부터 듣고, 엄마 이유도 이야기해줄게.",
+        after: "네 생각부터 듣고, 내 이유도 이야기해줄게.",
         whyItMayHelp:
-          "아이의 의견을 먼저 들은 뒤 엄마의 이유를 설명하면, 서로의 생각을 주고받는 방식으로 대화를 이어갈 수 있어요.",
+          "아이의 의견을 먼저 들은 뒤 {{CG의}} 이유를 설명하면, 서로의 생각을 주고받는 방식으로 대화를 이어갈 수 있어요.",
         evidenceRefs: ["child:self_assertion_asserts_but_negotiates"],
       },
     ],
@@ -503,7 +503,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
   // 9. Low-Friction / Collaborative: 순응/유연한 아이와 조율형 엄마 (Fixture H, F, G 등 유연 상황)
   {
     ruleId: "rule_collab_flexible_and_adaptable",
-    title: "아이의 유연한 흐름과 엄마의 여유로운 대처가 맞물릴 때",
+    title: "아이의 유연한 흐름과 {{CG의}} 여유로운 대처가 맞물릴 때",
     requiredChildPatterns: [
       "context_flexible",
       "switches_readily",
@@ -523,7 +523,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
     confidence: "medium",
     interactionType: "collaborative",
     childPerspectiveSummary:
-      "상황 변화나 엄마의 안내에 비교적 유연하게 반응하며 자기 페이스를 맞춰가요.",
+      "상황 변화나 {{CG의}} 안내에 비교적 유연하게 반응하며 자기 페이스를 맞춰가요.",
     momPerspectiveSummary:
       "상황이 바뀌어도 무리하게 통제하기보다 상황에 맞춰 여유롭게 넘기려는 태도예요.",
     synthesisSummary:
@@ -539,7 +539,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
       {
         actionId: "action_express_gratitude",
         actionTitle: "아이의 협조에 고마움 표현하기",
-        actionDetail: "“오늘 엄마 도와줘서 고마워” 하고 편안하게 표현해주세요.",
+        actionDetail: "“오늘 도와줘서 고마워” 하고 편안하게 표현해주세요.",
         whyItMayHelp: "편안한 소통을 이어가는 따뜻한 인사가 될 수 있어요.",
         evidenceRefs: ["child:rule_response_context_flexible"],
       },
@@ -550,15 +550,15 @@ export const INTERACTION_RULES: InteractionRule[] = [
   // 10. 식습관/편식: 처음 보는 음식에 신중한 아이 vs 골고루 먹이고 싶은 엄마 (meal 전용)
   {
     ruleId: "rule_friction_meal_new_food_hesitation",
-    title: "처음 보는 음식에 신중한 아이와 골고루 먹이고 싶은 엄마",
+    title: "처음 보는 음식에 신중한 아이와 골고루 먹이고 싶은 {{CG}}",
+    // P2.2V.4 FIX: Food Micro Check 응답(new_food_hesitation, food_familiar_preference)을
+    // 1차 근거로 사용한다. 일반 new_environment 관찰(needs_observation_time)은 음식 맥락의
+    // 직접 근거가 아니므로 TRANSFERRED_LOW 보조 신호로만 남긴다.
     requiredChildPatterns: [
-      "takes_long_to_observe",
-      "hides_behind_parent",
-      "observes_then_joins",
+      "new_food_hesitation",
+      "food_familiar_preference",
       "needs_observation_time",
       "prefers_completion_before_transition",
-      "needs_completion_before_transition",
-      "cautious_start",
     ],
     requiredMomPatterns: [
       "fast_pace_directive",
@@ -577,7 +577,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
     momPerspectiveSummary:
       "아이의 건강과 영양을 생각해 조금이라도 골고루 먹여주고 싶은 마음이에요.",
     synthesisSummary:
-      "엄마의 영양을 챙기려는 권유와 처음 보는 음식에 신중한 아이의 탐색 시간이 식탁에서 마주치며 실랑이가 길어질 수 있어요.",
+      "{{CG의}} 영양을 챙기려는 권유와 처음 보는 음식에 신중한 아이의 탐색 시간이 식탁에서 마주치며 실랑이가 길어질 수 있어요.",
     whereToBreakSummary: {
       targetStep: 2,
       breakActionTitle: "억지로 권하기 전 음식 탐색 틈 주기",
@@ -592,7 +592,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
         after: "어떤 냄새가 나는지 먼저 맡아볼까? 먹지 않고 보기만 해도 괜찮아.",
         whyItMayHelp:
           "바로 먹어야 하는 선택지만 주기보다, 냄새나 모양을 먼저 살펴보는 선택지도 함께 열어줄 수 있어요.",
-        evidenceRefs: ["child:new_environment_takes_long_to_observe", "concern:meal"],
+        evidenceRefs: ["child:new_environment_new_food_hesitation", "concern:meal"],
       },
       {
         phraseId: "phrase_meal_favorite_acknowledge",
@@ -601,7 +601,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
         after: "이 반찬이 제일 맛있구나. 좋아하는 거 먼저 먹고 다른 반찬은 젓가락으로 콕 찍어볼까?",
         whyItMayHelp:
           "아이가 좋아하는 음식을 인정해주면서 새로운 음식에 대한 접근을 부드럽게 시도할 수 있어요.",
-        evidenceRefs: ["child:new_environment_takes_long_to_observe", "concern:meal"],
+        evidenceRefs: ["child:self_assertion_food_familiar_preference", "concern:meal"],
       },
     ],
     sampleActions: [
@@ -611,15 +611,15 @@ export const INTERACTION_RULES: InteractionRule[] = [
         actionDetail:
           "밥 위에 바로 얹어주기보다 작은 접시에 따로 담아 아이가 스스로 냄새나 모양을 살필 수 있게 해주세요.",
         whyItMayHelp: "아이가 식사 속도와 선택권을 스스로 조절하는 데 도움이 될 수 있어요.",
-        evidenceRefs: ["child:new_environment_takes_long_to_observe", "concern:meal"],
+        evidenceRefs: ["child:new_environment_new_food_hesitation", "concern:meal"],
       },
       {
         actionId: "action_meal_touch_ingredient",
         actionTitle: "식사 전 음식 재료 함께 만져보기",
         actionDetail:
           "식사 준비 때 채소를 씻거나 만져보는 작은 참여 기회를 만들어주세요.",
-        whyItMayHelp: "낯선 음식에 대한 경계심을 낮추는 데 도움이 될 수 있어요.",
-        evidenceRefs: ["child:new_environment_takes_long_to_observe", "concern:meal"],
+        whyItMayHelp: "낯선 음식을 먼저 만지거나 살펴보는 선택지를 늘리는 데 도움이 될 수 있어요.",
+        evidenceRefs: ["child:new_environment_new_food_hesitation", "concern:meal"],
       },
     ],
     anchorPromise: "식탁에서 한 입 더 먹이는 것보다, 음식을 편안하게 마주할 작은 틈을 열어주는 것부터 시작해보세요.",
@@ -628,14 +628,16 @@ export const INTERACTION_RULES: InteractionRule[] = [
   // 11. 식습관/편식: 자기 식사 속도와 주도성 고수 vs 식사 시간 관리 엄마 (meal 전용)
   {
     ruleId: "rule_friction_meal_autonomy_pacing",
-    title: "자신의 식사 속도를 지키려는 아이와 정해진 식사 시간을 챙기는 엄마",
+    title: "자신의 식사 속도를 지키려는 아이와 정해진 식사 시간을 챙기는 {{CG}}",
+    // P2.2V.4 FIX: Food Micro Check 응답(meal_pacing_autonomy, food_refusal_on_pressure)을
+    // 1차 근거로 사용한다. 일반 문항 패턴(strong_self_direction 등)은 보조 신호로만 남기고,
+    // 존재하지 않던 pattern id(strong_independent_preference 등)는 제거한다.
     requiredChildPatterns: [
-      "strong_independent_preference",
-      "insists_on_own_way",
+      "meal_pacing_autonomy",
+      "food_refusal_on_pressure",
+      "strong_self_direction",
+      "own_way_first",
       "reason_seeking",
-      "intense_emotional_burst",
-      "energized_by_praise",
-      "expressive_temper",
       "deep_single_focus",
     ],
     requiredMomPatterns: [
@@ -654,7 +656,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
     momPerspectiveSummary:
       "식사 시간이 너무 길어지거나 장난을 치지 않고 제시간에 다 먹었으면 하는 마음이에요.",
     synthesisSummary:
-      "식사 시간을 관리하려는 엄마의 지도와 자기 방식대로 먹으려는 아이의 주도성이 맞부딪히는 양상이에요.",
+      "식사 시간을 관리하려는 {{CG의}} 지도와 자기 방식대로 먹으려는 아이의 주도성이 맞부딪히는 양상이에요.",
     whereToBreakSummary: {
       targetStep: 2,
       breakActionTitle: "강요 대신 식사 종료 기준 함께 정하기",
@@ -669,7 +671,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
         after: "식사 시간 5분 남았어. 지금 남은 밥 중에 딱 두 숟가락만 맛있게 먹고 정리할까?",
         whyItMayHelp:
           "아이가 식사의 마침표를 예측하고 스스로 마무리할 수 있는 기회를 주는 데 도움이 될 수 있어요.",
-        evidenceRefs: ["child:transition_needs_completion_before_transition", "concern:meal"],
+        evidenceRefs: ["child:transition_meal_pacing_autonomy", "concern:meal"],
       },
       {
         phraseId: "phrase_meal_acknowledge_full",
@@ -678,7 +680,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
         after: "배가 이제 부르구나. 국물 한 모금 마시고 자리에서 일어날까?",
         whyItMayHelp:
           "아이의 배부름 신호를 인정해주면서 부드럽게 식사를 마무리하는 데 도움이 될 수 있어요.",
-        evidenceRefs: ["child:transition_needs_completion_before_transition", "concern:meal"],
+        evidenceRefs: ["child:parent_instruction_food_refusal_on_pressure", "concern:meal"],
       },
     ],
     sampleActions: [
@@ -688,7 +690,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
         actionDetail:
           "식사 시작 시 모래시계를 두거나 끝나는 시간을 미리 알려주어 스스로 속도를 조절하게 해주세요.",
         whyItMayHelp: "잔소리 대신 시각적인 신호로 전환을 돕는 방법이 될 수 있어요.",
-        evidenceRefs: ["child:transition_needs_completion_before_transition", "concern:meal"],
+        evidenceRefs: ["child:transition_meal_pacing_autonomy", "concern:meal"],
       },
       {
         actionId: "action_meal_portion_choice",
@@ -696,7 +698,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
         actionDetail:
           "아이가 직접 먹을 만큼만 덜어먹게 하여 스스로 정한 양을 다 먹는 성취감을 경험하게 해주세요.",
         whyItMayHelp: "자기주도성을 존중하여 식사에 대한 거부감을 줄이는 데 도움이 될 수 있어요.",
-        evidenceRefs: ["child:transition_needs_completion_before_transition", "concern:meal"],
+        evidenceRefs: ["child:parent_instruction_food_refusal_on_pressure", "concern:meal"],
       },
     ],
     anchorPromise: "다 먹이는 것보다, 기분 좋게 식탁을 마무리하는 경험을 쌓는 것부터 시작해보세요.",

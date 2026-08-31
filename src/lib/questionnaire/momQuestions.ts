@@ -1,4 +1,4 @@
-// mom-questions 모듈: 엄마 반응 Mini Check 5문항
+// mom-questions 모듈: 내 반응 Mini Check 5문항 (P2.2V.6: 관계 중립 문구 유지)
 //
 // 원칙:
 // 1. 점수 없음 (Numeric score = 0).
@@ -127,7 +127,7 @@ export const MOM_QUESTIONS: MomQuestion[] = [
   {
     id: "mom_q5_recovery",
     domain: "conflict_recovery_style",
-    prompt: "아이와 한바탕 부딪히고 난 뒤, 엄마의 마음은 주로 어떻게 정리되나요?",
+    prompt: "아이와 한바탕 부딪히고 난 뒤, 내 마음은 주로 어떻게 정리되나요?",
     options: [
       {
         optionId: "opt_rec_repair",

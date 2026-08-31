@@ -19,7 +19,7 @@ export const CONCERNS: ConcernItem[] = [
   { id: "shyness", label: "낯가림", emoji: "🫣" },
   { id: "friends", label: "친구관계", emoji: "🧸" },
   { id: "sibling", label: "형제갈등", emoji: "👧👦" },
-  { id: "only_with_mom", label: "엄마에게만 심함", emoji: "💗" },
+  { id: "only_with_mom", label: "나에게만 심함", emoji: "💗" },
   { id: "focus_play", label: "집중·놀이", emoji: "🎨" },
   { id: "learning", label: "배움·공부", emoji: "📖" },
   { id: "etc", label: "기타", emoji: "✏️" },

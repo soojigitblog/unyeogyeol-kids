@@ -355,7 +355,9 @@ describe("P2.0H.1 EVIDENCE & CREDIBILITY ENGINE TEST SUITE", () => {
     expect(sigC.chapter06_threePhrases.length).toBeGreaterThan(0);
     const phraseC = sigC.chapter06_threePhrases[0];
     expect(phraseC.before).toContain("잘했네");
-    expect(phraseC.after).toContain("엄마가 봤어");
+    // P2.2V.6: "엄마" 고정 문구 제거 -> 관계 중립 표현
+    expect(phraseC.after).toContain("끝까지 해본 거");
+    expect(phraseC.after).not.toContain("엄마");
     expect(phraseC.evidenceRefs).toContain("child:praise_energized_by_praise");
 
     // 13-2. Fixture D (이유/규칙 탐색)
@@ -389,7 +391,8 @@ describe("P2.0H.1 EVIDENCE & CREDIBILITY ENGINE TEST SUITE", () => {
     const resA = buildEvidenceClaims(fixA.childEvidences, buildMomEvidence(fixA.momAnswers), fixA.conflictInput, fixA.fortuneFacts);
     const refA = resA.claims.find((c) => c.layer === "REFLECTIVE");
     expect(refA?.claim).toContain("자기 방식으로 움직이려는 쪽의 힌트");
-    expect(refA?.claim).toContain("실제 결과는 엄마가 알려준 행동을 중심으로");
+    // P2.2V.6: 관계 중립 표현으로 변경 ("엄마가 알려준" -> "직접 알려주신")
+    expect(refA?.claim).toContain("실제 결과는 직접 알려주신 행동을 중심으로");
 
     // 13-6. No generic fallback phrase ("왜 그래?") across all fixtures
     EXTENDED_FIXTURES.forEach((f) => {

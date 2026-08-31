@@ -138,16 +138,36 @@ export type ConcernId =
 // ── P2 PAID SIGNATURE / INTERACTION MODEL TYPES ───────────
 // ==========================================================
 
-// ── Mom Profile ──────────────────────────────────────────
-export interface MomProfile {
-  name?: string;
+// ── Caregiver Profile (P2.2V.6: 엄마 고정 구조 -> 보호자/가족 관계 일반화) ──
+export type CaregiverRole =
+  | "mother"
+  | "father"
+  | "maternal_grandmother"
+  | "paternal_grandmother"
+  | "maternal_grandfather"
+  | "paternal_grandfather"
+  | "aunt"
+  | "uncle"
+  | "guardian"
+  | "other";
+
+export interface CaregiverProfile {
+  /** 내부 분류값. 고객 문구에는 노출하지 않는다. */
+  role: CaregiverRole;
+  /** 고객 문구에 그대로 쓰이는 관계명 (예: "아빠", "외할머니", "큰이모"). */
+  roleLabel: string;
+  /** 선택 입력 애칭/이름. 없으면 roleLabel 을 사용한다. */
+  displayName?: string;
   birthDate: string; // YYYY-MM-DD
   birthTimeKnown: boolean;
   birthTime?: string; // HH:MM
 }
 
+/** 하위 호환 별칭 (기존 코드/세션의 momProfile 참조 지점용). */
+export type MomProfile = CaregiverProfile;
+
 export interface SignatureSessionInput {
-  momProfile: MomProfile;
+  caregiverProfile: CaregiverProfile;
   momAnswers: MomAnswers;
   conflictInput: CurrentConflictInput;
 }
@@ -197,7 +217,7 @@ export interface CurrentConflictInput {
   concernId: ConcernId;
   scenarioId: string; // A. 무슨 상황인가
   childFirstReaction?: string; // B. 아이 첫 반응
-  momFirstReaction?: string; // C. 엄마 첫 반응
+  momFirstReaction?: string; // C. 나(보호자) 첫 반응
   subsequentEscalation?: string; // D. 그다음 보통 어떻게 되는가
   recentFrequency?: "daily" | "several_times_a_week" | "weekly" | "occasional"; // E. 최근 얼마나 자주 (진단/점수 계산 금지, Chain 근거용)
   momTypicalPhrase?: string;
@@ -279,7 +299,11 @@ export interface SignatureReport {
     childName: string;
     childAgeDisplay: string;
     concernLabel: string;
+    /** 고객 문구용 표시명(애칭이 있으면 애칭, 없으면 관계명). */
     momName?: string;
+    /** 순수 관계명(예: "아빠", "할머니", "큰이모"). 배지/제목용. */
+    caregiverRoleLabel: string;
+    caregiverRole: CaregiverRole;
   };
 
   twoPersonSummary?: {
@@ -327,7 +351,8 @@ export interface SignatureReport {
     steps: {
       stepNumber: 1 | 2 | 3 | 4 | 5;
       stage: "trigger" | "mom_reaction" | "child_reaction" | "escalation" | "exhausted_end";
-      actor: "엄마" | "아이" | "둘 다";
+      /** "아이" / "둘 다" 또는 관계명(예: 아빠, 할머니, 큰이모). */
+      actor: string;
       description: string;
     }[];
     whereToBreak: {

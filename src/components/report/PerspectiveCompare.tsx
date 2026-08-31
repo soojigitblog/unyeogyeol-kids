@@ -11,23 +11,26 @@ interface PerspectiveCompareProps {
     possibleFeeling: string;
   };
   childName: string;
+  /** 관계명(예: 아빠 / 할머니 / 큰이모). */
+  caregiverRoleLabel?: string;
 }
 
 export function PerspectiveCompare({
   momPerspective,
   childPerspective,
   childName,
+  caregiverRoleLabel = "보호자",
 }: PerspectiveCompareProps) {
   return (
     <div className="grid gap-3.5 sm:grid-cols-2">
-      {/* 엄마의 시선 */}
+      {/* 나의 시선 */}
       <div className="rounded-3xl border border-coral-tint bg-milk p-5 shadow-xs">
         <div className="flex items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-full bg-coral-tint text-coral-deep">
             <Heart className="h-4 w-4 fill-coral-deep/20" />
           </span>
           <span className="text-[13px] font-bold tracking-tight text-coral-deep">
-            엄마의 마음
+            {caregiverRoleLabel}의 입장
           </span>
         </div>
         <p className="mt-3.5 text-[15.5px] font-bold leading-snug text-cocoa">

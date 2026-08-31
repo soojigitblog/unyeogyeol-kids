@@ -23,7 +23,7 @@ export interface MatchResult {
 
 export const INSUFFICIENT_INTERACTION_EVIDENCE_RULE: InteractionRule = {
   ruleId: "INSUFFICIENT_INTERACTION_EVIDENCE",
-  title: "현재 관찰된 행동과 엄마의 반응 흐름",
+  title: "현재 관찰된 행동과 {{CG의}} 반응 흐름",
   requiredChildPatterns: [],
   requiredMomPatterns: [],
   applicableConcerns: ["all"],
@@ -32,9 +32,9 @@ export const INSUFFICIENT_INTERACTION_EVIDENCE_RULE: InteractionRule = {
   childPerspectiveSummary:
     "아이는 자신만의 방식과 속도로 상황을 마주하며 적응해 나가고 있어요.",
   momPerspectiveSummary:
-    "엄마는 아이의 반응을 살피며 상황에 맞는 최선의 방식을 찾아가는 과정이에요.",
+    "{{CG는}} 아이의 반응을 살피며 상황에 맞는 최선의 방식을 찾아가는 과정이에요.",
   synthesisSummary:
-    "아이의 고유한 반응 방식과 엄마의 대처 방식이 일상에서 어떻게 맞물리는지 차분히 관찰해볼 수 있어요.",
+    "아이의 고유한 반응 방식과 {{CG의}} 대처 방식이 일상에서 어떻게 맞물리는지 차분히 관찰해볼 수 있어요.",
   whereToBreakSummary: {
     targetStep: 1,
     breakActionTitle: "현재 상황을 한 걸음 물러서서 관찰하기",
@@ -48,7 +48,7 @@ export const INSUFFICIENT_INTERACTION_EVIDENCE_RULE: InteractionRule = {
       actionDetail: "아이가 편안해하는 순간과 버거워하는 순간을 며칠간 눈여겨보세요.",
     },
   ],
-  anchorPromise: "아이와 엄마가 서로의 속도를 이해해가는 따뜻한 여정을 시작해보세요.",
+  anchorPromise: "아이와 {{CG가}} 서로의 속도를 이해해가는 따뜻한 여정을 시작해보세요.",
 };
 
 export function matchInteractionRule(

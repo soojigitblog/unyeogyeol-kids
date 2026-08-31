@@ -4,7 +4,7 @@ import { buildMomEvidence } from "../questionnaire/momEvidence";
 import { buildBehaviorEvidence } from "../questionnaire/evidence";
 import { buildFoodEvidence } from "../questionnaire/foodQuestions";
 import { generateSignatureReport } from "./signatureReportGenerator";
-import type { ChildProfile, CurrentConflictInput, MomProfile } from "../types";
+import type { CaregiverProfile, ChildProfile, CurrentConflictInput } from "../types";
 import {
   runLexicalGuard,
   runStructuredClaimGuard,
@@ -246,8 +246,10 @@ describe("P2.2H PAID REPORT EVIDENCE INTEGRITY & HUMAN VALUE PATCH", () => {
     };
     const childEv = buildBehaviorEvidence(childAnswers);
 
-    const momProfile: MomProfile = {
-      name: "열무맘",
+    const momProfile: CaregiverProfile = {
+      role: "mother",
+      roleLabel: "엄마",
+      displayName: "열무맘",
       birthDate: "1991-08-20",
       birthTimeKnown: false,
     };

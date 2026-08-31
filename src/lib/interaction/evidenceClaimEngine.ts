@@ -147,7 +147,7 @@ export function buildEvidenceClaims(
 
   momEvidences.forEach((ev, idx) => {
     const phrase = normalizeToPhrase(ev.observedLabel);
-    const text = `시간이나 갈등 상황에서 엄마의 반응: ${phrase}`;
+    const text = `시간이나 갈등 상황에서 나의 반응: ${phrase}`;
     claims.push({
       claimId: `obs_mom_${ev.domain}_${idx}`,
       claimText: text,
@@ -197,7 +197,7 @@ export function buildEvidenceClaims(
         const phrase = normalizeToPhrase(evList[0].observedLabel);
         const text =
           strength === "STRONG"
-            ? `엄마가 알려준 여러 상황을 종합해 보면, ${withJosa(phrase, "이", "가")} 꽤 일관되게 나타나요.`
+            ? `직접 알려주신 여러 상황을 종합해 보면, ${withJosa(phrase, "이", "가")} 꽤 일관되게 나타나요.`
             : `여러 장면에서 ${withJosa(phrase, "이", "가")} 반복해서 관찰돼요.`;
 
         claims.push({
@@ -326,13 +326,13 @@ export function buildEvidenceClaims(
     let text: string | null = null;
     if (fortuneStatus === "ALIGNED") {
       if ((el === "wood" || el === "fire") && isSelfDirObs) {
-        text = "출생정보에서는 자기 방식으로 움직이려는 쪽의 힌트가 있었어요. 실제 결과는 엄마가 알려준 행동을 중심으로 정리했어요.";
+        text = "출생정보에서는 자기 방식으로 움직이려는 쪽의 힌트가 있었어요. 실제 결과는 직접 알려주신 행동을 중심으로 정리했어요.";
       } else if (el === "fire" && isPraiseObs) {
-        text = "출생정보에서는 에너지를 활발하게 드러내려는 쪽의 힌트가 있었어요. 실제 결과는 엄마가 알려준 행동을 중심으로 정리했어요.";
+        text = "출생정보에서는 에너지를 활발하게 드러내려는 쪽의 힌트가 있었어요. 실제 결과는 직접 알려주신 행동을 중심으로 정리했어요.";
       } else if (el === "metal" && isStructuredObs) {
-        text = "출생정보에서는 자기 기준이나 마침표를 챙기려는 쪽의 힌트가 있었어요. 실제 결과는 엄마가 알려준 행동을 중심으로 정리했어요.";
+        text = "출생정보에서는 자기 기준이나 마침표를 챙기려는 쪽의 힌트가 있었어요. 실제 결과는 직접 알려주신 행동을 중심으로 정리했어요.";
       } else if ((el === "water" || el === "earth") && isCautiousObs) {
-        text = "출생정보에서는 상황을 천천히 살피려는 쪽의 힌트가 있었어요. 실제 결과는 엄마가 알려준 행동을 중심으로 정리했어요.";
+        text = "출생정보에서는 상황을 천천히 살피려는 쪽의 힌트가 있었어요. 실제 결과는 직접 알려주신 행동을 중심으로 정리했어요.";
       } else {
         fortuneStatus = "NEUTRAL";
       }
@@ -388,8 +388,8 @@ export function buildEvidenceClaims(
   if (negEv) {
     recommendations.push({
       recommendationId: "rec_assert_and_negotiate",
-      title: "아이의 생각을 먼저 듣고 엄마의 이유 나누기",
-      detail: "아이의 의견을 먼저 들은 뒤 엄마의 이유를 설명하면, 서로의 생각을 주고받는 방식으로 대화를 이어갈 수 있어요.",
+      title: "아이의 생각을 먼저 듣고 내 이유 나누기",
+      detail: "아이의 의견을 먼저 들은 뒤 내 이유를 설명하면, 서로의 생각을 주고받는 방식으로 대화를 이어갈 수 있어요.",
       recommendationReason: "자기 의사를 분명히 표현하되 이유를 들으면 조율하는 관찰 패턴에 기반합니다.",
       evidenceRefs: [`child:${negEv.domain}_${negEv.observedPattern}`],
     });
@@ -510,7 +510,7 @@ export function buildEvidenceClaims(
     const p1 = normalizeToPhrase(childEvidences[0].observedLabel);
     summaryOneSentence = `지금은 ${withJosa(p1, "이", "가")} 중심에 관찰되는 시기예요.`;
   } else {
-    summaryOneSentence = "엄마가 관찰해 준 일상의 장면들을 바탕으로 아이만의 편안한 흐름을 정리했어요.";
+    summaryOneSentence = "직접 관찰해 주신 일상의 장면들을 바탕으로 아이만의 편안한 흐름을 정리했어요.";
   }
 
   return {

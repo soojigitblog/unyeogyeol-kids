@@ -4,7 +4,8 @@ import { ArrowDown, CheckCircle2, Sparkles } from "lucide-react";
 interface Step {
   stepNumber: number;
   stage: string;
-  actor: "엄마" | "아이" | "둘 다";
+  /** "아이" / "둘 다" 또는 관계명(예: 아빠, 할머니, 큰이모). */
+  actor: string;
   description: string;
 }
 
@@ -13,16 +14,21 @@ interface ConflictChainVisualProps {
   targetStep?: number;
   isCollaborative?: boolean;
   childName: string;
+  /** 관계명(예: 아빠 / 할머니 / 큰이모). */
+  caregiverRoleLabel?: string;
 }
 
 export function ConflictChainVisual({
   steps,
   targetStep = 2,
   isCollaborative = false,
+  caregiverRoleLabel = "보호자",
 }: ConflictChainVisualProps) {
   const stageLabels: Record<string, string> = {
     trigger: isCollaborative ? "시작 순간" : "갈등의 불씨",
-    mom_reaction: isCollaborative ? "엄마의 반응" : "엄마의 첫 반응",
+    mom_reaction: isCollaborative
+      ? `${caregiverRoleLabel}의 반응`
+      : `${caregiverRoleLabel}의 첫 반응`,
     child_reaction: isCollaborative ? "아이의 반응" : "아이의 반응",
     escalation: isCollaborative ? "호흡 연결" : "긴장감 상승",
     exhausted_end: isCollaborative ? "편안한 마무리" : "지친 마무리",
@@ -61,11 +67,11 @@ export function ConflictChainVisual({
 
                 <span
                   className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
-                    step.actor === "엄마"
-                      ? "bg-coral-tint text-coral-deep"
-                      : step.actor === "아이"
+                    step.actor === "아이"
                       ? "bg-sage-tint text-sage-deep"
-                      : "bg-cream-dark text-cocoa"
+                      : step.actor === "둘 다"
+                      ? "bg-cream-dark text-cocoa"
+                      : "bg-coral-tint text-coral-deep"
                   }`}
                 >
                   {step.actor}

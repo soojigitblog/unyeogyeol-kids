@@ -183,7 +183,7 @@ export const QUESTIONS_WITH_VARIANTS: QuestionWithVariants[] = [
     domain: "parent_instruction",
     prompt: "무언가를 해 달라고 부탁하면,",
     agePrompts: {
-      A: "“이것 좀 엄마한테 가져다줄래?” 하고 부탁할 때,",
+      A: "“이것 좀 가져다줄래?” 하고 부탁할 때,",
       B: "“가방 제자리에 두고 손 씻자” 하고 이야기할 때,",
       C: "“숙제/준비물 먼저 챙기자” 하고 이야기할 때,",
     },

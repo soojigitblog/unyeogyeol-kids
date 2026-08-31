@@ -106,8 +106,8 @@ export const CONFLICT_SCENARIOS: ConflictScenario[] = [
   {
     scenarioId: "sc_sleep_night_waking",
     concernId: "sleep",
-    title: "밤에 자주 깨서 엄마를 찾거나 울 때",
-    situationPrompt: "자다가 깨서 울거나 엄마가 옆에 없으면 다시 잠들지 못해요.",
+    title: "밤에 자주 깨서 나를 찾거나 울 때",
+    situationPrompt: "자다가 깨서 울거나 옆에 아무도 없으면 다시 잠들지 못해요.",
   },
 
   // ── 6. 등원/어린이집 (daycare) ─────────────────────────
@@ -115,7 +115,7 @@ export const CONFLICT_SCENARIOS: ConflictScenario[] = [
     scenarioId: "sc_daycare_separation",
     concernId: "daycare",
     title: "등원 시 헤어지기 힘들어할 때",
-    situationPrompt: "어린이집이나 유치원 문앞에서 엄마와 떨어지지 않으려 해요.",
+    situationPrompt: "어린이집이나 유치원 문앞에서 저와 떨어지지 않으려 해요.",
   },
   {
     scenarioId: "sc_daycare_morning_hurry",
@@ -129,7 +129,7 @@ export const CONFLICT_SCENARIOS: ConflictScenario[] = [
     scenarioId: "sc_shyness_hesitation",
     concernId: "shyness",
     title: "낯선 사람이나 장소에서 얼어붙을 때",
-    situationPrompt: "새로운 장소나 사람 앞에서 엄마 뒤로 숨고 말 한마디 안 하려 해요.",
+    situationPrompt: "새로운 장소나 사람 앞에서 제 뒤로 숨고 말 한마디 안 하려 해요.",
   },
   {
     scenarioId: "sc_shyness_slow_entry",
@@ -151,15 +151,15 @@ export const CONFLICT_SCENARIOS: ConflictScenario[] = [
     scenarioId: "sc_sibling_rivalry",
     concernId: "sibling",
     title: "형제/자매와 계속 다툴 때",
-    situationPrompt: "장난감이나 엄마 관심을 두고 형제/자매와 끊임없이 부딪혀요.",
+    situationPrompt: "장난감이나 제 관심을 두고 형제/자매와 끊임없이 부딪혀요.",
   },
 
-  // ── 10. 엄마에게만 심함 (only_with_mom) ───────────────
+  // ── 10. 나에게만 심함 (only_with_mom) ───────────────
   {
     scenarioId: "sc_only_mom_clingy",
     concernId: "only_with_mom",
-    title: "다른 사람과 있을 때는 괜찮은데 엄마에게만 떼쓸 때",
-    situationPrompt: "아빠나 선생님과는 순한데 엄마만 보면 모든 감정을 폭발시키고 매달려요.",
+    title: "다른 사람과 있을 때는 괜찮은데 나에게만 떼쓸 때",
+    situationPrompt: "다른 사람과는 순한데 저만 보면 모든 감정을 폭발시키고 매달려요.",
   },
 
   // ── 11. 집중/놀이 (focus_play) ────────────────────────

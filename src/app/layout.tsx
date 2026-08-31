@@ -15,7 +15,7 @@ const gowunBatang = Gowun_Batang({
 export const metadata: Metadata = {
   title: "운의결 KIDS · 우리 아이, 왜 이럴까요?",
   description:
-    "말 안 듣는 아이가 아니라, 엄마와 움직이는 방식이 조금 다른 아이일 수도 있어요. 태어난 기질과 평소 아이의 모습을 함께 보고 우리 아이를 이해하는 힌트를 찾아보세요.",
+    "말 안 듣는 아이가 아니라, 나와 움직이는 방식이 조금 다른 아이일 수도 있어요. 아이를 가장 가까이에서 돌보는 사람과 아이의 관계를 함께 봅니다.",
 };
 
 export const viewport: Viewport = {

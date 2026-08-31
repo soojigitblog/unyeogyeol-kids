@@ -281,7 +281,7 @@ export const EXTENDED_FIXTURES: ExtendedFixture[] = [
         domain: "emotional_expression",
         axis: "emotional_expression_intensity",
         observedPattern: "seeks_reassurance",
-        observedLabel: "마음이 놓일 때까지 엄마 곁에서 탐색하는 모습",
+        observedLabel: "마음이 놓일 때까지 곁에서 탐색하는 모습",
         confidence: "medium",
         sourceQuestionIds: ["q9_emotional_expression"],
       },

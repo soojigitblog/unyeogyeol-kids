@@ -41,24 +41,24 @@ export default function ProductsPage() {
             </h1>
           </div>
 
-          {/* Signature — 엄마 × 아이 관계 사용설명서 */}
+          {/* Signature — 우리 아이 × 나 관계 사용설명서 */}
           <Card tone="coral" className="mt-7 p-6">
             <span className="inline-flex items-center rounded-full bg-coral px-3 py-1 text-[12px] font-bold tracking-wide text-white">
               SIGNATURE
             </span>
             <h2 className="mt-3 text-[21px] font-bold leading-snug text-cocoa">
-              엄마 × 아이 관계 사용설명서
+              우리 아이 × 나 관계 사용설명서
             </h2>
             <p className="mt-2 text-[14.5px] leading-relaxed text-cocoa-soft">
-              “왜 나한테만 이럴까?” 그 반복되는 장면을, 두 사람의 방식 차이로 풀어
-              드려요.
+              아이와 내가 왜 같은 순간에 자꾸 엇갈리는지 살펴봐요. 아이의 실제 행동,
+              내가 보이는 반응, 요즘 반복되는 장면, 두 사람의 출생정보를 함께 봅니다.
             </p>
 
             {/* 의도 vs 보이는 모습 */}
             <div className="mt-5 grid grid-cols-2 gap-2.5">
               <div className="rounded-2xl bg-milk p-3.5">
                 <p className="text-[12.5px] font-semibold text-coral-deep">
-                  엄마의 의도
+                  나의 의도
                 </p>
                 <p className="mt-1 text-[14px] text-cocoa">
                   “늦지 않게 준비시키려는 것”
@@ -81,7 +81,7 @@ export default function ProductsPage() {
               </p>
               <ol className="mt-2 space-y-1.5 text-[14px]">
                 <li className="text-cocoa">① 상황이 시작돼요</li>
-                <li className="text-cocoa">② 엄마가 반응해요</li>
+                <li className="text-cocoa">② 내가 반응해요</li>
                 <li className="font-semibold text-coral-deep">
                   ③ 여기서 끊을 수 있어요 · 갈등을 멈추는 지점
                 </li>
@@ -106,7 +106,7 @@ export default function ProductsPage() {
               )}
               <p className="mt-2 text-center text-[12.5px] text-cocoa-faint">
                 {process.env.NODE_ENV !== "production"
-                  ? "개발 환경 전용: 내 아이 실제 입력값 + 엄마 체크로 Signature Report를 직접 검수할 수 있습니다."
+                  ? "개발 환경 전용: 내 아이 실제 입력값 + 관계·내 반응 체크로 Signature Report를 직접 검수할 수 있습니다."
                   : "지금은 무료 결과까지 볼 수 있어요. 사용설명서는 순차적으로 열려요."}
               </p>
             </div>

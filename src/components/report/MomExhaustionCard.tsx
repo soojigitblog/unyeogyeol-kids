@@ -3,13 +3,16 @@ import { Coffee, HeartHandshake, Sparkles } from "lucide-react";
 
 interface MomExhaustionCardProps {
   title?: string;
+  /** 관계명(예: 아빠 / 할머니 / 큰이모). */
+  caregiverRoleLabel?: string;
   isLowFriction?: boolean;
   exhaustionReason: string;
   comfortMessage: string;
 }
 
 export function MomExhaustionCard({
-  title = "엄마가 이 순간 특히 지치는 이유",
+  title,
+  caregiverRoleLabel = "보호자",
   isLowFriction = false,
   exhaustionReason,
   comfortMessage,
@@ -25,7 +28,9 @@ export function MomExhaustionCard({
           {isLowFriction ? <Sparkles className="h-4 w-4" /> : <Coffee className="h-4 w-4" />}
         </span>
         <span className="text-[13px] font-bold tracking-tight text-cocoa">
-          {isLowFriction ? "현재 우리 둘의 편안한 호흡" : "엄마의 피로를 들여다보는 시간"}
+          {isLowFriction
+            ? "현재 우리 둘의 편안한 호흡"
+            : `${caregiverRoleLabel}의 피로를 들여다보는 시간`}
         </span>
       </div>
 

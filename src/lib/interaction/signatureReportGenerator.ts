@@ -9,38 +9,65 @@
 // 6. Remove Long-Term Promise & Therapeutic Metaphors (평생의 정서적 지지대, 진정제 등 금지).
 // 7. Non-deterministic effect phrasing: ~방식을 시도해볼 수 있어요, ~하는 데 도움이 될 수 있어요.
 // 8. Concern is Report Anchor: 식습관(meal), 수면, 떼쓰기 등 선택된 고민에 부합하는 장면과 상호작용 생성.
-// 9. Real Mom Fortune Facts & ParentChildFortuneReflection: 사주 궁합 점수(점수, 찰떡궁합 등) 금지, 엄마×아이 출생정보 교차 보조 힌트 제공 + 관찰 우선 원칙 명시.
+// 9. Real Caregiver Fortune Facts & ParentChildFortuneReflection: 사주 궁합 점수(점수, 찰떡궁합 등) 금지, 나×아이 출생정보 교차 보조 힌트 제공 + 관찰 우선 원칙 명시.
+// 10. P2.2V.6 Caregiver Generalization: 고객 문구의 관계명은 항상 caregiverRoleLabel 기준.
+//     "엄마" 고정 문구 금지, 관계명만으로 심리/행동 추론 금지(부모 전제 문구 포함).
 
 import type {
   BehaviorEvidence,
+  CaregiverProfile,
+  CaregiverRole,
   ChildProfile,
   CurrentConflictInput,
   Element,
   FortuneFacts,
   MomEvidence,
-  MomProfile,
   ParentChildFortuneReflection,
   SentenceClaim,
   SignatureReport,
 } from "@/lib/types";
 import { computeAge } from "@/lib/age";
 import { computeFortuneFacts } from "@/lib/fortune/engine";
+import {
+  applyCaregiverLabel,
+  conj,
+  resolveDisplayName,
+  resolveRoleLabel,
+  subj,
+  topic,
+} from "@/lib/caregiver";
 import { matchInteractionRule } from "./interactionEngine";
 
+/** 관계 정보가 없는 레거시 호출도 허용하되, 고객 문구는 관계명 기준으로 만든다. */
+type CaregiverInput =
+  | CaregiverProfile
+  | {
+      role?: CaregiverRole;
+      roleLabel?: string;
+      displayName?: string;
+      name?: string;
+      birthDate?: string;
+      birthTimeKnown?: boolean;
+      birthTime?: string;
+    }
+  | null;
+
+// P2.2V.4 FIX (Section 7): DayMaster Element 하나만으로 만들어지는 REFLECTIVE_EDITORIAL 문구.
+// 심리적 사실처럼 단정하지 않도록 "~한 방향의 힌트로 참고해볼 수 있어요" 수준으로 고정한다.
 const ELEMENT_HINT_CHILD: Record<Element, string> = {
-  wood: "호기심을 가지고 새로운 시도를 향해 뻗어나가려는 기운의 힌트가 있어요.",
-  fire: "자신의 감정과 에너지를 솔직하고 환하게 표현하려는 기운의 힌트가 있어요.",
-  earth: "상황을 든든하게 품고 안정감을 유지하려는 기운의 힌트가 있어요.",
-  metal: "매듭을 분명히 짓고 자기 기준을 야무지게 챙기려는 기운의 힌트가 있어요.",
-  water: "상황을 조용히 관찰하고 유연하게 스며들려는 기운의 힌트가 있어요.",
+  wood: "호기심을 가지고 새로운 시도를 향해 뻗어나가는 방향의 힌트로 참고해볼 수 있어요.",
+  fire: "자신의 감정과 에너지를 솔직하게 드러내는 방향의 힌트로 참고해볼 수 있어요.",
+  earth: "상황을 든든하게 품고 자기 자리를 지키는 방향의 힌트로 참고해볼 수 있어요.",
+  metal: "매듭을 분명히 짓고 자기 기준을 챙기는 방향의 힌트로 참고해볼 수 있어요.",
+  water: "상황을 조용히 관찰하고 천천히 스며드는 방향의 힌트로 참고해볼 수 있어요.",
 };
 
 const ELEMENT_HINT_MOM: Record<Element, string> = {
-  wood: "상황을 주도적으로 이끌고 바른 방향으로 성장시키려는 기운의 힌트가 보여요.",
-  fire: "열정적으로 마음을 표현하고 빠르게 소통하며 챙겨주려는 기운의 힌트가 보여요.",
-  earth: "묵묵히 상황을 포용하고 가정의 중심을 지키려는 기운의 힌트가 보여요.",
-  metal: "규칙과 일정을 명확하게 정리하고 올바른 방향을 잡으려는 기운의 힌트가 보여요.",
-  water: "상황을 유연하게 살피고 아이 마음을 깊이 헤아리려는 기운의 힌트가 보여요.",
+  wood: "상황을 주도적으로 이끌어가는 방향의 힌트로 참고해볼 수 있어요.",
+  fire: "마음을 열정적으로 표현하고 빠르게 소통하는 방향의 힌트로 참고해볼 수 있어요.",
+  earth: "묵묵히 상황을 포용하고 중심을 지키는 방향의 힌트로 참고해볼 수 있어요.",
+  metal: "규칙과 일정을 명확하게 정리하는 방향의 힌트로 참고해볼 수 있어요.",
+  water: "상황을 유연하게 살피고 천천히 헤아리는 방향의 힌트로 참고해볼 수 있어요.",
 };
 
 const ELEMENT_KEYWORD: Record<Element, string> = {
@@ -57,19 +84,23 @@ export function generateSignatureReport(
   momEvidences: MomEvidence[],
   conflictInput: CurrentConflictInput,
   fortuneFacts?: FortuneFacts | null,
-  momProfile?: MomProfile | { name?: string; birthDate?: string; birthTimeKnown?: boolean; birthTime?: string } | null
+  caregiverProfile?: CaregiverInput
 ): SignatureReport {
   const ageInfo = computeAge(profile.birthDate);
   const ageDisplay = ageInfo?.ageDisplay || "만 3세";
   const childName = profile.name || "우리 아이";
-  const momName = momProfile?.name || "엄마";
+  // P2.2V.6: 관계명이 기준. 애칭을 입력했으면 서술 문장에서 애칭을 쓴다.
+  const caregiverRoleLabel = resolveRoleLabel(caregiverProfile);
+  const caregiverRole: CaregiverRole = caregiverProfile?.role ?? "guardian";
+  const momName = resolveDisplayName(caregiverProfile);
 
   const match = matchInteractionRule(
     childEvidences,
     momEvidences,
     conflictInput.concernId
   );
-  const rule = match.rule;
+  // 규칙 문장의 {{CG}} 토큰을 실제 관계명으로 치환한다(단일 렌더러).
+  const rule = applyCaregiverLabel(match.rule, caregiverRoleLabel);
   const refs = match.evidenceRefs;
 
   const concernLabels: Record<string, string> = {
@@ -82,7 +113,7 @@ export function generateSignatureReport(
     shyness: "낯가림/수줍음",
     friends: "친구 관계/사회성",
     sibling: "형제/자매 갈등",
-    only_with_mom: "엄마 껌딱지",
+    only_with_mom: "나에게만 심함",
     focus_play: "놀이 몰입/산만",
     learning: "학습/집중",
     etc: "일상의 작은 마찰",
@@ -103,11 +134,11 @@ export function generateSignatureReport(
   }
 
   let momFortune: FortuneFacts | null = null;
-  if (momProfile?.birthDate) {
+  if (caregiverProfile?.birthDate) {
     momFortune = computeFortuneFacts(
-      momProfile.birthDate,
-      momProfile.birthTimeKnown ?? false,
-      momProfile.birthTime
+      caregiverProfile.birthDate,
+      caregiverProfile.birthTimeKnown ?? false,
+      caregiverProfile.birthTime
     );
   }
 
@@ -231,7 +262,7 @@ export function generateSignatureReport(
   if (childFortune && momFortune) {
     const cEl = childFortune.dayMasterElement;
     const mEl = momFortune.dayMasterElement;
-    fortuneRelationshipHint = `아이: ${ELEMENT_KEYWORD[cEl]} 성향 / 엄마: ${ELEMENT_KEYWORD[mEl]} 성향 · 서로 다른 속도와 표현 방식을 참고해볼 수 있어요.`;
+    fortuneRelationshipHint = `아이: ${ELEMENT_KEYWORD[cEl]} 성향 / ${caregiverRoleLabel}: ${ELEMENT_KEYWORD[mEl]} 성향 · 서로 다른 속도와 표현 방식을 참고해볼 수 있어요.`;
   }
 
   const twoPersonSummary = {
@@ -248,27 +279,29 @@ export function generateSignatureReport(
   let sceneKeywords: string[] = [];
 
   const childReact = conflictInput.childFirstReaction || `${childName}가 하던 방식을 이어가려 함`;
-  const momReact = conflictInput.momFirstReaction || "엄마가 상황을 정리하려 안내함";
+  const momReact =
+    conflictInput.momFirstReaction ||
+    `${subj(caregiverRoleLabel)} 상황을 정리하려 안내함`;
   const escalation = conflictInput.subsequentEscalation || "서로의 대화가 길어짐";
   const typicalPhrase = conflictInput.momTypicalPhrase;
 
   if (conflictInput.concernId === "meal" || rule.ruleId.startsWith("rule_friction_meal_")) {
-    sceneNarrative = `식사 시간이나 식탁 앞에서 음식을 마주하는 순간. ${childName}는 ${childReact}. 엄마는 아이의 건강과 식사 지도를 위해 ${momReact}${typicalPhrase ? ` “${typicalPhrase}”` : ""}. 그 뒤 ${escalation}.`;
+    sceneNarrative = `식사 시간이나 식탁 앞에서 음식을 마주하는 순간. ${childName}는 ${childReact}. ${topic(caregiverRoleLabel)} 아이의 건강과 식사 지도를 위해 ${momReact}${typicalPhrase ? ` “${typicalPhrase}”` : ""}. 그 뒤 ${escalation}.`;
     sceneKeywords = ["식사 시간", "식습관/편식", "식탁에서의 실랑이"];
   } else if (rule.ruleId === "rule_friction_completion_vs_time") {
-    sceneNarrative = `외출 준비나 상황을 전환해야 하는 순간. ${childName}는 ${childReact}. 엄마는 정해진 일정을 위해 ${momReact}${typicalPhrase ? ` “${typicalPhrase}”` : ""}. 그 뒤 ${escalation}.`;
+    sceneNarrative = `외출 준비나 상황을 전환해야 하는 순간. ${childName}는 ${childReact}. ${topic(caregiverRoleLabel)} 정해진 일정을 위해 ${momReact}${typicalPhrase ? ` “${typicalPhrase}”` : ""}. 그 뒤 ${escalation}.`;
     sceneKeywords = ["외출 준비", "놀이 마침표", "속도 차이"];
   } else if (rule.ruleId === "rule_friction_observation_vs_stress") {
-    sceneNarrative = `새로운 장소나 낯선 환경을 마주하는 순간. ${childName}는 ${childReact}. 엄마는 ${momReact}${typicalPhrase ? ` “${typicalPhrase}”` : ""}. 그 뒤 ${escalation}.`;
+    sceneNarrative = `새로운 장소나 낯선 환경을 마주하는 순간. ${childName}는 ${childReact}. ${topic(caregiverRoleLabel)} ${momReact}${typicalPhrase ? ` “${typicalPhrase}”` : ""}. 그 뒤 ${escalation}.`;
     sceneKeywords = ["새로운 환경", "주변 탐색", "참여 권유"];
   } else if (rule.ruleId === "rule_friction_emotion_vs_explanation") {
-    sceneNarrative = `뜻대로 되지 않아 감정이 일어나는 순간. ${childName}는 ${childReact}. 엄마는 상황을 풀기 위해 ${momReact}${typicalPhrase ? ` “${typicalPhrase}”` : ""}. 그 뒤 ${escalation}.`;
+    sceneNarrative = `뜻대로 되지 않아 감정이 일어나는 순간. ${childName}는 ${childReact}. ${topic(caregiverRoleLabel)} 상황을 풀기 위해 ${momReact}${typicalPhrase ? ` “${typicalPhrase}”` : ""}. 그 뒤 ${escalation}.`;
     sceneKeywords = ["감정 표현", "이유 설명", "대화의 타이밍"];
   } else if (rule.ruleId === "rule_friction_autonomy_vs_firmness") {
-    sceneNarrative = `일상의 규칙이나 할 일을 챙겨야 하는 순간. ${childName}는 ${childReact}. 엄마는 일과를 위해 ${momReact}${typicalPhrase ? ` “${typicalPhrase}”` : ""}. 그 뒤 ${escalation}.`;
+    sceneNarrative = `일상의 규칙이나 할 일을 챙겨야 하는 순간. ${childName}는 ${childReact}. ${topic(caregiverRoleLabel)} 일과를 위해 ${momReact}${typicalPhrase ? ` “${typicalPhrase}”` : ""}. 그 뒤 ${escalation}.`;
     sceneKeywords = ["일상 규칙", "자기주장", "실랑이"];
   } else if (rule.ruleId === "rule_collab_observation_and_patience") {
-    sceneNarrative = `새로운 환경이나 활동을 시작하는 순간. ${childName}는 ${childReact}. 엄마는 ${momReact}${typicalPhrase ? ` “${typicalPhrase}”` : ""}. 그 뒤 ${escalation}.`;
+    sceneNarrative = `새로운 환경이나 활동을 시작하는 순간. ${childName}는 ${childReact}. ${topic(caregiverRoleLabel)} ${momReact}${typicalPhrase ? ` “${typicalPhrase}”` : ""}. 그 뒤 ${escalation}.`;
     sceneKeywords = ["신중한 탐색", "묵묵한 기다림", "편안한 대화"];
   } else {
     sceneNarrative = `${childName}와(과) 일상을 보내다 보면 특히 ${concernLabel} 상황에서 ${childReact}, ${momReact}. ${escalation}.`;
@@ -377,8 +410,8 @@ export function generateSignatureReport(
       {
         stepNumber: 2 as const,
         stage: "mom_reaction" as const,
-        actor: "엄마" as const,
-        description: "엄마가 재촉하지 않고 곁에서 손을 잡고 조용히 기다려줍니다.",
+        actor: caregiverRoleLabel,
+        description: `${subj(caregiverRoleLabel)} 재촉하지 않고 곁에서 손을 잡고 조용히 기다려줍니다.`,
       },
       {
         stepNumber: 3 as const,
@@ -410,8 +443,8 @@ export function generateSignatureReport(
       {
         stepNumber: 2 as const,
         stage: "mom_reaction" as const,
-        actor: "엄마" as const,
-        description: `엄마가 ${momReact}${typicalPhrase ? ` “${typicalPhrase}”` : ""}.`,
+        actor: caregiverRoleLabel,
+        description: `${subj(caregiverRoleLabel)} ${momReact}${typicalPhrase ? ` “${typicalPhrase}”` : ""}.`,
       },
       {
         stepNumber: 3 as const,
@@ -443,8 +476,8 @@ export function generateSignatureReport(
       {
         stepNumber: 2 as const,
         stage: "mom_reaction" as const,
-        actor: "엄마" as const,
-        description: "일정에 늦지 않으려 엄마가 '빨리 신발 신자, 늦었어!' 하고 재촉합니다.",
+        actor: caregiverRoleLabel,
+        description: `일정에 늦지 않으려 ${subj(caregiverRoleLabel)} '빨리 신발 신자, 늦었어!' 하고 재촉합니다.`,
       },
       {
         stepNumber: 3 as const,
@@ -456,7 +489,7 @@ export function generateSignatureReport(
         stepNumber: 4 as const,
         stage: "escalation" as const,
         actor: "둘 다" as const,
-        description: "엄마의 말이 반복되고 아이도 버티며 실랑이가 길어집니다.",
+        description: `${caregiverRoleLabel}의 말이 반복되고 아이도 버티며 실랑이가 길어집니다.`,
       },
       {
         stepNumber: 5 as const,
@@ -471,25 +504,25 @@ export function generateSignatureReport(
         stepNumber: 1 as const,
         stage: "trigger" as const,
         actor: "아이" as const,
-        description: `새로운 장소를 마주해 ${childName}가 엄마 곁에 서서 주변을 지켜봅니다.`,
+        description: `새로운 장소를 마주해 ${childName}가 ${caregiverRoleLabel} 곁에 서서 주변을 지켜봅니다.`,
       },
       {
         stepNumber: 2 as const,
         stage: "mom_reaction" as const,
-        actor: "엄마" as const,
-        description: "아이가 머뭇거리자 엄마가 '어서 가서 인사해보자' 하고 참여를 권합니다.",
+        actor: caregiverRoleLabel,
+        description: `아이가 머뭇거리자 ${subj(caregiverRoleLabel)} '어서 가서 인사해보자' 하고 참여를 권합니다.`,
       },
       {
         stepNumber: 3 as const,
         stage: "child_reaction" as const,
         actor: "아이" as const,
-        description: "아이가 엄마 곁에 머물며 살펴보는 시간이 더 길어집니다.",
+        description: `아이가 ${caregiverRoleLabel} 곁에 머물며 살펴보는 시간이 더 길어집니다.`,
       },
       {
         stepNumber: 4 as const,
         stage: "escalation" as const,
         actor: "둘 다" as const,
-        description: "엄마의 권유하는 말이 반복되며 어색한 긴장감이 생깁니다.",
+        description: `${caregiverRoleLabel}의 권유하는 말이 반복되며 어색한 긴장감이 생깁니다.`,
       },
       {
         stepNumber: 5 as const,
@@ -509,8 +542,8 @@ export function generateSignatureReport(
       {
         stepNumber: 2 as const,
         stage: "mom_reaction" as const,
-        actor: "엄마" as const,
-        description: "상황을 이해시키려 엄마가 차근차근 논리적인 이유를 설명합니다.",
+        actor: caregiverRoleLabel,
+        description: `상황을 이해시키려 ${subj(caregiverRoleLabel)} 차근차근 논리적인 이유를 설명합니다.`,
       },
       {
         stepNumber: 3 as const,
@@ -522,7 +555,7 @@ export function generateSignatureReport(
         stepNumber: 4 as const,
         stage: "escalation" as const,
         actor: "둘 다" as const,
-        description: "엄마의 설명이 길어지고 아이의 울음도 이어지며 대화가 어긋납니다.",
+        description: `${caregiverRoleLabel}의 설명이 길어지고 아이의 울음도 이어지며 대화가 어긋납니다.`,
       },
       {
         stepNumber: 5 as const,
@@ -542,7 +575,7 @@ export function generateSignatureReport(
       {
         stepNumber: 2 as const,
         stage: "mom_reaction" as const,
-        actor: "엄마" as const,
+        actor: caregiverRoleLabel,
         description: "정해진 일과를 위해 '지금 해야 할 시간이야, 어서 해' 하고 단호하게 안내합니다.",
       },
       {
@@ -555,7 +588,7 @@ export function generateSignatureReport(
         stepNumber: 4 as const,
         stage: "escalation" as const,
         actor: "둘 다" as const,
-        description: "원칙을 지키려는 엄마와 고집을 꺾지 않는 아이의 실랑이가 길어집니다.",
+        description: `원칙을 지키려는 ${conj(caregiverRoleLabel)} 고집을 꺾지 않는 아이의 실랑이가 길어집니다.`,
       },
       {
         stepNumber: 5 as const,
@@ -575,8 +608,8 @@ export function generateSignatureReport(
       {
         stepNumber: 2 as const,
         stage: "mom_reaction" as const,
-        actor: "엄마" as const,
-        description: "엄마가 상황을 수습하거나 이끌기 위해 안내 또는 개입을 시도합니다.",
+        actor: caregiverRoleLabel,
+        description: `${subj(caregiverRoleLabel)} 상황을 수습하거나 이끌기 위해 안내 또는 개입을 시도합니다.`,
       },
       {
         stepNumber: 3 as const,
@@ -611,25 +644,25 @@ export function generateSignatureReport(
   ];
   allSentenceClaims.push(...ch4Claims);
 
-  // ── Chapter 05: 엄마가 이 순간 특히 지치는 이유 / 잘 맞는 지점 ──
-  let ch5Title = "엄마가 이 순간 특히 지치는 이유";
+  // ── Chapter 05: 내가(관계명) 이 순간 특히 지치는 이유 / 잘 맞는 지점 ──
+  let ch5Title = `${subj(caregiverRoleLabel)} 이 순간 특히 지치는 이유`;
   let exhaustionReason = "";
   let comfortMessage = "";
 
   if (isCollaborative) {
     ch5Title = "지금 우리 둘이 잘 맞는 지점";
-    exhaustionReason = `${childName}는 새로운 환경에서 먼저 살펴보는 시간이 필요한 모습이 있었고, 엄마는 그 순간 속도를 올리기보다 기다리는 반응을 보였어요. 두 방식이 현재 장면에서는 큰 마찰 없이 이어지고 있어요.`;
-    comfortMessage = "아이의 신중한 속도를 존중해주는 엄마의 차분한 기다림이 서로에게 편안한 소통의 바탕이 되고 있습니다.";
+    exhaustionReason = `${childName}는 새로운 환경에서 먼저 살펴보는 시간이 필요한 모습이 있었고, ${topic(caregiverRoleLabel)} 그 순간 속도를 올리기보다 기다리는 반응을 보였어요. 두 방식이 현재 장면에서는 큰 마찰 없이 이어지고 있어요.`;
+    comfortMessage = `아이의 신중한 속도를 존중해주는 ${caregiverRoleLabel}의 차분한 기다림이 서로에게 편안한 소통의 바탕이 되고 있습니다.`;
   } else if (conflictInput.concernId === "meal" || rule.ruleId.startsWith("rule_friction_meal_")) {
     exhaustionReason =
       "아이의 건강과 성장을 위해 정성껏 차린 음식을 거부당할 때, 매 식사 시간마다 감정 소모와 답답함이 커지기 쉬워요.";
     comfortMessage =
-      "엄마의 요리나 양육 태도가 잘못된 것이 아니라, 낯선 음식에 신중하게 다가서는 아이의 탐색 방식과 영양을 챙기려는 엄마의 마음이 부딪힌 순간이었을 뿐이에요.";
+      `${caregiverRoleLabel}의 요리나 돌봄 방식이 잘못된 것이 아니라, 낯선 음식에 신중하게 다가서는 아이의 탐색 방식과 영양을 챙기려는 ${caregiverRoleLabel}의 마음이 부딪힌 순간이었을 뿐이에요.`;
   } else if (rule.ruleId === "rule_friction_completion_vs_time") {
     exhaustionReason =
-      "정해진 시간 안에 일정을 챙겨야 하는 상황에서 같은 말을 여러 번 반복해야 할 때 엄마의 에너지 소모가 커질 수 있어요.";
+      `정해진 시간 안에 일정을 챙겨야 하는 상황에서 같은 말을 여러 번 반복해야 할 때 ${caregiverRoleLabel}의 에너지 소모가 커질 수 있어요.`;
     comfortMessage =
-      "엄마가 조급해서가 아니라, 일정을 챙겨야 하는 현실적인 필요와 마침표가 필요한 아이의 속도가 달랐을 뿐이에요.";
+      `${subj(caregiverRoleLabel)} 조급해서가 아니라, 일정을 챙겨야 하는 현실적인 필요와 마침표가 필요한 아이의 속도가 달랐을 뿐이에요.`;
   } else if (rule.ruleId === "rule_friction_observation_vs_stress") {
     exhaustionReason =
       "새로운 상황에서 아이가 겉돌지 않도록 챙겨주고 싶은 마음에 권유가 이어지면서 서로 어색한 긴장감이 생길 수 있어요.";
@@ -717,13 +750,13 @@ export function generateSignatureReport(
     } else if (((el === "wood" || el === "fire") && isSelfDirObs) || (el === "fire" && isPraiseObs) || (el === "metal" && isStructuredObs) || ((el === "water" || el === "earth") && isCautiousObs)) {
       let hintText = "";
       if ((el === "wood" || el === "fire") && isSelfDirObs) {
-        hintText = `${childName}의 출생정보에서는 자기 방식으로 움직이려는 쪽의 힌트가 있었어요. 실제 결과는 엄마가 알려준 행동을 중심으로 정리했어요.`;
+        hintText = `${childName}의 출생정보에서는 자기 방식으로 움직이려는 쪽의 힌트가 있었어요. 실제 결과는 직접 알려주신 행동을 중심으로 정리했어요.`;
       } else if (el === "fire" && isPraiseObs) {
-        hintText = `${childName}의 출생정보에서는 에너지를 활발하게 드러내려는 쪽의 힌트가 있었어요. 실제 결과는 엄마가 알려준 행동을 중심으로 정리했어요.`;
+        hintText = `${childName}의 출생정보에서는 에너지를 활발하게 드러내려는 쪽의 힌트가 있었어요. 실제 결과는 직접 알려주신 행동을 중심으로 정리했어요.`;
       } else if (el === "metal" && isStructuredObs) {
-        hintText = `${childName}의 출생정보에서는 자기 기준이나 마침표를 챙기려는 쪽의 힌트가 있었어요. 실제 결과는 엄마가 알려준 행동을 중심으로 정리했어요.`;
+        hintText = `${childName}의 출생정보에서는 자기 기준이나 마침표를 챙기려는 쪽의 힌트가 있었어요. 실제 결과는 직접 알려주신 행동을 중심으로 정리했어요.`;
       } else {
-        hintText = `${childName}의 출생정보에서는 상황을 천천히 살피려는 쪽의 힌트가 있었어요. 실제 결과는 엄마가 알려준 행동을 중심으로 정리했어요.`;
+        hintText = `${childName}의 출생정보에서는 상황을 천천히 살피려는 쪽의 힌트가 있었어요. 실제 결과는 직접 알려주신 행동을 중심으로 정리했어요.`;
       }
       fortuneReflection = {
         status: "ALIGNED",
@@ -739,6 +772,8 @@ export function generateSignatureReport(
       childAgeDisplay: ageDisplay,
       concernLabel,
       momName,
+      caregiverRoleLabel,
+      caregiverRole,
     },
     twoPersonSummary,
     chapter01_recurringScene: {
@@ -751,7 +786,7 @@ export function generateSignatureReport(
     chapter02_perspectiveGap: {
       momPerspective: {
         intention: momIntention,
-        possibleFeeling: "아이를 바르게 챙겨주고 싶은 책임감",
+        possibleFeeling: "이 순간을 잘 넘기고 싶은 마음",
       },
       childPerspective: {
         possibleInterpretation: childInterpretation,

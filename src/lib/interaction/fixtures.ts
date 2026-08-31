@@ -1,13 +1,15 @@
 // p2.fixtures 모듈: P2.2H 인터랙션 모델 검증 및 유료 리포트 Mock 생성을 위한 5개 가족 Fixture 정의
 //
-// Family A: 32개월 남아 / 전환 시 완결 욕구 vs 엄마의 시간 압박 (Friction)
-// Family B: 48개월 여아 / 신중한 아이(긴 탐색) vs 참여를 권하는 엄마 (Friction)
-// Family C: 60개월 남아 / 감정 표현 큰 아이 vs 설명이 먼저 나오는 엄마 (Friction)
-// Family D: 40개월 여아 / 자기 방식 강한 아이(주도성) vs 원칙/규칙 안내 엄마 (Friction)
-// Family E: 28개월 남아 / 출생시간 모름(Unknown) + 신중한 탐색과 묵묵한 기다림 (Low-Friction 협력형)
+// P2.2V.6: 관계(caregiver)를 fixture 마다 다르게 두어 호칭/조사 깨짐을 함께 검수한다.
+// Family A: 32개월 남아 × 엄마 / 전환 시 완결 욕구 vs 시간 압박 (Friction)
+// Family B: 48개월 여아 × 아빠 / 신중한 아이(긴 탐색) vs 참여 권유 (Friction)
+// Family C: 60개월 남아 × 할머니 / 감정 표현 큰 아이 vs 설명 우선 (Friction)
+// Family D: 40개월 여아 × 이모 / 자기 방식 강한 아이(주도성) vs 규칙 안내 (Friction)
+// Family E: 28개월 남아 × 삼촌 / 출생시간 모름 + 신중한 탐색과 묵묵한 기다림 (Low-Friction 협력형)
 
 import type {
   BehaviorEvidence,
+  CaregiverProfile,
   ChildProfile,
   CurrentConflictInput,
   FortuneFacts,
@@ -19,6 +21,8 @@ export interface FamilyFixture {
   title: string;
   description: string;
   childProfile: ChildProfile;
+  /** P2.2V.6: fixture 마다 다른 관계(엄마/아빠/할머니/이모)로 문구 깨짐을 검수한다. */
+  caregiverProfile: CaregiverProfile;
   childEvidences: BehaviorEvidence[];
   momAnswers: MomAnswers;
   conflictInput: CurrentConflictInput;
@@ -32,7 +36,14 @@ export const FAMILY_FIXTURES: FamilyFixture[] = [
   {
     fixtureId: "A",
     title: "민준 (32개월 남아) - 전환 × 시간압박 충돌",
-    description: "32개월 남아 / 전환 시 완결 욕구 vs 엄마의 시간 압박 (Friction)",
+    description: "32개월 남아 / 전환 시 완결 욕구 vs 시간 압박 (Friction)",
+    caregiverProfile: {
+      role: "mother",
+      roleLabel: "엄마",
+      displayName: "민준맘",
+      birthDate: "1991-05-14",
+      birthTimeKnown: false,
+    },
     childProfile: {
       name: "민준",
       birthDate: "2024-01-15",
@@ -88,11 +99,18 @@ export const FAMILY_FIXTURES: FamilyFixture[] = [
     expectedInteractionType: "friction",
   },
 
-  // Family B: 신중한 아이 × 참여를 권하는 엄마
+  // Family B: 신중한 아이 × 참여를 권하는 아빠
   {
     fixtureId: "B",
-    title: "서연 (48개월 여아) - 신중한 아이 × 참여를 권하는 엄마",
-    description: "48개월 여아 / 낯선 환경 신중한 탐색 vs 엄마의 조급함과 참여 권유 (Friction)",
+    title: "서연 (48개월 여아) - 신중한 아이 × 참여를 권하는 아빠",
+    description: "48개월 여아 / 낯선 환경 신중한 탐색 vs 조급함과 참여 권유 (Friction)",
+    caregiverProfile: {
+      role: "father",
+      roleLabel: "아빠",
+      birthDate: "1989-11-02",
+      birthTimeKnown: true,
+      birthTime: "07:00",
+    },
     childProfile: {
       name: "서연",
       birthDate: "2022-09-10",
@@ -113,7 +131,7 @@ export const FAMILY_FIXTURES: FamilyFixture[] = [
         domain: "social_approach",
         axis: "social_warmup_style",
         observedPattern: "hides_behind_parent",
-        observedLabel: "낯선 사람 앞에서는 엄마 곁에 머물며 살피는 모습",
+        observedLabel: "낯선 사람 앞에서는 곁에 머물며 살피는 모습",
         confidence: "medium",
         sourceQuestionIds: ["q5_social_approach"],
       },
@@ -128,9 +146,9 @@ export const FAMILY_FIXTURES: FamilyFixture[] = [
     conflictInput: {
       concernId: "shyness",
       scenarioId: "sc_shyness_hesitation",
-      childFirstReaction: "새로운 놀이터에서 바로 들어가지 않고 엄마 곁에 서서 주변을 지켜봄",
+      childFirstReaction: "새로운 놀이터에서 바로 들어가지 않고 곁에 서서 주변을 지켜봄",
       momFirstReaction: "아이가 머뭇거리자 '친구들한테 가서 인사해보자' 하고 참여를 권함",
-      subsequentEscalation: "아이가 엄마 곁에 계속 서 있고 권유하는 말이 반복됨",
+      subsequentEscalation: "아이가 계속 곁에 서 있고 권유하는 말이 반복됨",
       recentFrequency: "several_times_a_week",
       momTypicalPhrase: "친구들한테 가서 인사해보자, 얼른 가봐.",
     },
@@ -148,11 +166,17 @@ export const FAMILY_FIXTURES: FamilyFixture[] = [
     expectedInteractionType: "friction",
   },
 
-  // Family C: 감정 표현 큰 아이 × 설명이 먼저 나오는 엄마
+  // Family C: 감정 표현 큰 아이 × 설명이 먼저 나오는 할머니
   {
     fixtureId: "C",
-    title: "도윤 (60개월 남아) - 감정 표현 큰 아이 × 설명이 먼저 나오는 엄마",
-    description: "60개월 남아 / 감정 표현이 큰 아이 vs 논리적 설명이 먼저 나오는 엄마 (Friction)",
+    title: "도윤 (60개월 남아) - 감정 표현 큰 아이 × 설명이 먼저 나오는 할머니",
+    description: "60개월 남아 / 감정 표현이 큰 아이 vs 논리적 설명이 먼저 나오는 보호자 (Friction)",
+    caregiverProfile: {
+      role: "paternal_grandmother",
+      roleLabel: "할머니",
+      birthDate: "1962-03-08",
+      birthTimeKnown: false,
+    },
     childProfile: {
       name: "도윤",
       birthDate: "2021-08-05",
@@ -211,8 +235,14 @@ export const FAMILY_FIXTURES: FamilyFixture[] = [
   // Family D: 자기 방식 강한 아이 × 원칙/규칙 안내 엄마
   {
     fixtureId: "D",
-    title: "하은 (40개월 여아) - 자기 방식 강한 아이 × 단호한 훈육의 엄마",
-    description: "40개월 여아 / 자기 방식 강한 아이(주도성) vs 원칙을 강조하는 엄마 (Friction)",
+    title: "하은 (40개월 여아) - 자기 방식 강한 아이 × 단호한 규칙 안내의 이모",
+    description: "40개월 여아 / 자기 방식 강한 아이(주도성) vs 원칙을 강조하는 보호자 (Friction)",
+    caregiverProfile: {
+      role: "aunt",
+      roleLabel: "이모",
+      birthDate: "1994-07-21",
+      birthTimeKnown: false,
+    },
     childProfile: {
       name: "하은",
       birthDate: "2023-04-12",
@@ -271,8 +301,14 @@ export const FAMILY_FIXTURES: FamilyFixture[] = [
   // Family E: LOW-FRICTION 가족
   {
     fixtureId: "E",
-    title: "지호 (28개월 남아) - 신중한 아이 × 묵묵히 기다려주는 엄마 (LOW-FRICTION)",
-    description: "28개월 남아 / 출생시간 모름 + 신중한 탐색과 엄마의 묵묵한 기다림 (Low-Friction 협력형)",
+    title: "지호 (28개월 남아) - 신중한 아이 × 묵묵히 기다려주는 삼촌 (LOW-FRICTION)",
+    description: "28개월 남아 / 출생시간 모름 + 신중한 탐색과 묵묵한 기다림 (Low-Friction 협력형)",
+    caregiverProfile: {
+      role: "uncle",
+      roleLabel: "삼촌",
+      birthDate: "1993-09-30",
+      birthTimeKnown: false,
+    },
     childProfile: {
       name: "지호",
       birthDate: "2024-04-20",
@@ -292,7 +328,7 @@ export const FAMILY_FIXTURES: FamilyFixture[] = [
         domain: "emotional_expression",
         axis: "emotional_expression_intensity",
         observedPattern: "seeks_reassurance",
-        observedLabel: "마음이 놓일 때까지 엄마 곁에서 탐색하는 모습",
+        observedLabel: "마음이 놓일 때까지 곁에서 탐색하는 모습",
         confidence: "medium",
         sourceQuestionIds: ["q9_emotional_expression"],
       },
@@ -307,7 +343,7 @@ export const FAMILY_FIXTURES: FamilyFixture[] = [
     conflictInput: {
       concernId: "daycare",
       scenarioId: "sc_daycare_separation",
-      childFirstReaction: "어린이집 입구에서 엄마 곁에 머물며 주변을 조용히 둘러봄",
+      childFirstReaction: "어린이집 입구에서 곁에 머물며 주변을 조용히 둘러봄",
       momFirstReaction: "재촉하지 않고 곁에서 손을 잡은 채 함께 서서 기다려줌",
       subsequentEscalation: "아이가 스스로 상황을 둘러본 뒤 자연스럽게 한 걸음 걸어 들어감",
       recentFrequency: "occasional",

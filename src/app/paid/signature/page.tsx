@@ -25,11 +25,11 @@ import Link from "next/link";
 import { Sparkles, Users, ArrowLeft, RefreshCw, Compass, ShieldCheck } from "lucide-react";
 import type {
   BehaviorEvidence,
+  CaregiverProfile,
   ChildProfile,
   CurrentConflictInput,
   FortuneFacts,
   MomEvidence,
-  MomProfile,
 } from "@/lib/types";
 
 type ViewMode = "real" | "A" | "B" | "C" | "D" | "E";
@@ -37,7 +37,7 @@ type ViewMode = "real" | "A" | "B" | "C" | "D" | "E";
 function PaidSignatureReportInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { child, answers, concern, momProfile, momAnswers, conflictInput, foodAnswers, ready } = useKids();
+  const { child, answers, concern, caregiverProfile, momAnswers, conflictInput, foodAnswers, ready } = useKids();
 
   // URL family param check
   const familyParam = searchParams?.get("family")?.toUpperCase();
@@ -56,7 +56,14 @@ function PaidSignatureReportInner() {
 
   // If in real session mode, check if child and mom data exist
   const hasChildData = Boolean(child?.birthDate);
-  const hasMomData = Boolean(momProfile?.birthDate && Object.keys(momAnswers || {}).length > 0 && conflictInput);
+  // P2.2V.6 데이터 유효성: 관계 정보(caregiverRole)가 없으면 리포트를 만들지 않는다.
+  const hasMomData = Boolean(
+    caregiverProfile?.birthDate &&
+      caregiverProfile?.role &&
+      caregiverProfile?.roleLabel &&
+      Object.keys(momAnswers || {}).length > 0 &&
+      conflictInput
+  );
 
   useEffect(() => {
     if (ready && selectedMode === "real") {
@@ -74,7 +81,7 @@ function PaidSignatureReportInner() {
   let reportMomEv: MomEvidence[];
   let reportConflict: CurrentConflictInput;
   let reportFortune: FortuneFacts | null = null;
-  let reportMomProfile: MomProfile | null = null;
+  let reportCaregiverProfile: CaregiverProfile | null = null;
 
   if (selectedMode === "real") {
     // REAL SESSION MODE
@@ -106,7 +113,7 @@ function PaidSignatureReportInner() {
         reportProfile.birthTime
       );
     }
-    reportMomProfile = momProfile;
+    reportCaregiverProfile = caregiverProfile;
   } else {
     // QA FIXTURE MODE (A~E)
     const currentFixture: FamilyFixture =
@@ -116,7 +123,7 @@ function PaidSignatureReportInner() {
     reportMomEv = buildMomEvidence(currentFixture.momAnswers);
     reportConflict = currentFixture.conflictInput;
     reportFortune = currentFixture.fortuneFacts || null;
-    reportMomProfile = { name: "엄마", birthDate: "1990-05-15", birthTimeKnown: false };
+    reportCaregiverProfile = currentFixture.caregiverProfile;
   }
 
   const report = generateSignatureReport(
@@ -125,19 +132,20 @@ function PaidSignatureReportInner() {
     reportMomEv,
     reportConflict,
     reportFortune,
-    reportMomProfile
+    reportCaregiverProfile
   );
 
   const fixtureLabels: Record<"A" | "B" | "C" | "D" | "E", string> = {
-    A: "A. 전환×시간압박",
-    B: "B. 신중함×참여권유",
-    C: "C. 감정표현×설명우선",
-    D: "D. 자기주도×규칙안내",
+    A: "A. 엄마 케이스",
+    B: "B. 아빠 케이스",
+    C: "C. 할머니 케이스",
+    D: "D. 이모 케이스",
     E: "E. LOW-FRICTION",
   };
 
   const childDisplayName = report.meta.childName;
-  const momDisplayName = report.meta.momName || "엄마";
+  const momDisplayName = report.meta.momName || report.meta.caregiverRoleLabel;
+  const caregiverRoleLabel = report.meta.caregiverRoleLabel;
 
   return (
     <>
@@ -159,6 +167,9 @@ function PaidSignatureReportInner() {
                   <span className="rounded-md bg-coral/15 px-2 py-0.5 text-[11px] font-bold text-coral-deep">
                     내부 검수용 Mock Report
                   </span>
+                  <span className="rounded-md bg-sage-tint px-2 py-0.5 text-[11px] font-bold text-sage-deep">
+                    관계: {caregiverRoleLabel}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   {selectedMode === "real" && (
@@ -167,7 +178,7 @@ function PaidSignatureReportInner() {
                       className="inline-flex items-center gap-1 rounded-lg bg-milk px-2 py-0.5 text-[11px] font-bold text-sage-deep hover:bg-cream-dark"
                     >
                       <RefreshCw className="h-3 w-3" />
-                      엄마/갈등 입력 수정
+                      관계/갈등 입력 수정
                     </Link>
                   )}
                   <span className="text-[11px] font-medium text-cocoa-soft">
@@ -226,7 +237,7 @@ function PaidSignatureReportInner() {
               <div className="flex items-center justify-between border-b border-cream-dark pb-3 text-[12px] font-bold text-coral-deep">
                 <span className="flex items-center gap-1.5">
                   <Sparkles className="h-3.5 w-3.5" />
-                  엄마 × 아이 관계 사용설명서
+                  우리 아이 × 나 관계 사용설명서
                 </span>
                 <span className="rounded-full bg-coral-tint px-2 py-0.5 text-[11px] text-coral-deep">
                   Signature Report
@@ -247,9 +258,9 @@ function PaidSignatureReportInner() {
                 </h1>
 
                 <p className="mt-2 text-[14.5px] leading-relaxed text-cocoa-soft">
-                  {childDisplayName}의 타고난 속도와 {momDisplayName}의 반응 방식이 마주치는 순간을
+                  {childDisplayName}가 움직이는 방식과 {momDisplayName}가 반응하는 방식이
                   <br />
-                  직접 관찰하신 행동과 일상의 장면을 바탕으로 분석했습니다.
+                  어디에서 만나고 엇갈리는지 직접 알려주신 장면을 바탕으로 살펴봤어요.
                 </p>
 
                 <div className="mt-4 flex flex-wrap items-center gap-2 text-[12px] font-medium text-cocoa-soft">
@@ -257,7 +268,8 @@ function PaidSignatureReportInner() {
                     아이: {childDisplayName} ({report.meta.childAgeDisplay})
                   </span>
                   <span className="rounded-lg bg-cream px-2.5 py-1 font-bold text-cocoa">
-                    엄마: {momDisplayName}
+                    나: {momDisplayName}
+                    {momDisplayName !== caregiverRoleLabel && ` (${caregiverRoleLabel})`}
                   </span>
                   <span className="rounded-lg bg-sage-tint px-2.5 py-1 font-bold text-sage-deep">
                     고민: {report.meta.concernLabel}
@@ -273,6 +285,7 @@ function PaidSignatureReportInner() {
               <TwoPersonSummary
                 childName={childDisplayName}
                 momName={momDisplayName}
+                caregiverRoleLabel={caregiverRoleLabel}
                 childKeywords={report.twoPersonSummary.childKeywords}
                 childSummary={report.twoPersonSummary.childSummary}
                 momKeywords={report.twoPersonSummary.momKeywords}
@@ -326,6 +339,7 @@ function PaidSignatureReportInner() {
               momPerspective={report.chapter02_perspectiveGap.momPerspective}
               childPerspective={report.chapter02_perspectiveGap.childPerspective}
               childName={report.meta.childName}
+              caregiverRoleLabel={caregiverRoleLabel}
             />
           </section>
 
@@ -347,7 +361,7 @@ function PaidSignatureReportInner() {
               <div className="mt-5 space-y-3">
                 <div className="rounded-2xl bg-milk p-4">
                   <span className="text-[12px] font-bold text-sage-deep">
-                    [엄마가 알려준 실제 모습] {childDisplayName}의 관찰 특성
+                    [직접 알려주신 실제 모습] {childDisplayName}의 관찰 특성
                   </span>
                   <p className="mt-1 text-[14.5px] leading-relaxed text-cocoa">
                     {report.chapter03_interactionPattern.childBehaviorAspect}
@@ -355,7 +369,7 @@ function PaidSignatureReportInner() {
                 </div>
                 <div className="rounded-2xl bg-milk p-4">
                   <span className="text-[12px] font-bold text-coral-deep">
-                    [이번 체크에서 보인 엄마 반응] {momDisplayName}의 반응 패턴
+                    [이번 체크에서 보인 {caregiverRoleLabel} 반응] {momDisplayName}의 반응 패턴
                   </span>
                   <p className="mt-1 text-[14.5px] leading-relaxed text-cocoa">
                     {report.chapter03_interactionPattern.momReactionAspect}
@@ -383,12 +397,12 @@ function PaidSignatureReportInner() {
                 <div>
                   <div className="flex items-center gap-1.5 text-[12px] font-bold text-coral-deep">
                     <Compass className="h-4 w-4" />
-                    <span>출생정보 기반 보조 힌트 (사주 사실 레이어)</span>
+                    <span>출생정보 기반 보조 힌트 (참고용 REFLECTIVE 레이어)</span>
                   </div>
                   <h2 className="mt-1 text-[20px] font-bold leading-snug text-cocoa">
-                    태어난 기질로 같이 보는
+                    나와 아이의 출생정보로
                     <br />
-                    {momDisplayName} × {childDisplayName} 관계 힌트
+                    함께 보는 관계 힌트
                   </h2>
                   <p className="mt-1.5 text-[13.5px] leading-relaxed text-cocoa-soft">
                     사주 출생정보는 성격을 확정하지 않고 보조 힌트로만 참고하며, 실제 관찰된 행동을 가장 우선으로 분석합니다.
@@ -491,6 +505,7 @@ function PaidSignatureReportInner() {
                   targetStep={report.chapter04_conflictChain.whereToBreak.targetStep}
                   isCollaborative={report.chapter04_conflictChain.isCollaborative}
                   childName={report.meta.childName}
+                  caregiverRoleLabel={caregiverRoleLabel}
                 />
               </div>
 
@@ -512,10 +527,11 @@ function PaidSignatureReportInner() {
               <span className="text-[13px] font-bold text-cocoa-soft">
                 {report.chapter05_momExhaustionPoint.isLowFriction
                   ? "호흡의 연결"
-                  : "엄마의 마음 돌봄"}
+                  : "내 마음 돌봄"}
               </span>
             </div>
             <MomExhaustionCard
+              caregiverRoleLabel={caregiverRoleLabel}
               title={report.chapter05_momExhaustionPoint.title}
               isLowFriction={report.chapter05_momExhaustionPoint.isLowFriction}
               exhaustionReason={report.chapter05_momExhaustionPoint.exhaustionReason}
