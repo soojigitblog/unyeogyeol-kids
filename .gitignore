@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# test screenshots and temporary outputs
+*.png
+acceptance-screenshots/
+preview-p1.2-output.txt

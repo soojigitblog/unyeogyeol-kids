@@ -1,26 +1,126 @@
 @import "tailwindcss";
 
+/*
+  운의결 KIDS — Visual System v2
+  "따뜻하고 세련된 요즘 육아 브랜드"
+  Warm · Soft · Modern · Playful · Premium · Friendly · Emotional · Calm
+*/
+
+@theme {
+  /* ── Base ── */
+  --color-milk: #fffcf8;
+  --color-cream: #fff7ed;
+  --color-card: #fffefb;
+
+  /* ── Text ── */
+  --color-cocoa: #2e2926;
+  --color-cocoa-soft: #716a65;
+  --color-cocoa-faint: #a89f97;
+
+  /* ── Primary accent · Soft Coral ── */
+  --color-coral: #f18d72;
+  --color-coral-deep: #e8785c; /* pressed / text on light */
+  --color-coral-tint: #fdeee8;
+  --color-coral-soft: #f9d3c7;
+
+  /* ── Secondary · Soft Sage ── */
+  --color-sage: #a8b9a3;
+  --color-sage-deep: #7f9479;
+  --color-sage-tint: #eef2ec;
+  --color-sage-soft: #dbe4d6;
+
+  /* ── Support ── */
+  --color-butter: #f4d98b;
+  --color-butter-tint: #fcf4dc;
+  --color-peach: #f6c3b2;
+  --color-peach-tint: #fdeee7;
+  --color-sky: #c7dde0;
+  --color-sky-tint: #eaf4f5;
+
+  /* ── Lines ── */
+  --color-line: #f1e8da;
+  --color-line-soft: #f7f0e6;
+
+  /* ── Fonts ── */
+  --font-sans: "Pretendard Variable", -apple-system, BlinkMacSystemFont,
+    system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-serif: var(--font-gowun-batang), "Pretendard Variable", serif;
+
+  /* ── Radii ── */
+  --radius-card: 1.5rem; /* 24px */
+  --radius-cta: 1.25rem; /* 20px */
+
+  /* ── Shadows (very soft, warm) ── */
+  --shadow-soft: 0 1px 2px rgba(46, 41, 38, 0.03),
+    0 10px 24px -12px rgba(46, 41, 38, 0.12);
+  --shadow-lift: 0 2px 6px rgba(46, 41, 38, 0.05),
+    0 18px 40px -16px rgba(46, 41, 38, 0.18);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-milk);
+  color: var(--color-cocoa);
+  font-family: var(--font-sans);
+  font-weight: 450;
+  line-height: 1.65;
+  letter-spacing: -0.005em;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Accent serif helper — 제한적으로만 사용 */
+.font-accent {
+  font-family: var(--font-serif);
+  letter-spacing: -0.01em;
+}
+
+/* ── Motion: 작은 것만 ── */
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-rise {
+  animation: riseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-rise-2 {
+  animation: riseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+}
+.animate-rise-3 {
+  animation: riseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.16s both;
+}
+
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+.animate-floaty {
+  animation: floaty 5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise,
+  .animate-rise-2,
+  .animate-rise-3,
+  .animate-floaty {
+    animation: none;
+  }
 }
