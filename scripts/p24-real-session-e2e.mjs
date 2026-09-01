@@ -69,7 +69,10 @@ async function runCase(page, config) {
   await page.locator("#birth_year").selectOption(config.year);
   await page.locator("#birth_month").selectOption(config.month);
   await page.locator("#birth_day").selectOption(config.day);
-  await page.getByRole("button", { name: config.gender }).click();
+  // 성별 선택은 접근성 개선으로 label + sr-only radio 구조 (label 을 클릭해야 함)
+  await page
+    .locator(`label[for="child-gender-${config.gender === "여아" ? "girl" : "boy"}"]`)
+    .click();
   await page.getByRole("button", { name: "질문 보러 가기" }).click();
   await answerFreeQuestions(page);
   await page.getByRole("link", { name: /요즘 가장 힘든 장면 골라보기/ }).click();
@@ -86,7 +89,11 @@ async function runCase(page, config) {
   await shot(page, `${config.tag}-success.png`);
   await page.getByRole("link", { name: "내 관계 사용설명서 보기" }).click();
   await page.waitForURL("**/paid/signature**", { timeout: 20000 });
-  await page.waitForTimeout(800);
+  // 서버 Ownership 확인 후 리포트 본문이 렌더될 때까지 대기 (P2.4: 구매 전 본문 렌더 금지)
+  const enterStart = Date.now();
+  await page.waitForSelector("#section-cover", { timeout: 20000 });
+  const enterMs = Date.now() - enterStart;
+  console.log(`  [${config.tag}] 결제 직후 리포트 표시까지: ${enterMs}ms`);
   const mainText = await page.locator("main").innerText();
   const checks = { ...config.checks(mainText) };
 

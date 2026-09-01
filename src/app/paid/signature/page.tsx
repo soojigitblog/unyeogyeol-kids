@@ -16,38 +16,23 @@ import { RelationshipAnchorCard } from "@/components/report/RelationshipAnchorCa
 import { TwoPersonSummary } from "@/components/report/TwoPersonSummary";
 import { FAMILY_FIXTURES, FamilyFixture } from "@/lib/interaction/fixtures";
 import { buildMomEvidence } from "@/lib/questionnaire/momEvidence";
-import { buildBehaviorEvidence } from "@/lib/questionnaire/evidence";
-import { buildFoodEvidence } from "@/lib/questionnaire/foodQuestions";
-import { buildSleepEvidence } from "@/lib/questionnaire/sleepQuestions";
 import { generateSignatureReport } from "@/lib/interaction/signatureReportGenerator";
-import { computeFortuneFacts } from "@/lib/fortune/engine";
 import { subj } from "@/lib/caregiver";
 import { useKids } from "@/lib/store";
-import {
-  SIGNATURE_PRODUCT_ID,
-} from "@/lib/purchase/commerce";
 import { ReportOwnershipCover } from "@/components/commerce/ReportOwnershipCover";
 import { ShareSummaryCard } from "@/components/commerce/ShareSummaryCard";
 import { apiCheckReportAccess, apiFetchReport } from "@/lib/commerce/apiClient";
 import { loadCommerceDraft } from "@/lib/commerce/commerceDraft";
 import Link from "next/link";
 import { Sparkles, Users, ArrowLeft, RefreshCw, Compass, ShieldCheck } from "lucide-react";
-import type {
-  BehaviorEvidence,
-  CaregiverProfile,
-  ChildProfile,
-  CurrentConflictInput,
-  FortuneFacts,
-  MomEvidence,
-  SignatureReport,
-} from "@/lib/types";
+import type { SignatureReport } from "@/lib/types";
 
 type ViewMode = "real" | "A" | "B" | "C" | "D" | "E";
 
 function PaidSignatureReportInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { child, answers, concern, caregiverProfile, momAnswers, conflictInput, foodAnswers, sleepAnswers, ready } = useKids();
+  const { child, caregiverProfile, momAnswers, conflictInput, ready } = useKids();
 
   const reportIdParam =
     searchParams?.get("reportId") ?? loadCommerceDraft().reportId ?? null;
@@ -56,8 +41,9 @@ function PaidSignatureReportInner() {
   const [accessChecked, setAccessChecked] = useState(false);
   const [hasServerAccess, setHasServerAccess] = useState(false);
 
-  // URL family param check
-  const familyParam = searchParams?.get("family")?.toUpperCase();
+  // P2.4 §28: QA fixture 리포트는 개발 환경에서만 허용한다(운영 결제 경로와 격리).
+  const isReviewEnv = process.env.NODE_ENV !== "production";
+  const familyParam = isReviewEnv ? searchParams?.get("family")?.toUpperCase() : null;
   const initialMode: ViewMode =
     familyParam && ["A", "B", "C", "D", "E"].includes(familyParam)
       ? (familyParam as "A" | "B" | "C" | "D" | "E")
@@ -132,71 +118,25 @@ function PaidSignatureReportInner() {
     router,
   ]);
 
-  // Prepare Report Data
-  let reportProfile: ChildProfile;
-  let reportChildEv: BehaviorEvidence[];
-  let reportMomEv: MomEvidence[];
-  let reportConflict: CurrentConflictInput;
-  let reportFortune: FortuneFacts | null = null;
-  let reportCaregiverProfile: CaregiverProfile | null = null;
-
-  if (selectedMode === "real") {
-    // REAL SESSION MODE
-    reportProfile = child || {
-      name: "우리 아이",
-      birthDate: "2023-01-01",
-      birthTimeKnown: false,
-      gender: "boy",
-    };
-    reportChildEv = buildBehaviorEvidence(answers || {});
-    if (foodAnswers && Object.keys(foodAnswers).length > 0) {
-      const foodEv = buildFoodEvidence(foodAnswers);
-      reportChildEv = [...reportChildEv, ...foodEv];
-    }
-    if (sleepAnswers && Object.keys(sleepAnswers).length > 0) {
-      const sleepEv = buildSleepEvidence(sleepAnswers);
-      reportChildEv = [...reportChildEv, ...sleepEv];
-    }
-    reportMomEv = buildMomEvidence(momAnswers || {});
-    reportConflict = conflictInput || {
-      concernId: concern || "meal",
-      scenarioId: "sc_meal_new_food_reject",
-      childFirstReaction: "새로운 반찬을 보자마자 입을 닫고 밀어냄",
-      momFirstReaction: "영양 생각에 '한 입만 먹어보자' 하고 숟가락을 건넴",
-      subsequentEscalation: "아이가 고개를 돌리거나 숟가락을 밀치며 식탁 분위기가 굳어짐",
-      recentFrequency: "several_times_a_week",
-      momTypicalPhrase: "한 입만 먹어보자, 진짜 맛있어",
-    };
-    if (reportProfile.birthDate) {
-      reportFortune = computeFortuneFacts(
-        reportProfile.birthDate,
-        reportProfile.birthTimeKnown,
-        reportProfile.birthTime
-      );
-    }
-    reportCaregiverProfile = caregiverProfile;
-  } else {
-    // QA FIXTURE MODE (A~E)
+  // P2.4 §4 §26 §27: 실제 세션에서는 클라이언트가 유료 리포트를 만들지 않는다.
+  // 서버가 Ownership 을 확인하고 내려준 snapshot payload 만 렌더링한다.
+  // 아래 fixture 리포트는 개발 검수 전용 경로에서만 생성된다.
+  const fixtureReport = useMemo<SignatureReport | null>(() => {
+    if (!isReviewEnv || selectedMode === "real") return null;
     const currentFixture: FamilyFixture =
       FAMILY_FIXTURES.find((f) => f.fixtureId === selectedMode) || FAMILY_FIXTURES[0];
-    reportProfile = currentFixture.childProfile;
-    reportChildEv = currentFixture.childEvidences;
-    reportMomEv = buildMomEvidence(currentFixture.momAnswers);
-    reportConflict = currentFixture.conflictInput;
-    reportFortune = currentFixture.fortuneFacts || null;
-    reportCaregiverProfile = currentFixture.caregiverProfile;
-  }
+    return generateSignatureReport(
+      currentFixture.childProfile,
+      currentFixture.childEvidences,
+      buildMomEvidence(currentFixture.momAnswers),
+      currentFixture.conflictInput,
+      currentFixture.fortuneFacts || null,
+      currentFixture.caregiverProfile
+    );
+  }, [isReviewEnv, selectedMode]);
 
-  const generatedReport = generateSignatureReport(
-    reportProfile,
-    reportChildEv,
-    reportMomEv,
-    reportConflict,
-    reportFortune,
-    reportCaregiverProfile
-  );
-
-  const report = serverReport ?? generatedReport;
+  const report: SignatureReport | null =
+    selectedMode === "real" ? serverReport : fixtureReport;
 
   const fixtureLabels: Record<"A" | "B" | "C" | "D" | "E", string> = {
     A: "A. 엄마 케이스",
@@ -205,11 +145,6 @@ function PaidSignatureReportInner() {
     D: "D. 이모 케이스",
     E: "E. LOW-FRICTION",
   };
-
-  const childDisplayName = report.meta.childName;
-  const momDisplayName = report.meta.momName || report.meta.caregiverRoleLabel;
-  const caregiverRoleLabel = report.meta.caregiverRoleLabel;
-  const reportCreatedAt = new Date().toISOString();
 
   if (
     selectedMode === "real" &&
@@ -235,6 +170,47 @@ function PaidSignatureReportInner() {
       </>
     );
   }
+
+  // P2.4 §21: 서버가 내려준 리포트가 없으면 유료 본문을 렌더링하지 않는다.
+  if (!report) {
+    return (
+      <>
+        <SiteHeader />
+        <main className="flex-1 pb-20 pt-8">
+          <Container>
+            <Card tone="plain" className="p-6 text-center">
+              <p className="text-[15px] font-bold leading-relaxed text-cocoa">
+                이 결과를 볼 수 있는 구매 정보를 확인하지 못했어요.
+              </p>
+              <p className="mt-2 text-[13.5px] leading-relaxed text-cocoa-soft">
+                결제한 브라우저에서 다시 열거나, 아래에서 구매 내역을 확인해보세요.
+              </p>
+              <div className="mt-5 flex flex-col gap-2">
+                <Link
+                  href="/my-results"
+                  className="rounded-2xl bg-coral px-4 py-3 text-[14.5px] font-bold text-white"
+                >
+                  내 결과 목록 보기
+                </Link>
+                <Link
+                  href="/checkout/signature"
+                  className="rounded-2xl bg-milk px-4 py-3 text-[14px] font-bold text-cocoa"
+                >
+                  결제 화면으로 이동
+                </Link>
+              </div>
+            </Card>
+          </Container>
+        </main>
+        <SiteFooter />
+      </>
+    );
+  }
+
+  const childDisplayName = report.meta.childName;
+  const momDisplayName = report.meta.momName || report.meta.caregiverRoleLabel;
+  const caregiverRoleLabel = report.meta.caregiverRoleLabel;
+  const reportCreatedAt = new Date().toISOString();
 
   return (
     <>
