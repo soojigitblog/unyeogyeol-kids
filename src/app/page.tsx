@@ -86,7 +86,7 @@ export default function Home() {
               </p>
               <p className="mt-1.5 text-[14px] leading-relaxed text-cocoa">
                 <b className="font-semibold">태어난 기질</b> +{" "}
-                <b className="font-semibold">엄마가 실제로 본 아이의 행동 10가지</b>
+                <b className="font-semibold">내가 실제로 본 아이의 행동 10가지</b>
                 를 함께 보고, 우리 아이를 이해하는 힌트를 찾아드려요.
               </p>
             </div>
@@ -102,7 +102,7 @@ export default function Home() {
             <div className="mt-3">
               <BeforeAfterQuote
                 before="빨리 신발 신어!"
-                after="엄마가 신겨줄까, 네가 먼저 해볼래?"
+                after="내가 신겨줄까, 네가 먼저 해볼래?"
               />
             </div>
           </Container>
@@ -117,7 +117,7 @@ export default function Home() {
               아니었어요.
             </h2>
             <p className="mt-3 text-[15px] leading-relaxed text-cocoa-soft">
-              매일 밤 ‘내가 뭘 잘못했나’ 곱씹는 엄마들이
+              매일 밤 ‘내가 뭘 잘못했나’ 곱씹는 보호자들이
               <br />
               생각보다 정말 많아요.
             </p>
@@ -148,7 +148,7 @@ export default function Home() {
                 같은 상황도 아이에겐 다르게 느껴져요.
               </p>
               <p className="mt-3 text-[19px] font-bold leading-snug text-cocoa">
-                “빨리 준비시키려는” 엄마와
+                “빨리 준비시키려는” 보호자와
                 <br />
                 “하던 걸 자꾸 끊는다”고 느끼는 아이.
               </p>

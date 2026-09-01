@@ -16,10 +16,12 @@ import type {
   Axis,
   BehaviorEvidence,
   CurrentConflictInput,
+  EvidenceDomain,
   FortuneFacts,
   MomEvidence,
   QuestionDomain,
 } from "@/lib/types";
+import { childEvidenceRef, momEvidenceRef } from "@/lib/evidence/ref";
 
 export type ClaimLayer = "OBSERVED" | "INFERRED" | "REFLECTIVE";
 export type EvidenceStrength = "LOW" | "MEDIUM" | "STRONG";
@@ -29,7 +31,7 @@ export interface EvidenceClaim {
   claimId: string;
   claimText?: string; // claim 의 alias / 호환성
   layer: ClaimLayer;
-  domain?: QuestionDomain;
+  domain?: EvidenceDomain;
   axis?: Axis;
   claim: string;
   evidenceStrength: EvidenceStrength;
@@ -139,7 +141,7 @@ export function buildEvidenceClaims(
       axis: ev.axis,
       claim: text,
       evidenceStrength: "LOW", // 단일 관찰은 LOW
-      evidenceRefs: [`child:${ev.domain}_${ev.observedPattern}`],
+      evidenceRefs: [childEvidenceRef(ev)],
       contextTags: ["child_observation"],
       fortuneRefs: [],
     });
@@ -156,7 +158,7 @@ export function buildEvidenceClaims(
       axis: undefined,
       claim: text,
       evidenceStrength: "LOW",
-      evidenceRefs: [`mom:${ev.domain}_${ev.patternId}`],
+      evidenceRefs: [momEvidenceRef(ev)],
       contextTags: ["mom_reaction"],
       fortuneRefs: [],
     });
@@ -165,6 +167,7 @@ export function buildEvidenceClaims(
   // ── 2. Axis 단위 그룹화 및 Multi-Evidence / Contradiction 판정 ──
   const axisGroup: Record<string, BehaviorEvidence[]> = {};
   childEvidences.forEach((ev) => {
+    if (!ev.axis) return;
     if (!axisGroup[ev.axis]) axisGroup[ev.axis] = [];
     axisGroup[ev.axis].push(ev);
   });
@@ -172,8 +175,8 @@ export function buildEvidenceClaims(
   // ── 3. INFERRED Layer Claims (2개 이상 관찰 종합 or 갈등 연결) ────
   Object.entries(axisGroup).forEach(([axisKey, evList]) => {
     const axis = axisKey as Axis;
-    const patterns = Array.from(new Set(evList.map((e) => e.observedPattern)));
-    const refs = evList.map((e) => `child:${e.domain}_${e.observedPattern}`);
+    const patterns = Array.from(new Set(evList.map((e) => e.patternId)));
+    const refs = evList.map(childEvidenceRef);
 
     if (evList.length >= 2) {
       if (patterns.length === 1) {
@@ -294,7 +297,7 @@ export function buildEvidenceClaims(
     const el = fortuneFacts.dayMasterElement;
     
     // 관찰된 주요 성향 분석
-    const allPatterns = childEvidences.map((e) => e.observedPattern);
+    const allPatterns = childEvidences.map((e) => e.patternId);
     const isCautiousObs = allPatterns.some((p) =>
       p.includes("observe") || p.includes("reassurance") || p.includes("scan")
     );
@@ -359,18 +362,18 @@ export function buildEvidenceClaims(
   // ── 5. Recommendation Traceability (육아 조언 추적성) ────────
   // 규칙: Child Evidence 및 Mom Evidence 와 연결될 때만 생성 (모두 evidenceRefs 필수)
   const transEv = childEvidences.find((e) => e.axis === "transition_preference");
-  if (transEv && transEv.observedPattern.includes("completion")) {
+  if (transEv && transEv.patternId.includes("completion")) {
     recommendations.push({
       recommendationId: "rec_transition_completion",
       title: "활동 전환 전 마침표 지점 함께 정하기",
       detail: "갑작스럽게 중단하기보다 아이가 스스로 마무리할 수 있는 구체적인 지점을 미리 확인해주세요.",
       recommendationReason: "관찰된 행동에서 하던 놀이를 끝맺어야 전환이 편안한 패턴이 확인되었습니다.",
-      evidenceRefs: [`child:${transEv.domain}_${transEv.observedPattern}`],
+      evidenceRefs: [childEvidenceRef(transEv)],
     });
   }
 
   const dirEv = childEvidences.find(
-    (e) => e.axis === "strong_self_direction" && e.observedPattern.includes("independent")
+    (e) => e.axis === "strong_self_direction" && e.patternId.includes("independent")
   );
   if (dirEv) {
     recommendations.push({
@@ -378,12 +381,12 @@ export function buildEvidenceClaims(
       title: "규칙 안에서 작은 선택권 건네기",
       detail: "해야 할 큰 규칙은 명확히 하되, 순서나 도구를 직접 고를 수 있는 기회를 열어주세요.",
       recommendationReason: "자기 생각과 주도적 참여를 중요하게 여기는 관찰 패턴에 기반합니다.",
-      evidenceRefs: [`child:${dirEv.domain}_${dirEv.observedPattern}`],
+      evidenceRefs: [childEvidenceRef(dirEv)],
     });
   }
 
   const negEv = childEvidences.find(
-    (e) => e.axis === "strong_self_direction" && e.observedPattern.includes("negotiates")
+    (e) => e.axis === "strong_self_direction" && e.patternId.includes("negotiates")
   );
   if (negEv) {
     recommendations.push({
@@ -391,34 +394,34 @@ export function buildEvidenceClaims(
       title: "아이의 생각을 먼저 듣고 내 이유 나누기",
       detail: "아이의 의견을 먼저 들은 뒤 내 이유를 설명하면, 서로의 생각을 주고받는 방식으로 대화를 이어갈 수 있어요.",
       recommendationReason: "자기 의사를 분명히 표현하되 이유를 들으면 조율하는 관찰 패턴에 기반합니다.",
-      evidenceRefs: [`child:${negEv.domain}_${negEv.observedPattern}`],
+      evidenceRefs: [childEvidenceRef(negEv)],
     });
   }
 
   const obsEv = childEvidences.find((e) => e.axis === "needs_observation_time");
-  if (obsEv && obsEv.observedPattern.includes("observe")) {
+  if (obsEv && obsEv.patternId.includes("observe")) {
     recommendations.push({
       recommendationId: "rec_observation_time_allowance",
       title: "새로운 상황에서 충분한 탐색 시간 지켜봐주기",
       detail: "성급하게 참여를 유도하기보다 부모 곁에서 주변을 살필 수 있는 여유를 주는 편이 더 잘 맞을 수 있어요.",
       recommendationReason: "새로운 환경에서 상황을 먼저 파악하려는 관찰 패턴에 기반합니다.",
-      evidenceRefs: [`child:${obsEv.domain}_${obsEv.observedPattern}`],
+      evidenceRefs: [childEvidenceRef(obsEv)],
     });
   }
 
   const praiseEv = childEvidences.find((e) => e.axis === "motivation_source");
-  if (praiseEv && praiseEv.observedPattern.includes("praise")) {
+  if (praiseEv && praiseEv.patternId.includes("praise")) {
     recommendations.push({
       recommendationId: "rec_praise_effort_focus",
       title: "결과보다 과정과 시도를 구체적으로 알아채주기",
       detail: "칭찬을 들었을 때 참여가 높아지는 모습이 관찰되었으므로, 결과만 칭찬하기보다 어떤 시도를 했는지 구체적으로 짚어주는 방식을 시도해볼 수 있어요.",
       recommendationReason: "칭찬을 들었을 때 적극성이 높아지는 관찰 패턴에 기반합니다.",
-      evidenceRefs: [`child:${praiseEv.domain}_${praiseEv.observedPattern}`],
+      evidenceRefs: [childEvidenceRef(praiseEv)],
     });
   }
 
   const reasonEv = childEvidences.find(
-    (e) => e.axis === "rule_negotiation_style" && e.observedPattern.includes("reason")
+    (e) => e.axis === "rule_negotiation_style" && e.patternId.includes("reason")
   );
   if (reasonEv) {
     recommendations.push({
@@ -426,12 +429,12 @@ export function buildEvidenceClaims(
       title: "행동의 이유를 먼저 차근차근 설명해주기",
       detail: "규칙이나 이유를 알고 싶어 하는 모습이 관찰되어, 지시만 하기보다 이유를 함께 알려주는 방식이 더 잘 맞을 수 있어요.",
       recommendationReason: "규칙이나 이유에 대한 설명을 듣고 납득하려는 관찰 패턴에 기반합니다.",
-      evidenceRefs: [`child:${reasonEv.domain}_${reasonEv.observedPattern}`],
+      evidenceRefs: [childEvidenceRef(reasonEv)],
     });
   }
 
   const ruleEv = childEvidences.find(
-    (e) => e.axis === "rule_negotiation_style" && e.observedPattern.includes("flexible")
+    (e) => e.axis === "rule_negotiation_style" && e.patternId.includes("flexible")
   );
   if (ruleEv) {
     recommendations.push({
@@ -439,7 +442,7 @@ export function buildEvidenceClaims(
       title: "지금 보이는 유연한 반응을 그대로 지켜보기",
       detail: "현재 관찰에서는 상황 변화나 활동 전환에서 큰 어려움이 반복되지는 않았어요. 지금처럼 어떤 상황에서 편안하게 넘어가는지 조금 더 지켜봐도 좋아요.",
       recommendationReason: "상황과 분위기에 맞춰 유연하게 반응하는 관찰 패턴에 기반합니다.",
-      evidenceRefs: [`child:${ruleEv.domain}_${ruleEv.observedPattern}`],
+      evidenceRefs: [childEvidenceRef(ruleEv)],
     });
   }
 
@@ -452,7 +455,7 @@ export function buildEvidenceClaims(
       title: "현재의 편안한 소통 방식 이어가기",
       detail: "지금 답변에서는 이 행동을 바꿔야 할 만큼 반복되는 어려움은 뚜렷하게 확인되지 않았어요. 무언가를 고치려고 하기보다 어떤 상황에서 이런 모습이 자주 나타나는지 조금 더 지켜봐도 좋아요.",
       recommendationReason: `관찰된 ${phrase} 특성에 바탕하여, 무리하게 바꾸기보다 상황별 반응을 자연스럽게 지켜보는 방식을 권합니다.`,
-      evidenceRefs: [`child:${first.domain}_${first.observedPattern}`],
+      evidenceRefs: [childEvidenceRef(first)],
     });
   }
 

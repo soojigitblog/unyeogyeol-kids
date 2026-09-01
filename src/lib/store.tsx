@@ -19,6 +19,7 @@ import type {
   CurrentConflictInput,
   FoodMicroCheckAnswers,
   MomAnswers,
+  SleepMicroCheckAnswers,
 } from "@/lib/types";
 import { migrateLegacyMomProfile } from "@/lib/caregiver";
 import {
@@ -36,6 +37,7 @@ interface KidsState {
   momAnswers: MomAnswers;
   conflictInput: CurrentConflictInput | null;
   foodAnswers?: FoodMicroCheckAnswers;
+  sleepAnswers?: SleepMicroCheckAnswers;
 }
 
 /** 레거시 개발 세션(momProfile) 호환용 저장 형태. */
@@ -56,7 +58,11 @@ interface KidsContextValue extends KidsState {
   setCaregiverProfile: (caregiver: CaregiverProfile) => void;
   setMomAnswer: (domain: string, optionId: string) => void;
   setConflictInput: (conflict: CurrentConflictInput) => void;
-  setFoodAnswer: (questionId: keyof FoodMicroCheckAnswers, value: any) => void;
+  setFoodAnswer: (questionId: keyof FoodMicroCheckAnswers, value: string) => void;
+  setSleepAnswer: (
+    questionId: keyof SleepMicroCheckAnswers,
+    value: SleepMicroCheckAnswers[keyof SleepMicroCheckAnswers]
+  ) => void;
   reset: () => void;
 }
 
@@ -71,6 +77,7 @@ const emptyState: KidsState = {
   momAnswers: {},
   conflictInput: null,
   foodAnswers: {},
+  sleepAnswers: {},
 };
 
 const KidsContext = createContext<KidsContextValue | null>(null);
@@ -131,12 +138,25 @@ export function KidsProvider({ children }: { children: React.ReactNode }) {
     setState((s) => ({ ...s, conflictInput }));
   }, []);
 
-  const setFoodAnswer = useCallback((questionId: keyof FoodMicroCheckAnswers, value: any) => {
+  const setFoodAnswer = useCallback((questionId: keyof FoodMicroCheckAnswers, value: string) => {
     setState((s) => ({
       ...s,
       foodAnswers: { ...s.foodAnswers, [questionId]: value },
     }));
   }, []);
+
+  const setSleepAnswer = useCallback(
+    (
+      questionId: keyof SleepMicroCheckAnswers,
+      value: SleepMicroCheckAnswers[keyof SleepMicroCheckAnswers]
+    ) => {
+    setState((s) => ({
+      ...s,
+      sleepAnswers: { ...s.sleepAnswers, [questionId]: value },
+    }));
+  },
+    []
+  );
 
   const reset = useCallback(() => {
     setState(emptyState);
@@ -154,6 +174,7 @@ export function KidsProvider({ children }: { children: React.ReactNode }) {
       setMomAnswer,
       setConflictInput,
       setFoodAnswer,
+      setSleepAnswer,
       reset,
     }),
     [
@@ -165,6 +186,8 @@ export function KidsProvider({ children }: { children: React.ReactNode }) {
       setCaregiverProfile,
       setMomAnswer,
       setConflictInput,
+      setFoodAnswer,
+      setSleepAnswer,
       reset,
     ],
   );

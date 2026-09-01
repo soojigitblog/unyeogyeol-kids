@@ -12,6 +12,7 @@ import type {
   InteractionRule,
   MomEvidence,
 } from "@/lib/types";
+import { childEvidenceRef, momEvidenceRef } from "@/lib/evidence/ref";
 import { INTERACTION_RULES } from "./interactionRules";
 
 export interface MatchResult {
@@ -67,13 +68,12 @@ export function matchInteractionRule(
     };
   }
 
-  const childPatterns = new Set(childEvidences.map((e) => e.observedPattern));
+  const childPatterns = new Set(childEvidences.map((e) => e.patternId));
   const momPatterns = new Set(momEvidences.map((e) => e.patternId));
 
-  // Evidence refs 기본 수집
   const evidenceRefs: string[] = [
-    ...childEvidences.map((e) => `child:${e.domain}_${e.observedPattern}`),
-    ...momEvidences.map((e) => `mom:${e.domain}_${e.patternId}`),
+    ...childEvidences.map(childEvidenceRef),
+    ...momEvidences.map(momEvidenceRef),
   ];
   if (concernId) {
     evidenceRefs.push(`concern:${concernId}`);
@@ -115,16 +115,21 @@ export function matchInteractionRule(
     }
   }
 
-  // 2. Partial Match (Child + Mom 일치하지만 concern 불일치)
+  // 2. Partial Match — concernId 가 있으면 해당 concern 과 호환되는 규칙만 허용 (P2.2V.7)
   for (const rule of INTERACTION_RULES) {
     const childMatch = rule.requiredChildPatterns.some((p) => childPatterns.has(p));
     const momMatch = rule.requiredMomPatterns.some((p) => momPatterns.has(p));
+    const concernOk =
+      !concernId ||
+      rule.applicableConcerns.includes("all") ||
+      rule.applicableConcerns.includes(concernId);
 
-    if (childMatch && momMatch) {
+    if (childMatch && momMatch && concernOk) {
       return {
         rule,
         evidenceRefs,
-        matchConfidence: "medium", // concern 불일치 시 downgrade
+        matchConfidence:
+          concernId && !rule.applicableConcerns.includes(concernId) ? "medium" : rule.confidence,
         isFallback: false,
       };
     }

@@ -16,7 +16,20 @@ export interface ChildProfile {
   gender: Gender;
 }
 
-// ── Questionnaire (아이 10문항) ───────────────────────────
+// ── Child Behavior evidence (deterministic) ────────────────
+export type Axis =
+  | "needs_observation_time"
+  | "recovery_pace"
+  | "strong_self_direction"
+  | "transition_preference"
+  | "social_warmup_style"
+  | "play_focus_style"
+  | "motivation_source"
+  | "rule_negotiation_style"
+  | "emotional_expression_intensity"
+  | "instruction_response_style";
+
+/** Free 10문항 기질 관찰 domain */
 export type QuestionDomain =
   | "new_environment"
   | "failure"
@@ -29,6 +42,52 @@ export type QuestionDomain =
   | "emotional_expression"
   | "parent_instruction";
 
+// ── Concern Micro Check evidence domains (확장 등록) ────────
+/** meal concern micro-check domains */
+export type FoodMicroEvidenceDomain =
+  | "food_new_food"
+  | "food_preference"
+  | "food_prompt_response"
+  | "food_meal_flow";
+
+/** sleep concern micro-check domains */
+export type SleepMicroEvidenceDomain =
+  | "sleep_bedtime"
+  | "sleep_routine"
+  | "sleep_separation"
+  | "sleep_prebed";
+
+// 향후 동일 원칙으로 추가:
+// EmotionMicroEvidenceDomain | DisciplineMicroEvidenceDomain | ShynessMicroEvidenceDomain
+// DaycareMicroEvidenceDomain | FriendsMicroEvidenceDomain | SiblingMicroEvidenceDomain
+// OnlyWithMomMicroEvidenceDomain | LearningMicroEvidenceDomain
+
+export type ConcernMicroEvidenceDomain = FoodMicroEvidenceDomain | SleepMicroEvidenceDomain;
+
+/** Evidence domain = general questionnaire OR concern micro-check */
+export type EvidenceDomain = QuestionDomain | ConcernMicroEvidenceDomain;
+
+export type EvidenceSource =
+  | { scope: "general"; questionIds: string[] }
+  | { scope: "concern_micro"; concernId: ConcernId; questionIds: string[] };
+
+export type Confidence = "low" | "medium" | "high";
+
+/**
+ * Child behavior evidence — general + concern micro-check 공통 모델
+ * domain + patternId + source + strength (+ axis: general only)
+ */
+export interface BehaviorEvidence {
+  domain: EvidenceDomain;
+  patternId: string;
+  observedLabel: string;
+  strength: Confidence;
+  source: EvidenceSource;
+  /** Free 10문항 general evidence only */
+  axis?: Axis;
+}
+
+// ── Questionnaire (아이 10문항) ───────────────────────────
 export interface QuestionOption {
   id: string;
   label: string;
@@ -83,30 +142,6 @@ export interface FortuneFacts {
     yearPillar: boolean;
     monthPillar: boolean;
   };
-}
-
-// ── Child Behavior evidence (deterministic) ────────────────
-export type Axis =
-  | "needs_observation_time"
-  | "recovery_pace"
-  | "strong_self_direction"
-  | "transition_preference"
-  | "social_warmup_style"
-  | "play_focus_style"
-  | "motivation_source"
-  | "rule_negotiation_style"
-  | "emotional_expression_intensity"
-  | "instruction_response_style";
-
-export type Confidence = "low" | "medium" | "high";
-
-export interface BehaviorEvidence {
-  domain: QuestionDomain;
-  axis: Axis;
-  observedPattern: string;
-  observedLabel: string;
-  confidence: Confidence;
-  sourceQuestionIds: string[];
 }
 
 // ── Free result (정확히 5블록까지만) ────────────────────────
@@ -281,6 +316,29 @@ export interface FoodMicroCheckAnswers {
   preference_balance?: "favorite_only_first" | "alternate_try" | "leave_unfamiliar" | "basic_familiar_only";
   prompt_response?: "reluctant_one_bite" | "shake_head_close_mouth" | "stronger_refusal_on_prompt" | "distract_or_divert";
   meal_flow_block?: "leave_table_wander" | "put_down_spoon_divert" | "express_frustration" | "slow_down_quietly";
+}
+
+export interface SleepMicroCheckAnswers {
+  bedtime_transition?:
+    | "sleep_transition_accepts_bedtime"
+    | "sleep_transition_needs_completion"
+    | "sleep_transition_delays_bedtime"
+    | "sleep_transition_strong_refusal";
+  routine_order?:
+    | "sleep_routine_flexible"
+    | "sleep_routine_accepts_explanation"
+    | "sleep_routine_prefers_familiar_sequence"
+    | "sleep_routine_resists_change";
+  lights_off_departure?:
+    | "sleep_separation_accepts"
+    | "sleep_separation_checks_in"
+    | "sleep_separation_requests_presence"
+    | "sleep_separation_strong_proximity_request";
+  pre_sleep?:
+    | "sleep_prebed_settled"
+    | "sleep_prebed_more_talking"
+    | "sleep_prebed_body_movement"
+    | "sleep_prebed_continues_activity";
 }
 
 export interface ParentChildFortuneReflection {

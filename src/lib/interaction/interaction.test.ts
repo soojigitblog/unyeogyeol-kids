@@ -83,10 +83,10 @@ describe("P2.1 INTERACTION MODEL SPEC & LOCKS TEST", () => {
       {
         domain: "play_immersion" as const,
         axis: "play_focus_style" as const,
-        observedPattern: "unrelated_focus_pattern",
+        patternId: "unrelated_focus_pattern",
         observedLabel: "특정 놀이에 깊게 빠져드는 편이에요.",
-        confidence: "medium" as const,
-        sourceQuestionIds: ["q6_play_immersion"],
+        strength: "medium" as const,
+        source: { scope: "general" as const, questionIds: ["q6_play_immersion"] },
       },
     ];
     const unmatchedMomAnswers = {

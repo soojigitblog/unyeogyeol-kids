@@ -91,10 +91,10 @@ describe("P2.0H.1 EVIDENCE & CREDIBILITY ENGINE TEST SUITE", () => {
       {
         domain: "transition",
         axis: "transition_preference",
-        observedPattern: "needs_completion_before_transition",
+        patternId: "needs_completion_before_transition",
         observedLabel: "식사 전에도 하던 놀이를 끝맺으려는 모습",
-        confidence: "medium",
-        sourceQuestionIds: ["extra_q"],
+        strength: "medium",
+        source: { scope: "general", questionIds: ["extra_q"] },
       },
     ];
     const strongResult = buildEvidenceClaims(

@@ -207,8 +207,17 @@ export default function ChildInputPage() {
 
             {/* 성별 */}
             <div>
-              <span className="text-[14px] font-semibold text-cocoa">성별</span>
-              <div className="mt-2 grid grid-cols-2 gap-3">
+              <span
+                id="child-gender-label"
+                className="text-[14px] font-semibold text-cocoa"
+              >
+                성별
+              </span>
+              <div
+                role="radiogroup"
+                aria-labelledby="child-gender-label"
+                className="mt-2 grid grid-cols-2 gap-3"
+              >
                 {(
                   [
                     { v: "girl", label: "여아" },
@@ -216,19 +225,28 @@ export default function ChildInputPage() {
                   ] as const
                 ).map((opt) => {
                   const active = gender === opt.v;
+                  const inputId = `child-gender-${opt.v}`;
                   return (
-                    <button
-                      type="button"
+                    <label
                       key={opt.v}
-                      onClick={() => setGender(opt.v)}
-                      className={`rounded-[1.05rem] border px-4 py-3.5 text-[15.5px] font-medium transition-all active:scale-[0.99] ${
+                      htmlFor={inputId}
+                      className={`flex min-h-[48px] cursor-pointer touch-manipulation select-none items-center justify-center rounded-[1.05rem] border px-4 py-3.5 text-[15.5px] font-medium transition-all active:scale-[0.99] ${
                         active
                           ? "border-coral bg-coral-tint text-cocoa"
                           : "border-line bg-card text-cocoa-soft hover:border-coral-soft"
                       }`}
                     >
+                      <input
+                        id={inputId}
+                        type="radio"
+                        name="child-gender"
+                        value={opt.v}
+                        checked={active}
+                        onChange={() => setGender(opt.v)}
+                        className="sr-only"
+                      />
                       {opt.label}
-                    </button>
+                    </label>
                   );
                 })}
               </div>

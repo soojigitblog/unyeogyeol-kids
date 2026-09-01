@@ -193,8 +193,9 @@ describe("P2.2V.6 보호자/가족 관계 일반화", () => {
       const label = fixture.caregiverProfile.roleLabel;
 
       // 선택한 관계가 아니면서 다른 가족 호칭이 섞이지 않아야 한다.
-      ["엄마", "아빠", "할머니", "이모", "삼촌"]
-        .filter((other) => other !== label)
+      // '외할머니' 안의 '할머니', '큰이모' 안의 '이mo' 같은 부분 문자열은 제외한다.
+      ["엄마", "아빠", "외할머니", "할머니", "이모", "큰이모", "삼촌"]
+        .filter((other) => other !== label && !label.includes(other))
         .forEach((other) => {
           expect(serialized).not.toContain(other);
         });

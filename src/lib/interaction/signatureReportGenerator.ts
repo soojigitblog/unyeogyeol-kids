@@ -37,6 +37,13 @@ import {
   topic,
 } from "@/lib/caregiver";
 import { matchInteractionRule } from "./interactionEngine";
+import {
+  formatCaregiverObservedReaction,
+  formatChildObserved,
+  formatChildReactShort,
+  formatEscalationFact,
+  mergeCaregiverReactionSentence,
+} from "./copyFormatters";
 
 /** 관계 정보가 없는 레거시 호출도 허용하되, 고객 문구는 관계명 기준으로 만든다. */
 type CaregiverInput =
@@ -55,19 +62,19 @@ type CaregiverInput =
 // P2.2V.4 FIX (Section 7): DayMaster Element 하나만으로 만들어지는 REFLECTIVE_EDITORIAL 문구.
 // 심리적 사실처럼 단정하지 않도록 "~한 방향의 힌트로 참고해볼 수 있어요" 수준으로 고정한다.
 const ELEMENT_HINT_CHILD: Record<Element, string> = {
-  wood: "호기심을 가지고 새로운 시도를 향해 뻗어나가는 방향의 힌트로 참고해볼 수 있어요.",
-  fire: "자신의 감정과 에너지를 솔직하게 드러내는 방향의 힌트로 참고해볼 수 있어요.",
-  earth: "상황을 든든하게 품고 자기 자리를 지키는 방향의 힌트로 참고해볼 수 있어요.",
-  metal: "매듭을 분명히 짓고 자기 기준을 챙기는 방향의 힌트로 참고해볼 수 있어요.",
-  water: "상황을 조용히 관찰하고 천천히 스며드는 방향의 힌트로 참고해볼 수 있어요.",
+  wood: "새로운 시도를 먼저보려는 방향의 힌트로 참고해볼 수 있어요.",
+  fire: "감정과 에너지를 바로 표현하는 방향의 힌트로 참고해볼 수 있어요.",
+  earth: "자리를 잡고 천천히 익숙해지는 방향의 힌트로 참고해볼 수 있어요.",
+  metal: "기준을 분명히 세우고 마무리하려는 방향의 힌트로 참고해볼 수 있어요.",
+  water: "상황을 바로 밀어붙이기보다 한 번 살펴보는 방향의 힌트로 참고해볼 수 있어요.",
 };
 
 const ELEMENT_HINT_MOM: Record<Element, string> = {
-  wood: "상황을 주도적으로 이끌어가는 방향의 힌트로 참고해볼 수 있어요.",
-  fire: "마음을 열정적으로 표현하고 빠르게 소통하는 방향의 힌트로 참고해볼 수 있어요.",
-  earth: "묵묵히 상황을 포용하고 중심을 지키는 방향의 힌트로 참고해볼 수 있어요.",
-  metal: "규칙과 일정을 명확하게 정리하는 방향의 힌트로 참고해볼 수 있어요.",
-  water: "상황을 유연하게 살피고 천천히 헤아리는 방향의 힌트로 참고해볼 수 있어요.",
+  wood: "상황의 방향을 먼저 정하려는 쪽의 힌트로 참고해볼 수 있어요.",
+  fire: "마음을 먼저 말로 꺼내며 빠르게 소통하는 방향의 힌트로 참고해볼 수 있어요.",
+  earth: "상황을 받아들이며 중심을 잡으려는 방향의 힌트로 참고해볼 수 있어요.",
+  metal: "규칙과 순서를 먼저 정리하려는 방향의 힌트로 참고해볼 수 있어요.",
+  water: "상황을 살핀 뒤 다음 단계를 천천히 정하려는 방향의 힌트로 참고해볼 수 있어요.",
 };
 
 const ELEMENT_KEYWORD: Record<Element, string> = {
@@ -89,6 +96,8 @@ export function generateSignatureReport(
   const ageInfo = computeAge(profile.birthDate);
   const ageDisplay = ageInfo?.ageDisplay || "만 3세";
   const childName = profile.name || "우리 아이";
+  const cSubj = subj(childName);
+  const cTopic = topic(childName);
   // P2.2V.6: 관계명이 기준. 애칭을 입력했으면 서술 문장에서 애칭을 쓴다.
   const caregiverRoleLabel = resolveRoleLabel(caregiverProfile);
   const caregiverRole: CaregiverRole = caregiverProfile?.role ?? "guardian";
@@ -167,13 +176,13 @@ export function generateSignatureReport(
     }
 
     const sharedThemes = [
-      `두 사람에게서 비슷하게 보이는 방향: ${childName}와 ${momName} 모두 일상 속에서 서로의 마음을 살피려는 태도`,
+      `두 사람에게서 비슷하게 보이는 방향: ${childName}와 ${momName} 모두 일상 속에서 상황에 맞춰 반응하려는 태도`,
     ];
     const contrastingThemes = [
       `서로 다른 방식으로 나타나는 지점: 상황을 마주했을 때 ${childName}의 [${ELEMENT_KEYWORD[cEl]}] 방식과 ${momName}의 [${ELEMENT_KEYWORD[mEl]}] 방식의 차이`,
     ];
 
-    const reflectionText = `두 사람의 출생정보를 함께 보면, ${childName}는 ${ELEMENT_HINT_CHILD[cEl]} 반면 ${momName}는 ${ELEMENT_HINT_MOM[mEl]} 이러한 기질적 특성은 일상에서 상황을 바라보는 속도와 표현 방식의 차이로 이어질 수 있는 참고 힌트예요.`;
+    const reflectionText = `두 사람의 출생정보에서는 서로 다른 방향의 힌트를 참고해볼 수 있어요. ${cTopic} ${ELEMENT_HINT_CHILD[cEl]} 반면 ${subj(momName)} ${ELEMENT_HINT_MOM[mEl]} 다만 이번 관계 리포트에서는 ${conj(childName)} ${subj(momName)} 실제로 보여준 행동과 반응을 더 중요한 기준으로 봤어요.`;
 
     const observationContrastText = `출생정보에서는 두 사람의 속도와 표현 방식의 차이를 참고해볼 수 있었지만, 이번 실제 응답에서는 ${concernLabel} 상황에서 관찰된 구체적 행동이 더 분명하게 확인되었어요. 따라서 이 리포트에서는 현재 관찰된 행동을 더 중요하게 반영했습니다.`;
 
@@ -189,7 +198,7 @@ export function generateSignatureReport(
   }
 
   // Two-Person Summary Keywords & Synthesis
-  const childPatterns = childEvidences.map((e) => e.observedPattern);
+  const childPatterns = childEvidences.map((e) => e.patternId);
   const childKeywords: string[] = [];
   if (conflictInput.concernId === "meal") {
     if (childPatterns.some((p) => p.includes("observe") || p.includes("reassurance"))) {
@@ -198,6 +207,22 @@ export function generateSignatureReport(
       childKeywords.push("나만의식사속도가있어요", "스스로선택하고싶어요");
     } else {
       childKeywords.push("식사속도를지켜요", "내방식으로먹고싶어요");
+    }
+  } else if (conflictInput.concernId === "sleep") {
+    if (
+      childPatterns.some((p) =>
+        ["sleep_transition_needs_completion", "sleep_transition_delays_bedtime", "sleep_prebed_continues_activity"].includes(p)
+      )
+    ) {
+      childKeywords.push("잠자리전마무리필요", "전환속도를지켜요");
+    } else if (
+      childPatterns.some((p) =>
+        ["sleep_routine_prefers_familiar_sequence", "sleep_routine_resists_change"].includes(p)
+      )
+    ) {
+      childKeywords.push("익숙한순서선호", "잠자리흐름을지켜요");
+    } else {
+      childKeywords.push("잠자리전환신중", "나만의속도가있어요");
     }
   } else {
     if (childPatterns.some((p) => p.includes("completion") || p.includes("deep_single_focus"))) {
@@ -223,6 +248,14 @@ export function generateSignatureReport(
     } else {
       momKeywords.push("건강하게먹이고싶어요", "아이식사를챙기려해요");
     }
+  } else if (conflictInput.concernId === "sleep") {
+    if (momPatterns.some((p) => p.includes("fast_pace") || p.includes("time_notice") || p.includes("firm_boundary"))) {
+      momKeywords.push("취침시간을지키려해요", "잠자리로재촉해요");
+    } else if (momPatterns.some((p) => p.includes("rapid_rescheduling") || p.includes("preference_for_structure"))) {
+      momKeywords.push("순서를바꾸려해요", "흐름을정리하려해요");
+    } else {
+      momKeywords.push("잠자리를챙기려해요", "편하게재우고싶어요");
+    }
   } else {
     if (momPatterns.some((p) => p.includes("fast_pace") || p.includes("time_notice"))) {
       momKeywords.push("시간이급하면속도가빨라져요", "해야할일은분명히알려줘요");
@@ -239,23 +272,33 @@ export function generateSignatureReport(
     }
   }
 
+  const childReact = conflictInput.childFirstReaction || `${cSubj} 하던 방식을 이어가려 함`;
+  const momReact =
+    conflictInput.momFirstReaction ||
+    `${subj(caregiverRoleLabel)} 상황을 정리하려 안내함`;
+  const typicalPhrase = conflictInput.momTypicalPhrase;
+
   let misalignedPoint = "";
   if (rule.ruleId === "rule_friction_meal_new_food_hesitation") {
-    misalignedPoint = `${momName}는 ‘골고루 먹는 건강한 식사’를 챙기고 싶고, ${childName}는 ‘낯선 음식을 스스로 눈으로 확인할 편안한 틈’이 필요해요.`;
+    misalignedPoint = `${momName}는 ‘골고루 먹는 건강한 식사’를 챙기고 싶고, ${cTopic} ‘낯선 음식을 스스로 눈으로 확인할 편안한 틈’이 필요해요.`;
   } else if (rule.ruleId === "rule_friction_meal_autonomy_pacing") {
-    misalignedPoint = `${momName}는 ‘정해진 식사 시간과 양’을 지키려 하고, ${childName}는 ‘자신이 원하는 속도와 선택권’을 지키고 싶어 해요.`;
+    misalignedPoint = `${momName}는 ‘정해진 식사 시간과 양’을 지키려 하고, ${cTopic} ‘자신이 원하는 속도와 선택권’을 지키고 싶어 해요.`;
+  } else if (rule.ruleId === "rule_friction_sleep_transition_vs_pace") {
+    misalignedPoint = `${subj(caregiverRoleLabel)} 정해진 취침 시간에 맞춰 잠자리 흐름을 이어가려는 반응이 있었어요. ${formatChildObserved(childName, childReact)}`;
+  } else if (rule.ruleId === "rule_friction_sleep_routine_vs_change") {
+    misalignedPoint = `${momName}는 ‘상황에 맞게 순서를 바꾸려’ 하고, ${cTopic} ‘익숙한 잠자리 순서’를 지키고 싶어 해요.`;
   } else if (rule.ruleId === "rule_friction_completion_vs_time") {
-    misalignedPoint = `${momName}는 ‘이제 가야 할 시간’을 보고, ${childName}는 ‘아직 끝나지 않은 놀이’를 보고 있어요.`;
+    misalignedPoint = `${momName}는 ‘이제 가야 할 시간’을 보고, ${cTopic} ‘아직 끝나지 않은 놀이’를 보고 있어요.`;
   } else if (rule.ruleId === "rule_friction_observation_vs_stress") {
-    misalignedPoint = `${momName}는 ‘어서 편하게 어울리는 모습’을 바라고, ${childName}는 ‘주변이 익숙해질 관찰 시간’이 필요해요.`;
+    misalignedPoint = `${momName}는 ‘어서 편하게 어울리는 모습’을 바라고, ${cTopic} ‘주변이 익숙해질 관찰 시간’이 필요해요.`;
   } else if (rule.ruleId === "rule_friction_emotion_vs_explanation") {
-    misalignedPoint = `${momName}는 ‘상황을 납득할 논리적 이유’를 먼저 전하고, ${childName}는 ‘속상한 감정의 환기’가 먼저 필요해요.`;
+    misalignedPoint = `${momName}는 ‘상황을 납득할 논리적 이유’를 먼저 전하고, ${cTopic} ‘속상한 감정의 환기’가 먼저 필요해요.`;
   } else if (rule.ruleId === "rule_friction_autonomy_vs_firmness") {
-    misalignedPoint = `${momName}는 ‘지켜야 할 분명한 규칙’을 안내하고, ${childName}는 ‘스스로 고르고 주도할 작은 선택지’를 원해요.`;
+    misalignedPoint = `${momName}는 ‘지켜야 할 분명한 규칙’을 안내하고, ${cTopic} ‘스스로 고르고 주도할 작은 선택지’를 원해요.`;
   } else if (rule.ruleId === "rule_collab_observation_and_patience") {
     misalignedPoint = `${childName}의 신중한 관찰 속도를 ${momName}가 묵묵히 지켜봐 주며 서로 편안한 호흡을 맞추고 있어요.`;
   } else {
-    misalignedPoint = `${momName}가 챙기려는 ${concernLabel}의 방향과 ${childName}가 세상에 반응하는 고유한 속도가 만나는 지점이에요.`;
+    misalignedPoint = `${momName}가 챙기려는 ${concernLabel}의 방향과 ${cSubj} 세상에 반응하는 고유한 속도가 만나는 지점이에요.`;
   }
 
   let fortuneRelationshipHint: string | undefined = undefined;
@@ -278,30 +321,44 @@ export function generateSignatureReport(
   let sceneNarrative = "";
   let sceneKeywords: string[] = [];
 
-  const childReact = conflictInput.childFirstReaction || `${childName}가 하던 방식을 이어가려 함`;
-  const momReact =
-    conflictInput.momFirstReaction ||
-    `${subj(caregiverRoleLabel)} 상황을 정리하려 안내함`;
   const escalation = conflictInput.subsequentEscalation || "서로의 대화가 길어짐";
-  const typicalPhrase = conflictInput.momTypicalPhrase;
+  const caregiverSceneReaction = mergeCaregiverReactionSentence(
+    caregiverRoleLabel,
+    momReact,
+    typicalPhrase
+  );
+  const childSceneObserved = formatChildObserved(childName, childReact);
+  const escalationFact = formatEscalationFact(escalation, childName);
 
-  if (conflictInput.concernId === "meal" || rule.ruleId.startsWith("rule_friction_meal_")) {
-    sceneNarrative = `식사 시간이나 식탁 앞에서 음식을 마주하는 순간. ${childName}는 ${childReact}. ${topic(caregiverRoleLabel)} 아이의 건강과 식사 지도를 위해 ${momReact}${typicalPhrase ? ` “${typicalPhrase}”` : ""}. 그 뒤 ${escalation}.`;
+  if (conflictInput.concernId === "meal") {
+    sceneNarrative = `식사 시간이나 식탁 앞에서 음식을 마주하는 순간. ${childSceneObserved.replace(/\.$/, "")}. ${caregiverSceneReaction} 그 뒤 ${escalationFact}`;
     sceneKeywords = ["식사 시간", "식습관/편식", "식탁에서의 실랑이"];
+  } else if (conflictInput.concernId === "sleep") {
+    sceneNarrative = `잠자리에 들어가거나 수면 시간을 앞두고, ${childSceneObserved.replace(/\.$/, "")}. ${caregiverSceneReaction} 그 뒤 ${escalationFact}`;
+    sceneKeywords = ["잠자리", "수면/잠자리", "재촉과 미루기"];
+  } else if (conflictInput.concernId === "tantrum") {
+    sceneNarrative = `뜻대로 되지 않아 감정이 일어나는 순간. ${childSceneObserved.replace(/\.$/, "")}. ${caregiverSceneReaction} 그 뒤 ${escalationFact}`;
+    sceneKeywords = ["감정 표현", "떼쓰기/울음", "대화의 타이밍"];
+  } else if (conflictInput.concernId === "shyness") {
+    sceneNarrative = `새로운 장소나 낯선 환경을 마주하는 순간. ${childSceneObserved.replace(/\.$/, "")}. ${caregiverSceneReaction} 그 뒤 ${escalationFact}`;
+    sceneKeywords = ["새로운 환경", "낯가림/수줍음", "참여 권유"];
+  } else if (conflictInput.concernId === "discipline") {
+    sceneNarrative = `일상의 규칙이나 할 일을 챙겨야 하는 순간. ${childSceneObserved.replace(/\.$/, "")}. ${caregiverSceneReaction} 그 뒤 ${escalationFact}`;
+    sceneKeywords = ["일상 규칙", "훈육/규칙", "실랑이"];
   } else if (rule.ruleId === "rule_friction_completion_vs_time") {
-    sceneNarrative = `외출 준비나 상황을 전환해야 하는 순간. ${childName}는 ${childReact}. ${topic(caregiverRoleLabel)} 정해진 일정을 위해 ${momReact}${typicalPhrase ? ` “${typicalPhrase}”` : ""}. 그 뒤 ${escalation}.`;
+    sceneNarrative = `외출 준비나 상황을 전환해야 하는 순간. ${childSceneObserved.replace(/\.$/, "")}. ${caregiverSceneReaction} 그 뒤 ${escalationFact}`;
     sceneKeywords = ["외출 준비", "놀이 마침표", "속도 차이"];
   } else if (rule.ruleId === "rule_friction_observation_vs_stress") {
-    sceneNarrative = `새로운 장소나 낯선 환경을 마주하는 순간. ${childName}는 ${childReact}. ${topic(caregiverRoleLabel)} ${momReact}${typicalPhrase ? ` “${typicalPhrase}”` : ""}. 그 뒤 ${escalation}.`;
+    sceneNarrative = `새로운 장소나 낯선 환경을 마주하는 순간. ${childSceneObserved.replace(/\.$/, "")}. ${caregiverSceneReaction} 그 뒤 ${escalationFact}`;
     sceneKeywords = ["새로운 환경", "주변 탐색", "참여 권유"];
   } else if (rule.ruleId === "rule_friction_emotion_vs_explanation") {
-    sceneNarrative = `뜻대로 되지 않아 감정이 일어나는 순간. ${childName}는 ${childReact}. ${topic(caregiverRoleLabel)} 상황을 풀기 위해 ${momReact}${typicalPhrase ? ` “${typicalPhrase}”` : ""}. 그 뒤 ${escalation}.`;
+    sceneNarrative = `뜻대로 되지 않아 감정이 일어나는 순간. ${childSceneObserved.replace(/\.$/, "")}. ${caregiverSceneReaction} 그 뒤 ${escalationFact}`;
     sceneKeywords = ["감정 표현", "이유 설명", "대화의 타이밍"];
   } else if (rule.ruleId === "rule_friction_autonomy_vs_firmness") {
-    sceneNarrative = `일상의 규칙이나 할 일을 챙겨야 하는 순간. ${childName}는 ${childReact}. ${topic(caregiverRoleLabel)} 일과를 위해 ${momReact}${typicalPhrase ? ` “${typicalPhrase}”` : ""}. 그 뒤 ${escalation}.`;
+    sceneNarrative = `일상의 규칙이나 할 일을 챙겨야 하는 순간. ${childSceneObserved.replace(/\.$/, "")}. ${caregiverSceneReaction} 그 뒤 ${escalationFact}`;
     sceneKeywords = ["일상 규칙", "자기주장", "실랑이"];
   } else if (rule.ruleId === "rule_collab_observation_and_patience") {
-    sceneNarrative = `새로운 환경이나 활동을 시작하는 순간. ${childName}는 ${childReact}. ${topic(caregiverRoleLabel)} ${momReact}${typicalPhrase ? ` “${typicalPhrase}”` : ""}. 그 뒤 ${escalation}.`;
+    sceneNarrative = `새로운 환경이나 활동을 시작하는 순간. ${childSceneObserved.replace(/\.$/, "")}. ${caregiverSceneReaction} 그 뒤 ${escalationFact}`;
     sceneKeywords = ["신중한 탐색", "묵묵한 기다림", "편안한 대화"];
   } else {
     sceneNarrative = `${childName}와(과) 일상을 보내다 보면 특히 ${concernLabel} 상황에서 ${childReact}, ${momReact}. ${escalation}.`;
@@ -320,49 +377,30 @@ export function generateSignatureReport(
   ];
   allSentenceClaims.push(...ch1Claims);
 
-  // ── Chapter 02: 같은 상황, 다른 시선 ──
-  const momIntention =
-    conflictInput.concernId === "meal" || rule.ruleId.startsWith("rule_friction_meal_")
-      ? "아이에게 건강한 음식을 골고루 먹이고 올바른 식습관을 길러주고 싶은 마음"
-      : rule.ruleId === "rule_friction_completion_vs_time"
-      ? "정해진 시간과 다음 일정에 늦지 않도록 챙겨주려는 마음"
-      : rule.ruleId === "rule_friction_observation_vs_stress"
-      ? "아이가 어색해하지 않고 자연스럽게 참여하도록 돕고 싶은 마음"
-      : rule.ruleId === "rule_friction_emotion_vs_explanation"
-      ? "아이가 상황을 이해하고 수긍할 수 있도록 이유를 알려주려는 마음"
-      : rule.ruleId === "rule_friction_autonomy_vs_firmness"
-      ? "지켜야 할 규칙을 바르게 가르쳐주고 싶은 마음"
-      : "아이의 페이스를 살피며 상황에 맞게 돕고 싶은 마음";
-
-  const childInterpretation =
-    conflictInput.concernId === "meal" || rule.ruleId.startsWith("rule_friction_meal_")
-      ? "익숙하지 않은 음식에 대한 감각적 부담이 있거나 자신의 식사 속도를 지키고 싶은 상태에서 식사를 권유받는 상황으로 받아들여질 수 있어요."
-      : rule.ruleId === "rule_friction_completion_vs_time"
-      ? "하던 행동의 마침표를 찍지 못한 채 갑작스럽게 끊기는 상황으로 받아들여질 수 있어요."
-      : rule.ruleId === "rule_friction_observation_vs_stress"
-      ? "주변이 안전한지 스스로 확인할 시간이 필요한 상태에서 참여를 권유받는 상황으로 닿을 수 있어요."
-      : rule.ruleId === "rule_friction_emotion_vs_explanation"
-      ? "속상한 감정이 가라앉기 전에 설명부터 듣는 상황으로 받아들여질 수 있어요."
-      : rule.ruleId === "rule_friction_autonomy_vs_firmness"
-      ? "자신의 생각이나 선택권이 배제된 채 일방적으로 안내받는 상황으로 여겨질 수 있어요."
-      : "자신만의 속도로 주변을 탐색하며 적응해가는 중일 수 있어요.";
+  // ── Chapter 02: 같은 순간, 서로 달랐던 행동 (입력 근거만) ──
+  const momObservedReaction = formatCaregiverObservedReaction(
+    caregiverRoleLabel,
+    momReact,
+    typicalPhrase
+  );
+  const childObservedBehavior = formatChildObserved(childName, childReact);
 
   const ch2Claims: SentenceClaim[] = [
     {
       claimId: "ch2_c1",
-      claimType: "INFERRED",
+      claimType: "DIRECT_INPUT",
       chapter: 2,
-      text: momIntention,
+      text: momObservedReaction,
       evidenceRefs: refs,
-      inferenceLevel: "low",
+      inferenceLevel: "direct",
     },
     {
       claimId: "ch2_c2",
-      claimType: "INFERRED",
+      claimType: "DIRECT_INPUT",
       chapter: 2,
-      text: childInterpretation,
+      text: childObservedBehavior,
       evidenceRefs: refs,
-      inferenceLevel: "low",
+      inferenceLevel: "direct",
     },
   ];
   allSentenceClaims.push(...ch2Claims);
@@ -405,7 +443,7 @@ export function generateSignatureReport(
         stepNumber: 1 as const,
         stage: "trigger" as const,
         actor: "아이" as const,
-        description: `새로운 환경을 마주해 ${childName}가 멈춰 서서 주변을 살핍니다.`,
+        description: `새로운 환경을 마주해 ${cSubj} 멈춰 서서 주변을 살핍니다.`,
       },
       {
         stepNumber: 2 as const,
@@ -417,7 +455,7 @@ export function generateSignatureReport(
         stepNumber: 3 as const,
         stage: "child_reaction" as const,
         actor: "아이" as const,
-        description: `${childName}가 스스로 주변 상황을 파악한 뒤 편안하게 둘러봅니다.`,
+        description: `${cSubj} 스스로 주변 상황을 파악한 뒤 편안하게 둘러봅니다.`,
       },
       {
         stepNumber: 4 as const,
@@ -432,37 +470,58 @@ export function generateSignatureReport(
         description: "큰 마찰 없이 서로 편안하게 일상 흐름을 이어갑니다.",
       },
     ];
-  } else if (conflictInput.concernId === "meal" || rule.ruleId.startsWith("rule_friction_meal_")) {
+  } else if (conflictInput.concernId === "meal") {
     chainSteps = [
       {
         stepNumber: 1 as const,
         stage: "trigger" as const,
         actor: "아이" as const,
-        description: `식사 시간, 식탁에 차려진 반찬이나 음식을 마주하는 순간.`,
+        description: "식사 시간, 식탁에 차려진 반찬이나 음식을 마주하는 순간.",
       },
       {
         stepNumber: 2 as const,
-        stage: "mom_reaction" as const,
-        actor: caregiverRoleLabel,
-        description: `${subj(caregiverRoleLabel)} ${momReact}${typicalPhrase ? ` “${typicalPhrase}”` : ""}.`,
+        stage: "child_reaction" as const,
+        actor: "아이" as const,
+        description: formatChildReactShort(childName, childReact),
       },
       {
         stepNumber: 3 as const,
-        stage: "child_reaction" as const,
-        actor: "아이" as const,
-        description: `${childName}가 ${childReact}.`,
+        stage: "mom_reaction" as const,
+        actor: caregiverRoleLabel,
+        description: mergeCaregiverReactionSentence(caregiverRoleLabel, momReact, typicalPhrase),
       },
       {
         stepNumber: 4 as const,
         stage: "escalation" as const,
         actor: "둘 다" as const,
-        description: `그다음 ${escalation}.`,
+        description: `그다음 ${escalationFact}`,
+      },
+    ];
+  } else if (conflictInput.concernId === "sleep") {
+    chainSteps = [
+      {
+        stepNumber: 1 as const,
+        stage: "trigger" as const,
+        actor: "아이" as const,
+        description: "잠자리 시간이 됨.",
       },
       {
-        stepNumber: 5 as const,
-        stage: "exhausted_end" as const,
+        stepNumber: 2 as const,
+        stage: "child_reaction" as const,
+        actor: "아이" as const,
+        description: formatChildReactShort(childName, childReact),
+      },
+      {
+        stepNumber: 3 as const,
+        stage: "mom_reaction" as const,
+        actor: caregiverRoleLabel,
+        description: mergeCaregiverReactionSentence(caregiverRoleLabel, momReact, typicalPhrase),
+      },
+      {
+        stepNumber: 4 as const,
+        stage: "escalation" as const,
         actor: "둘 다" as const,
-        description: `권유와 거부가 반복되면 식사 시간이 서로 피곤하고 부담스럽게 느껴질 수도 있어요.`,
+        description: `그다음 ${escalationFact}`,
       },
     ];
   } else if (rule.ruleId === "rule_friction_completion_vs_time") {
@@ -471,7 +530,7 @@ export function generateSignatureReport(
         stepNumber: 1 as const,
         stage: "trigger" as const,
         actor: "아이" as const,
-        description: `${childName}가 하던 놀이의 마지막 조립이나 정리를 이어가려 합니다.`,
+        description: `${cSubj} 하던 놀이의 마지막 조립이나 정리를 이어가려 합니다.`,
       },
       {
         stepNumber: 2 as const,
@@ -504,7 +563,7 @@ export function generateSignatureReport(
         stepNumber: 1 as const,
         stage: "trigger" as const,
         actor: "아이" as const,
-        description: `새로운 장소를 마주해 ${childName}가 ${caregiverRoleLabel} 곁에 서서 주변을 지켜봅니다.`,
+        description: `새로운 장소를 마주해 ${cSubj} ${caregiverRoleLabel} 곁에 서서 주변을 지켜봅니다.`,
       },
       {
         stepNumber: 2 as const,
@@ -598,36 +657,38 @@ export function generateSignatureReport(
       },
     ];
   } else {
+    const concernSceneOpeners: Partial<Record<string, string>> = {
+      tantrum: "뜻대로 되지 않아 감정이 일어나는 순간",
+      shyness: "새로운 장소나 낯선 환경을 마주하는 순간",
+      discipline: "일상의 규칙이나 할 일을 챙겨야 하는 순간",
+    };
+    const opener =
+      concernSceneOpeners[conflictInput.concernId] ||
+      `${concernLabel} 상황에서 반복되는 순간`;
     chainSteps = [
       {
         stepNumber: 1 as const,
         stage: "trigger" as const,
         actor: "아이" as const,
-        description: `${childName}가 특정 상황에서 자신만의 방식을 고수하거나 머뭇거립니다.`,
+        description: `${opener}.`,
       },
       {
         stepNumber: 2 as const,
-        stage: "mom_reaction" as const,
-        actor: caregiverRoleLabel,
-        description: `${subj(caregiverRoleLabel)} 상황을 수습하거나 이끌기 위해 안내 또는 개입을 시도합니다.`,
+        stage: "child_reaction" as const,
+        actor: "아이" as const,
+        description: formatChildReactShort(childName, childReact),
       },
       {
         stepNumber: 3 as const,
-        stage: "child_reaction" as const,
-        actor: "아이" as const,
-        description: `${childName}가 개입에 대해 저항하거나 자신의 속도를 지키려 합니다.`,
+        stage: "mom_reaction" as const,
+        actor: caregiverRoleLabel,
+        description: mergeCaregiverReactionSentence(caregiverRoleLabel, momReact, typicalPhrase),
       },
       {
         stepNumber: 4 as const,
         stage: "escalation" as const,
         actor: "둘 다" as const,
-        description: "서로의 방식이 맞물리지 않아 긴장감이 올라갑니다.",
-      },
-      {
-        stepNumber: 5 as const,
-        stage: "exhausted_end" as const,
-        actor: "둘 다" as const,
-        description: "상황은 마무리되었지만 서로 감정적 소모감을 느끼게 됩니다.",
+        description: `그다음 ${escalationFact}`,
       },
     ];
   }
@@ -644,74 +705,59 @@ export function generateSignatureReport(
   ];
   allSentenceClaims.push(...ch4Claims);
 
-  // ── Chapter 05: 내가(관계명) 이 순간 특히 지치는 이유 / 잘 맞는 지점 ──
-  let ch5Title = `${subj(caregiverRoleLabel)} 이 순간 특히 지치는 이유`;
+  // ── Chapter 05: 같은 순간 반복되는 반응 (관찰 근거) ──
+  let ch5Title = `이 순간 ${caregiverRoleLabel} 쪽에서 반복되는 반응`;
   let exhaustionReason = "";
   let comfortMessage = "";
 
   if (isCollaborative) {
     ch5Title = "지금 우리 둘이 잘 맞는 지점";
-    exhaustionReason = `${childName}는 새로운 환경에서 먼저 살펴보는 시간이 필요한 모습이 있었고, ${topic(caregiverRoleLabel)} 그 순간 속도를 올리기보다 기다리는 반응을 보였어요. 두 방식이 현재 장면에서는 큰 마찰 없이 이어지고 있어요.`;
+    exhaustionReason = `${cTopic} 새로운 환경에서 먼저 살펴보는 모습이 있었고, ${topic(caregiverRoleLabel)} 그 순간 속도를 올리기보다 기다리는 반응을 보였어요. 두 방식이 현재 장면에서는 큰 마찰 없이 이어지고 있어요.`;
     comfortMessage = `아이의 신중한 속도를 존중해주는 ${caregiverRoleLabel}의 차분한 기다림이 서로에게 편안한 소통의 바탕이 되고 있습니다.`;
-  } else if (conflictInput.concernId === "meal" || rule.ruleId.startsWith("rule_friction_meal_")) {
-    exhaustionReason =
-      "아이의 건강과 성장을 위해 정성껏 차린 음식을 거부당할 때, 매 식사 시간마다 감정 소모와 답답함이 커지기 쉬워요.";
-    comfortMessage =
-      `${caregiverRoleLabel}의 요리나 돌봄 방식이 잘못된 것이 아니라, 낯선 음식에 신중하게 다가서는 아이의 탐색 방식과 영양을 챙기려는 ${caregiverRoleLabel}의 마음이 부딪힌 순간이었을 뿐이에요.`;
-  } else if (rule.ruleId === "rule_friction_completion_vs_time") {
-    exhaustionReason =
-      `정해진 시간 안에 일정을 챙겨야 하는 상황에서 같은 말을 여러 번 반복해야 할 때 ${caregiverRoleLabel}의 에너지 소모가 커질 수 있어요.`;
-    comfortMessage =
-      `${subj(caregiverRoleLabel)} 조급해서가 아니라, 일정을 챙겨야 하는 현실적인 필요와 마침표가 필요한 아이의 속도가 달랐을 뿐이에요.`;
-  } else if (rule.ruleId === "rule_friction_observation_vs_stress") {
-    exhaustionReason =
-      "새로운 상황에서 아이가 겉돌지 않도록 챙겨주고 싶은 마음에 권유가 이어지면서 서로 어색한 긴장감이 생길 수 있어요.";
-    comfortMessage =
-      "아이가 상황을 충분히 둘러볼 수 있는 시간을 조금만 더 열어주면 서로 편안한 대화를 이어가는 데 도움이 될 수 있어요.";
-  } else if (rule.ruleId === "rule_friction_emotion_vs_explanation") {
-    exhaustionReason =
-      "아이를 달래고 납득시키려 차근차근 설명했는데도 아이가 받아들이지 못하면 대화의 피로감이 크게 느껴질 수 있어요.";
-    comfortMessage =
-      "설명이 부족했던 것이 아니라, 속상한 감정이 가라앉을 작은 틈이 먼저 필요했던 타이밍의 차이였어요.";
-  } else if (rule.ruleId === "rule_friction_autonomy_vs_firmness") {
-    exhaustionReason =
-      "매일 지켜야 하는 일상 규칙을 지도하는 과정에서 사소한 일마다 실랑이가 반복되면 매 순간 지치기 쉬워요.";
-    comfortMessage =
-      "큰 규칙의 테두리 안에서 아이가 직접 고를 수 있는 작은 틈을 열어주면 부딪힘을 줄이는 데 도움이 될 수 있어요.";
   } else {
-    exhaustionReason =
-      "반복되는 실랑이 속에서 같은 대처를 이어가느라 힘이 부치는 순간이 있었을 것입니다.";
-    comfortMessage =
-      "서로가 상황을 마주하는 기본 호흡이 달랐던 만큼, 속도를 맞추는 작은 조율이 도움이 될 수 있습니다.";
+    exhaustionReason = formatCaregiverObservedReaction(
+      caregiverRoleLabel,
+      momReact,
+      typicalPhrase
+    );
+    comfortMessage = formatChildObserved(childName, childReact);
   }
 
   const ch5Claims: SentenceClaim[] = [
     {
       claimId: "ch5_c1",
-      claimType: isCollaborative ? "OBSERVED" : "INFERRED",
+      claimType: isCollaborative ? "OBSERVED" : "DIRECT_INPUT",
       chapter: 5,
       text: exhaustionReason,
       evidenceRefs: refs,
-      inferenceLevel: isCollaborative ? "direct" : "low",
+      inferenceLevel: "direct",
     },
     {
       claimId: "ch5_c2",
-      claimType: "EMOTIONAL_COPY",
+      claimType: isCollaborative ? "EMOTIONAL_COPY" : "DIRECT_INPUT",
       chapter: 5,
       text: comfortMessage,
       evidenceRefs: refs,
-      inferenceLevel: "reflective",
+      inferenceLevel: isCollaborative ? "reflective" : "direct",
     },
   ];
   allSentenceClaims.push(...ch5Claims);
 
   // ── Chapter 08: Core Promise Anchor ──
+  let oneSentenceAnchor = rule.anchorPromise;
+  if (
+    conflictInput.concernId === "sleep" &&
+    rule.ruleId === "rule_friction_sleep_transition_vs_pace"
+  ) {
+    oneSentenceAnchor = `${childName}에게 잠자리로 가자고 말하기 전, 하던 활동의 마지막 지점을 먼저 같이 정해보세요.`;
+  }
+
   const ch8Claims: SentenceClaim[] = [
     {
       claimId: "ch8_c1",
       claimType: "RECOMMENDATION",
       chapter: 8,
-      text: rule.anchorPromise,
+      text: oneSentenceAnchor,
       evidenceRefs: refs,
       inferenceLevel: "direct",
     },
@@ -722,7 +768,7 @@ export function generateSignatureReport(
   let fortuneReflection: SignatureReport["fortuneReflection"] = undefined;
   if (childFortune) {
     const el = childFortune.dayMasterElement;
-    const allPatterns = childEvidences.map((e) => e.observedPattern);
+    const allPatterns = childEvidences.map((e) => e.patternId);
     const isCautiousObs = allPatterns.some((p) =>
       p.includes("observe") || p.includes("reassurance") || p.includes("scan")
     );
@@ -785,12 +831,12 @@ export function generateSignatureReport(
     },
     chapter02_perspectiveGap: {
       momPerspective: {
-        intention: momIntention,
-        possibleFeeling: "이 순간을 잘 넘기고 싶은 마음",
+        intention: momObservedReaction,
+        possibleFeeling: "",
       },
       childPerspective: {
-        possibleInterpretation: childInterpretation,
-        possibleFeeling: "자신의 속도나 감정이 존중받고 싶은 마음",
+        possibleInterpretation: childObservedBehavior,
+        possibleFeeling: "",
       },
       evidenceRefs: refs,
       sentenceClaims: ch2Claims,
@@ -804,7 +850,11 @@ export function generateSignatureReport(
       sentenceClaims: ch3Claims,
     },
     chapter04_conflictChain: {
-      title: isCollaborative ? "평소 서로가 맞물리는 대화 흐름 (Collaboration Flow)" : "5단계 갈등 흐름 (Conflict Chain)",
+      title: isCollaborative
+        ? "평소 서로가 맞물리는 대화 흐름"
+        : chainSteps.length === 4
+        ? "4단계 반복되는 갈등 흐름"
+        : "5단계 반복되는 갈등 흐름",
       isCollaborative,
       steps: chainSteps,
       whereToBreak: {
@@ -832,8 +882,8 @@ export function generateSignatureReport(
       evidenceRefs: a.evidenceRefs || refs,
     })),
     chapter08_corePromise: {
-      oneSentenceAnchor: rule.anchorPromise,
-      meaning: "갈등의 순간에도 서로의 기본 결을 기억하면, 일상의 대화가 훨씬 편안해질 수 있어요.",
+      oneSentenceAnchor,
+      meaning: "",
       evidenceRefs: refs,
       sentenceClaims: ch8Claims,
     },

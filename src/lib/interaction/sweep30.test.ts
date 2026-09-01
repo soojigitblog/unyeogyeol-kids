@@ -80,26 +80,26 @@ describe("P2.0H 30-CASE SYNTHETIC COMBINATION SWEEP", () => {
           {
             domain: "transition",
             axis: "transition_preference",
-            observedPattern: "needs_completion_before_transition",
+            patternId: "needs_completion_before_transition",
             observedLabel: "하던 놀이를 끝맺어야 전환하는 모습",
-            confidence: "medium",
-            sourceQuestionIds: ["q1"],
+            strength: "medium",
+            source: { scope: "general", questionIds: ["q1"] },
           },
           {
             domain: "transition",
             axis: "transition_preference",
-            observedPattern: "needs_completion_before_transition",
+            patternId: "needs_completion_before_transition",
             observedLabel: "외출 준비 시에도 마침표가 필요한 모습",
-            confidence: "medium",
-            sourceQuestionIds: ["q2"],
+            strength: "medium",
+            source: { scope: "general", questionIds: ["q2"] },
           },
           {
             domain: "transition",
             axis: "transition_preference",
-            observedPattern: "needs_completion_before_transition",
+            patternId: "needs_completion_before_transition",
             observedLabel: "식사 시간에도 하던 단계를 마무리하려는 모습",
-            confidence: "medium",
-            sourceQuestionIds: ["q3"],
+            strength: "medium",
+            source: { scope: "general", questionIds: ["q3"] },
           }
         );
       } else if (i % 4 === 1) {
@@ -108,18 +108,18 @@ describe("P2.0H 30-CASE SYNTHETIC COMBINATION SWEEP", () => {
           {
             domain: "transition",
             axis: "transition_preference",
-            observedPattern: "switches_readily",
+            patternId: "switches_readily",
             observedLabel: "일반 상황에서는 바로 전환하는 모습",
-            confidence: "medium",
-            sourceQuestionIds: ["q1"],
+            strength: "medium",
+            source: { scope: "general", questionIds: ["q1"] },
           },
           {
             domain: "transition",
             axis: "transition_preference",
-            observedPattern: "needs_completion_before_transition",
+            patternId: "needs_completion_before_transition",
             observedLabel: "좋아하는 놀이에서는 마침표를 원하는 모습",
-            confidence: "medium",
-            sourceQuestionIds: ["q2"],
+            strength: "medium",
+            source: { scope: "general", questionIds: ["q2"] },
           }
         );
       } else if (i % 4 === 2) {
@@ -128,18 +128,18 @@ describe("P2.0H 30-CASE SYNTHETIC COMBINATION SWEEP", () => {
           {
             domain: "new_environment",
             axis: "needs_observation_time",
-            observedPattern: "brief_scan_then_engages",
+            patternId: "brief_scan_then_engages",
             observedLabel: "잠깐 둘러본 뒤 움직이는 모습",
-            confidence: "low",
-            sourceQuestionIds: ["q1"],
+            strength: "low",
+            source: { scope: "general", questionIds: ["q1"] },
           },
           {
             domain: "self_assertion",
             axis: "strong_self_direction",
-            observedPattern: "moderate_pace",
+            patternId: "moderate_pace",
             observedLabel: "자기 주장을 조율하는 모습",
-            confidence: "low",
-            sourceQuestionIds: ["q2"],
+            strength: "low",
+            source: { scope: "general", questionIds: ["q2"] },
           }
         );
       } else {
@@ -148,18 +148,18 @@ describe("P2.0H 30-CASE SYNTHETIC COMBINATION SWEEP", () => {
           {
             domain: "new_environment",
             axis: "needs_observation_time",
-            observedPattern: "takes_long_to_observe",
+            patternId: "takes_long_to_observe",
             observedLabel: "새로운 상황에서 천천히 살피는 모습",
-            confidence: "medium",
-            sourceQuestionIds: ["q1"],
+            strength: "medium",
+            source: { scope: "general", questionIds: ["q1"] },
           },
           {
             domain: "new_environment",
             axis: "needs_observation_time",
-            observedPattern: "takes_long_to_observe",
+            patternId: "takes_long_to_observe",
             observedLabel: "처음 보는 모임에서도 관찰 후 참여하는 모습",
-            confidence: "medium",
-            sourceQuestionIds: ["q2"],
+            strength: "medium",
+            source: { scope: "general", questionIds: ["q2"] },
           }
         );
       }

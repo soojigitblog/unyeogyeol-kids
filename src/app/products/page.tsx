@@ -10,6 +10,10 @@ import { Card, Eyebrow } from "@/components/ui/Card";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { useKids } from "@/lib/store";
 import { concernLabel } from "@/lib/concerns";
+import { SignatureProductCard } from "@/components/commerce/SignatureProductCard";
+import { FreeVsPaidCompare } from "@/components/commerce/FreeVsPaidCompare";
+import { SignatureResultPreview } from "@/components/commerce/SignatureResultPreview";
+import { CommerceFaq } from "@/components/commerce/CommerceFaq";
 
 export default function ProductsPage() {
   const router = useRouter();
@@ -20,6 +24,7 @@ export default function ProductsPage() {
   }, [ready, child, router]);
 
   const concernText = concern ? concernLabel(concern) : null;
+  const setupHref = child ? "/paid/signature/setup" : "/free/child";
 
   return (
     <>
@@ -27,122 +32,58 @@ export default function ProductsPage() {
       <main className="flex-1 pb-16 pt-4">
         <Container>
           <div className="animate-rise">
-            <Eyebrow>우리 아이 맞춤 사용설명서</Eyebrow>
+            <Eyebrow>유료 관계 사용설명서</Eyebrow>
             {concernText && (
               <div className="mt-4 rounded-2xl bg-sage-tint px-4 py-3 text-[14px] text-cocoa">
-                지금 고민 <b className="text-sage-deep">‘{concernText}’</b>을(를)
-                가장 먼저 담아 드려요.
+                지금 고민 <b className="text-sage-deep">‘{concernText}’</b>을(를) 중심으로
+                봅니다.
               </div>
             )}
             <h1 className="mt-5 text-[26px] font-bold leading-snug tracking-tight text-cocoa">
-              무료로 본 기질을,
+              같은 장면이 반복된다면,
               <br />
-              오늘 저녁 대화로.
+              우리 둘이 어디서 엇갈리는지부터.
             </h1>
+            <p className="mt-3 text-[14.5px] leading-relaxed text-cocoa-soft">
+              반복되는 한 장면이 있다면, 그 장면에서 우리 둘이 무엇을 다르게 하고 있는지
+              먼저 살펴보세요.
+            </p>
           </div>
 
-          {/* Signature — 우리 아이 × 나 관계 사용설명서 */}
-          <Card tone="coral" className="mt-7 p-6">
-            <span className="inline-flex items-center rounded-full bg-coral px-3 py-1 text-[12px] font-bold tracking-wide text-white">
-              SIGNATURE
-            </span>
-            <h2 className="mt-3 text-[21px] font-bold leading-snug text-cocoa">
-              우리 아이 × 나 관계 사용설명서
-            </h2>
-            <p className="mt-2 text-[14.5px] leading-relaxed text-cocoa-soft">
-              아이와 내가 왜 같은 순간에 자꾸 엇갈리는지 살펴봐요. 아이의 실제 행동,
-              내가 보이는 반응, 요즘 반복되는 장면, 두 사람의 출생정보를 함께 봅니다.
-            </p>
+          <div className="mt-7">
+            <SignatureProductCard setupHref={setupHref} ctaLabel="우리 둘 이야기 보기" />
+          </div>
 
-            {/* 의도 vs 보이는 모습 */}
-            <div className="mt-5 grid grid-cols-2 gap-2.5">
-              <div className="rounded-2xl bg-milk p-3.5">
-                <p className="text-[12.5px] font-semibold text-coral-deep">
-                  나의 의도
-                </p>
-                <p className="mt-1 text-[14px] text-cocoa">
-                  “늦지 않게 준비시키려는 것”
-                </p>
-              </div>
-              <div className="rounded-2xl bg-milk p-3.5">
-                <p className="text-[12.5px] font-semibold text-sage-deep">
-                  아이에게 보이는 모습
-                </p>
-                <p className="mt-1 text-[14px] text-cocoa">
-                  “내가 하던 걸 자꾸 끊는 것”
-                </p>
-              </div>
-            </div>
+          <div className="mt-6">
+            <FreeVsPaidCompare />
+          </div>
 
-            {/* 갈등 Chain + WHERE TO BREAK */}
-            <div className="mt-3 rounded-2xl bg-milk p-4">
-              <p className="text-[12.5px] font-semibold text-cocoa-soft">
-                반복되는 갈등의 흐름
-              </p>
-              <ol className="mt-2 space-y-1.5 text-[14px]">
-                <li className="text-cocoa">① 상황이 시작돼요</li>
-                <li className="text-cocoa">② 내가 반응해요</li>
-                <li className="font-semibold text-coral-deep">
-                  ③ 여기서 끊을 수 있어요 · 갈등을 멈추는 지점
-                </li>
-                <li className="text-cocoa-faint">④ 아이가 반응하고…</li>
-                <li className="text-cocoa-faint">⑤ 갈등이 커지고…</li>
-                <li className="text-cocoa-faint">⑥ 늘 같은 결말로 끝나요</li>
-              </ol>
-            </div>
+          <div className="mt-6">
+            <SignatureResultPreview />
+          </div>
 
-            <div className="mt-5">
-              {process.env.NODE_ENV !== "production" ? (
-                <ButtonLink
-                  href={child ? "/paid/signature/setup" : "/free/child"}
-                  size="lg"
-                >
-                  내 입력값으로 관계 리포트 만들어보기
-                </ButtonLink>
-              ) : (
-                <Button size="lg" disabled>
-                  곧 열려요
-                </Button>
-              )}
-              <p className="mt-2 text-center text-[12.5px] text-cocoa-faint">
-                {process.env.NODE_ENV !== "production"
-                  ? "개발 환경 전용: 내 아이 실제 입력값 + 관계·내 반응 체크로 Signature Report를 직접 검수할 수 있습니다."
-                  : "지금은 무료 결과까지 볼 수 있어요. 사용설명서는 순차적으로 열려요."}
-              </p>
-            </div>
+          <Card className="mt-5 p-5">
+            <span className="text-[12.5px] font-semibold text-sage-deep">아이 중심 리포트</span>
+            <h2 className="mt-2 text-[18px] font-bold text-cocoa">우리 아이 기질 사용설명서</h2>
+            <p className="mt-2 text-[14px] text-cocoa-soft">향후 제공 예정 상품입니다.</p>
+            <Button variant="secondary" className="mt-4 w-full" disabled>
+              곧 열려요
+            </Button>
           </Card>
 
-          {/* Secondary */}
-          <Card className="mt-5">
-            <span className="text-[12.5px] font-semibold text-sage-deep">
-              CHILD FOCUS
-            </span>
-            <h2 className="mt-2 text-[18px] font-bold text-cocoa">
-              우리 아이 기질 사용설명서
-            </h2>
-            <p className="mt-2 text-[14.5px] leading-relaxed text-cocoa-soft">
-              떼쓸 때, 훈육할 때, 칭찬할 때, 새로운 환경에서… 이 아이에게 통하는
-              방식과 말을 12개 장으로 담아요.
-            </p>
-            <div className="mt-4">
-              <Button variant="secondary" className="w-full" disabled>
-                곧 열려요
-              </Button>
-            </div>
-          </Card>
-
-          {/* Repeat */}
           <div className="mt-5 rounded-card border border-line bg-cream p-4">
-            <p className="text-[14.5px] font-semibold text-cocoa">
-              요즘 이 행동, 왜 그럴까?
-            </p>
-            <p className="mt-1 text-[13px] leading-relaxed text-cocoa-soft">
-              나중에 새로운 행동이 생겼을 때, 아이 기질은 그대로 두고 그 상황만
-              다시 물어보는 반복 상담도 준비하고 있어요.
-            </p>
+            <p className="text-[14.5px] font-semibold text-cocoa">요즘 이 행동, 왜 그럴까?</p>
+            <p className="mt-1 text-[13px] text-cocoa-soft">반복 상담 상품 — 준비 중</p>
           </div>
 
-          <div className="mt-8 text-center">
+          <div className="mt-8">
+            <CommerceFaq />
+          </div>
+
+          <div className="mt-8 flex flex-col gap-3">
+            <ButtonLink href="/my-results" variant="secondary">
+              내 결과 보기
+            </ButtonLink>
             <ButtonLink href="/free/result" variant="ghost">
               <ChevronLeft className="h-4 w-4" strokeWidth={2.2} />
               무료 결과 다시 보기

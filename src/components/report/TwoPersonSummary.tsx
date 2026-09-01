@@ -49,7 +49,7 @@ export function TwoPersonSummary({
               {childName}에게서 관찰된 모습
             </span>
             <span className="rounded-full bg-sage-tint px-2 py-0.5 text-[10.5px] font-semibold text-sage-deep">
-              직접 알려주신 실제 모습
+              가족이 알려준 실제 모습
             </span>
           </div>
           <div className="mt-2.5 flex flex-wrap gap-1.5">

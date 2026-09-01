@@ -34,13 +34,14 @@ describe("BehaviorEvidence 변환", () => {
     expect(ev).toHaveLength(3);
   });
 
-  it("evidence 는 observedPattern·observedLabel·sourceQuestionIds·confidence 를 가진다", () => {
+  it("evidence 는 patternId·observedLabel·source·strength 를 가진다", () => {
     const ev = buildBehaviorEvidence(answers);
     for (const e of ev) {
-      expect(e.observedPattern.length).toBeGreaterThan(0);
+      expect(e.patternId.length).toBeGreaterThan(0);
       expect(e.observedLabel.length).toBeGreaterThan(0);
-      expect(e.sourceQuestionIds.length).toBeGreaterThan(0);
-      expect(e.confidence).toBe("medium"); // 10문항 → 과신하지 않음
+      expect(e.source.scope).toBe("general");
+      expect(e.source.questionIds.length).toBeGreaterThan(0);
+      expect(e.strength).toBe("medium");
     }
   });
 

@@ -29,7 +29,7 @@ export function generateChildDeepReport(
       ageDisplay,
     },
     overview: {
-      dominantPattern: childEvidences[0]?.observedPattern || "balanced",
+      dominantPattern: childEvidences[0]?.patternId || "balanced",
       keywords: childEvidences.slice(0, 3).map((e) => e.observedLabel),
     },
     chapters,

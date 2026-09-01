@@ -1,4 +1,5 @@
 import { EXTENDED_FIXTURES } from "../src/lib/interaction/fixturesP20";
+import { childEvidenceRef } from "../src/lib/evidence/ref";
 import { buildMomEvidence } from "../src/lib/questionnaire/momEvidence";
 import { buildEvidenceClaims } from "../src/lib/interaction/evidenceClaimEngine";
 import { generateSignatureReport } from "../src/lib/interaction/signatureReportGenerator";
@@ -25,7 +26,7 @@ for (const f of EXTENDED_FIXTURES) {
   console.log(`### Fixture ${f.fixtureId}: ${f.title}`);
   console.log(`- Observation Evidence:`);
   f.childEvidences.forEach((ev) => {
-    console.log(`  * [${ev.domain}] ${ev.observedLabel} (ref: child:${ev.domain}_${ev.observedPattern})`);
+    console.log(`  * [${ev.domain}] ${ev.observedLabel} (ref: ${childEvidenceRef(ev)})`);
   });
 
   console.log(`- Recommendation:`);

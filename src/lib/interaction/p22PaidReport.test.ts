@@ -47,11 +47,9 @@ describe("P2.2H PAID REPORT EVIDENCE INTEGRITY & HUMAN VALUE PATCH", () => {
       expect(report.chapter01_recurringScene.evidenceRefs.length).toBeGreaterThan(0);
       expect(report.chapter01_recurringScene.sentenceClaims).toBeDefined();
 
-      // Chapter 02: Perspective Gap
+      // Chapter 02: Perspective Gap (입력 근거 관찰)
       expect(report.chapter02_perspectiveGap.momPerspective.intention).toBeTruthy();
-      expect(report.chapter02_perspectiveGap.momPerspective.possibleFeeling).toBeTruthy();
       expect(report.chapter02_perspectiveGap.childPerspective.possibleInterpretation).toBeTruthy();
-      expect(report.chapter02_perspectiveGap.childPerspective.possibleFeeling).toBeTruthy();
       expect(report.chapter02_perspectiveGap.evidenceRefs.length).toBeGreaterThan(0);
 
       // Chapter 03: Interaction Pattern
@@ -62,7 +60,7 @@ describe("P2.2H PAID REPORT EVIDENCE INTEGRITY & HUMAN VALUE PATCH", () => {
       expect(report.chapter03_interactionPattern.evidenceRefs.length).toBeGreaterThan(0);
 
       // Chapter 04: Conflict Chain + Where to Break
-      expect(report.chapter04_conflictChain.steps.length).toBe(5);
+      expect(report.chapter04_conflictChain.steps.length).toBeGreaterThanOrEqual(4);
       expect(report.chapter04_conflictChain.whereToBreak.targetStep).toBeGreaterThanOrEqual(1);
       expect(report.chapter04_conflictChain.whereToBreak.breakActionTitle).toBeTruthy();
       expect(report.chapter04_conflictChain.whereToBreak.breakActionDetail).toBeTruthy();
@@ -94,7 +92,6 @@ describe("P2.2H PAID REPORT EVIDENCE INTEGRITY & HUMAN VALUE PATCH", () => {
 
       // Chapter 08: Core Promise Anchor
       expect(report.chapter08_corePromise.oneSentenceAnchor).toBeTruthy();
-      expect(report.chapter08_corePromise.meaning).toBeTruthy();
       expect(report.chapter08_corePromise.evidenceRefs.length).toBeGreaterThan(0);
     });
   });
@@ -130,7 +127,7 @@ describe("P2.2H PAID REPORT EVIDENCE INTEGRITY & HUMAN VALUE PATCH", () => {
     );
 
     expect(report.chapter04_conflictChain.isCollaborative).toBe(true);
-    expect(report.chapter04_conflictChain.title).toContain("Flow");
+    expect(report.chapter04_conflictChain.title).toContain("흐름");
     expect(report.chapter04_conflictChain.steps[4].description).toContain("편안하게");
     expect(report.chapter04_conflictChain.whereToBreak.breakActionTitle).toContain("이어가기");
 
@@ -289,7 +286,7 @@ describe("P2.2H PAID REPORT EVIDENCE INTEGRITY & HUMAN VALUE PATCH", () => {
     expect(report.fortuneRelationship!.childHints[0]).toContain("열무의 출생정보에서는");
     expect(report.fortuneRelationship!.momHints.length).toBeGreaterThan(0);
     expect(report.fortuneRelationship!.momHints[0]).toContain("열무맘의 출생정보에서는");
-    expect(report.fortuneRelationship!.reflectionText).toContain("두 사람의 출생정보를 함께 보면");
+    expect(report.fortuneRelationship!.reflectionText).toContain("두 사람의 출생정보에서는");
     expect(report.fortuneRelationship!.observationContrastText).toContain("현재 관찰된 행동을 더 중요하게 반영했습니다");
 
     // Zero Compatibility Score Verification
@@ -313,8 +310,8 @@ describe("P2.2H PAID REPORT EVIDENCE INTEGRITY & HUMAN VALUE PATCH", () => {
 
     // Conflict Chain is Food Context (Literal User Input Grounded)
     expect(report.chapter04_conflictChain.steps[0].description).toContain("식사");
-    expect(report.chapter04_conflictChain.steps[1].description).toContain("한 입만 먹어보자");
-    expect(report.chapter04_conflictChain.steps[2].description).toContain("처음 보는 반찬");
+    expect(report.chapter04_conflictChain.steps[1].description).toContain("처음 보는 반찬");
+    expect(report.chapter04_conflictChain.steps[2].description).toContain("한 입만 먹어보자");
     expect(report.chapter04_conflictChain.steps[3].description).toContain("숟가락");
 
     // Phrases are Food Context
@@ -330,8 +327,9 @@ describe("P2.2H PAID REPORT EVIDENCE INTEGRITY & HUMAN VALUE PATCH", () => {
       "바로 먹어야 하는 선택지만 주기보다, 냄새나 모양을 먼저 살펴보는 선택지도 함께 열어줄 수 있어요."
     );
 
-    // Conflict Chain Step 5 is Inferred/Template with Possibility tone
-    expect(report.chapter04_conflictChain.steps[4].description).toContain("피곤하고 부담스럽게 느껴질 수도 있어요");
+    // Conflict Chain — 입력 기반 4단계 (추론 종료 단계 없음)
+    expect(report.chapter04_conflictChain.steps.length).toBe(4);
+    expect(report.chapter04_conflictChain.steps[3].description).not.toContain("피곤하고 부담스럽게");
 
     // Anchor is Food Context
     expect(report.chapter08_corePromise.oneSentenceAnchor).toContain("식탁");
@@ -353,7 +351,7 @@ describe("P2.2H PAID REPORT EVIDENCE INTEGRITY & HUMAN VALUE PATCH", () => {
     };
     const foodEvs = buildFoodEvidence(foodAnswers);
     expect(foodEvs.length).toBe(4);
-    expect(foodEvs.map((e) => e.observedPattern)).toEqual([
+    expect(foodEvs.map((e) => e.patternId)).toEqual([
       "new_food_hesitation",
       "food_familiar_preference",
       "food_refusal_on_pressure",

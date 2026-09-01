@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { useKids } from "@/lib/store";
 import { MOM_QUESTIONS } from "@/lib/questionnaire/momQuestions";
 import { FOOD_QUESTIONS } from "@/lib/questionnaire/foodQuestions";
+import { SLEEP_QUESTIONS } from "@/lib/questionnaire/sleepQuestions";
 import { CONFLICT_SCENARIOS, ConflictScenario } from "@/lib/interaction/conflictScenarios";
 import { computeAge } from "@/lib/age";
 import { concernLabel } from "@/lib/concerns";
@@ -20,6 +21,7 @@ import type {
   ConcernId,
   CurrentConflictInput,
   FoodMicroCheckAnswers,
+  SleepMicroCheckAnswers,
 } from "@/lib/types";
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -37,6 +39,7 @@ type SetupStep =
   | "caregiver_profile"
   | "mom_mini_check"
   | "food_micro_check"
+  | "sleep_micro_check"
   | "conflict_scene"
   | "summary";
 
@@ -50,10 +53,12 @@ export default function MomSetupPage() {
     momAnswers,
     conflictInput,
     foodAnswers,
+    sleepAnswers,
     setCaregiverProfile,
     setMomAnswer,
     setConflictInput,
     setFoodAnswer,
+    setSleepAnswer,
   } = useKids();
 
   // Child data check
@@ -66,6 +71,7 @@ export default function MomSetupPage() {
   const [step, setStep] = useState<SetupStep>("relationship");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [currentFoodQuestionIndex, setCurrentFoodQuestionIndex] = useState(0);
+  const [currentSleepQuestionIndex, setCurrentSleepQuestionIndex] = useState(0);
 
   // 1. 아이와의 관계 (P2.2V.6 필수 입력)
   const initialRoleOptionId =
@@ -128,6 +134,7 @@ export default function MomSetupPage() {
 
   // 3. Conflict scene state (Concern is Report Anchor)
   const currentConcern: ConcernId = concern || "meal";
+  const hasConcernMicroCheck = currentConcern === "meal" || currentConcern === "sleep";
   const matchingScenarios = useMemo(() => {
     const list = CONFLICT_SCENARIOS.filter((s) => s.concernId === currentConcern);
     return list.length > 0 ? list : CONFLICT_SCENARIOS.filter((s) => s.concernId === "meal");
@@ -156,6 +163,13 @@ export default function MomSetupPage() {
         momReaction: "아이가 어색해할까 봐 '어서 가서 인사해보자' 하고 참여를 권함",
         escalation: "아이가 더 세게 매달리며 낯선 환경에 들어가지 못함",
         typicalPhrase: "괜찮아, 친구들이랑 가서 인사하고 놀아",
+      };
+    } else if (currentConcern === "sleep") {
+      return {
+        childReaction: "잠자리에 갈 시간이 되어도 하던 그림책 읽기를 계속 이어가려 함",
+        momReaction: "'이제 자야 할 시간이야, 빨리 누워' 하고 재촉함",
+        escalation: "아이가 침대에서 딴청을 피우며 잠들기를 미룸",
+        typicalPhrase: "이제 자야 할 시간이야, 빨리 누워",
       };
     } else {
       return {
@@ -239,13 +253,29 @@ export default function MomSetupPage() {
       if (currentConcern === "meal") {
         setStep("food_micro_check");
         setCurrentFoodQuestionIndex(0);
+      } else if (currentConcern === "sleep") {
+        setStep("sleep_micro_check");
+        setCurrentSleepQuestionIndex(0);
       } else {
         setStep("conflict_scene");
       }
     }
   }
 
-  function handleSelectFoodOption(questionId: keyof FoodMicroCheckAnswers, patternId: any) {
+  function handleSelectSleepOption(
+    questionId: keyof SleepMicroCheckAnswers,
+    patternId: SleepMicroCheckAnswers[keyof SleepMicroCheckAnswers]
+  ) {
+    setSleepAnswer(questionId, patternId);
+
+    if (currentSleepQuestionIndex < SLEEP_QUESTIONS.length - 1) {
+      setCurrentSleepQuestionIndex(currentSleepQuestionIndex + 1);
+    } else {
+      setStep("conflict_scene");
+    }
+  }
+
+  function handleSelectFoodOption(questionId: keyof FoodMicroCheckAnswers, patternId: string) {
     setFoodAnswer(questionId, patternId);
 
     if (currentFoodQuestionIndex < FOOD_QUESTIONS.length - 1) {
@@ -269,8 +299,8 @@ export default function MomSetupPage() {
     setStep("summary");
   }
 
-  function handleCompleteAndGoReport() {
-    router.push("/paid/signature");
+  function handleCompleteAndGoCheckout() {
+    router.push("/checkout/signature");
   }
 
   const inputCls =
@@ -295,17 +325,18 @@ export default function MomSetupPage() {
                   ? 2
                   : step === "mom_mini_check"
                   ? 3
-                  : step === "food_micro_check"
+                  : step === "food_micro_check" || step === "sleep_micro_check"
                   ? 4
                   : step === "conflict_scene"
-                  ? currentConcern === "meal" ? 5 : 4
-                  : currentConcern === "meal" ? 6 : 5}
+                  ? hasConcernMicroCheck ? 5 : 4
+                  : hasConcernMicroCheck ? 6 : 5}
               </span>
               <span>
                 {step === "relationship" && "아이와 나의 관계"}
                 {step === "caregiver_profile" && `${resolvedRoleLabel || "나"}의 기본 정보`}
                 {step === "mom_mini_check" && `내 반응 체크 (${currentQuestionIndex + 1}/5)`}
                 {step === "food_micro_check" && `식습관 관찰 체크 (${currentFoodQuestionIndex + 1}/4)`}
+                {step === "sleep_micro_check" && `수면 관찰 체크 (${currentSleepQuestionIndex + 1}/4)`}
                 {step === "conflict_scene" && `요즘 가장 힘든 장면 (${concernLabel(currentConcern)})`}
                 {step === "summary" && "관계 리포트 준비 완료"}
               </span>
@@ -319,7 +350,7 @@ export default function MomSetupPage() {
           {step === "relationship" && (
             <div className="animate-rise space-y-6">
               <div>
-                <Eyebrow>MY RELATIONSHIP</Eyebrow>
+                <Eyebrow>아이와의 관계</Eyebrow>
                 <h1 className="mt-2 text-[26px] font-bold leading-snug tracking-tight text-cocoa">
                   {childDisplayName}와
                   <br />
@@ -385,7 +416,7 @@ export default function MomSetupPage() {
           {step === "caregiver_profile" && (
             <div className="animate-rise space-y-6">
               <div>
-                <Eyebrow>MY PROFILE · {resolvedRoleLabel}</Eyebrow>
+                <Eyebrow>나의 기본 정보 · {resolvedRoleLabel}</Eyebrow>
                 <h1 className="mt-2 text-[26px] font-bold leading-snug tracking-tight text-cocoa">
                   이번에는 아이와 함께 지내는
                   <br />
@@ -532,7 +563,7 @@ export default function MomSetupPage() {
           {step === "mom_mini_check" && (
             <div className="animate-rise space-y-6">
               <div>
-                <Eyebrow>MY REACTION CHECK · {currentQuestionIndex + 1}/5</Eyebrow>
+                <Eyebrow>내 반응 체크 · {currentQuestionIndex + 1}/5</Eyebrow>
                 <h1 className="mt-2 text-[22px] font-bold leading-snug tracking-tight text-cocoa">
                   {MOM_QUESTIONS[currentQuestionIndex].prompt}
                 </h1>
@@ -592,7 +623,7 @@ export default function MomSetupPage() {
           {step === "food_micro_check" && (
             <div className="animate-rise space-y-6">
               <div>
-                <Eyebrow>FOOD OBSERVATION · {currentFoodQuestionIndex + 1}/4</Eyebrow>
+                <Eyebrow>식습관 관찰 · {currentFoodQuestionIndex + 1}/4</Eyebrow>
                 <h1 className="mt-2 text-[22px] font-bold leading-snug tracking-tight text-cocoa">
                   {FOOD_QUESTIONS[currentFoodQuestionIndex].title}
                 </h1>
@@ -604,7 +635,7 @@ export default function MomSetupPage() {
               <div className="space-y-3">
                 {FOOD_QUESTIONS[currentFoodQuestionIndex].options.map((opt) => {
                   const currentQId = FOOD_QUESTIONS[currentFoodQuestionIndex].id;
-                  const isSelected = (foodAnswers as any)?.[currentQId] === opt.patternId;
+                  const isSelected = foodAnswers?.[currentQId] === opt.patternId;
                   return (
                     <button
                       key={opt.optionId}
@@ -651,11 +682,71 @@ export default function MomSetupPage() {
             </div>
           )}
 
+          {/* STEP 2-C: Sleep Concern Micro Check (4문항, 수면/잠 고민 시 노출) */}
+          {step === "sleep_micro_check" && (
+            <div id="section-sleep-micro-check" className="animate-rise space-y-6">
+              <div>
+                <Eyebrow>수면 관찰 · {currentSleepQuestionIndex + 1}/4</Eyebrow>
+                <h1 className="mt-2 text-[22px] font-bold leading-snug tracking-tight text-cocoa">
+                  {SLEEP_QUESTIONS[currentSleepQuestionIndex].title}
+                </h1>
+                <p className="mt-2 text-[14px] text-cocoa-soft">
+                  {SLEEP_QUESTIONS[currentSleepQuestionIndex].subtitle}
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                {SLEEP_QUESTIONS[currentSleepQuestionIndex].options.map((opt) => {
+                  const currentQId = SLEEP_QUESTIONS[currentSleepQuestionIndex].id;
+                  const isSelected = sleepAnswers?.[currentQId] === opt.patternId;
+                  return (
+                    <button
+                      key={opt.optionId}
+                      type="button"
+                      onClick={() => handleSelectSleepOption(currentQId, opt.patternId)}
+                      className={`w-full rounded-2xl border p-4.5 text-left transition-all ${
+                        isSelected
+                          ? "border-coral bg-coral-tint/40 shadow-xs"
+                          : "border-line bg-milk hover:bg-cream/40"
+                      }`}
+                    >
+                      <p className="text-[15px] font-medium leading-relaxed text-cocoa">
+                        {opt.label}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center justify-between pt-2">
+                {currentSleepQuestionIndex > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => setCurrentSleepQuestionIndex(currentSleepQuestionIndex - 1)}
+                    className="inline-flex items-center gap-1 text-[13px] font-bold text-cocoa-soft hover:text-cocoa"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                    이전 문항
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setStep("mom_mini_check")}
+                    className="inline-flex items-center gap-1 text-[13px] font-bold text-cocoa-soft hover:text-cocoa"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                    내 반응 체크로 돌아가기
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* STEP 3: Current Conflict Input (Concern is Report Anchor) */}
           {step === "conflict_scene" && (
             <div className="animate-rise space-y-6">
               <div>
-                <Eyebrow>RECURRING SCENE · {concernLabel(currentConcern)}</Eyebrow>
+                <Eyebrow>반복되는 장면 · {concernLabel(currentConcern)}</Eyebrow>
                 <h1 className="mt-2 text-[23px] font-bold leading-snug tracking-tight text-cocoa">
                   요즘 {childDisplayName}와 가장 자주
                   <br />
@@ -692,7 +783,7 @@ export default function MomSetupPage() {
                     type="text"
                     value={childFirstReaction}
                     onChange={(e) => setChildFirstReaction(e.target.value)}
-                    placeholder="예: 낯선 반찬을 보자마자 입을 닫고 밀어냄"
+                    placeholder={`예: ${defaultDefaultsForConcern.childReaction}`}
                     className="mt-2 w-full rounded-[1.05rem] border border-line bg-milk px-4 py-3 text-[14.5px] text-cocoa focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/15"
                   />
                 </div>
@@ -705,14 +796,14 @@ export default function MomSetupPage() {
                     type="text"
                     value={momFirstReaction}
                     onChange={(e) => setMomFirstReaction(e.target.value)}
-                    placeholder="예: '한 입만 먹어보자' 하고 숟가락을 건넴"
+                    placeholder={`예: ${defaultDefaultsForConcern.momReaction}`}
                     className="mt-2 w-full rounded-[1.05rem] border border-line bg-milk px-4 py-3 text-[14.5px] text-cocoa focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/15"
                   />
                   <input
                     type="text"
                     value={momTypicalPhrase}
                     onChange={(e) => setMomTypicalPhrase(e.target.value)}
-                    placeholder="내가 자주 하는 말 (예: 한 입만 먹어보자, 진짜 맛있어)"
+                    placeholder={`내가 자주 하는 말 (예: ${defaultDefaultsForConcern.typicalPhrase})`}
                     className="mt-2 w-full rounded-[1.05rem] border border-line bg-milk px-4 py-2.5 text-[13.5px] text-cocoa focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/15"
                   />
                 </div>
@@ -725,7 +816,7 @@ export default function MomSetupPage() {
                     type="text"
                     value={subsequentEscalation}
                     onChange={(e) => setSubsequentEscalation(e.target.value)}
-                    placeholder="예: 아이가 고개를 돌리거나 숟가락을 밀치며 식탁 분위기가 굳어짐"
+                    placeholder={`예: ${defaultDefaultsForConcern.escalation}`}
                     className="mt-2 w-full rounded-[1.05rem] border border-line bg-milk px-4 py-3 text-[14.5px] text-cocoa focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/15"
                   />
                 </div>
@@ -744,7 +835,11 @@ export default function MomSetupPage() {
                       <button
                         key={f.id}
                         type="button"
-                        onClick={() => setRecentFrequency(f.id as any)}
+                        onClick={() =>
+                          setRecentFrequency(
+                            f.id as NonNullable<CurrentConflictInput["recentFrequency"]>
+                          )
+                        }
                         className={`rounded-xl py-2.5 text-[13px] font-bold transition-all ${
                           recentFrequency === f.id
                             ? "bg-coral text-white shadow-xs"
@@ -765,6 +860,9 @@ export default function MomSetupPage() {
                     if (currentConcern === "meal") {
                       setStep("food_micro_check");
                       setCurrentFoodQuestionIndex(FOOD_QUESTIONS.length - 1);
+                    } else if (currentConcern === "sleep") {
+                      setStep("sleep_micro_check");
+                      setCurrentSleepQuestionIndex(SLEEP_QUESTIONS.length - 1);
                     } else {
                       setStep("mom_mini_check");
                     }
@@ -772,7 +870,11 @@ export default function MomSetupPage() {
                   className="inline-flex items-center gap-1 text-[13px] font-bold text-cocoa-soft hover:text-cocoa"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
-                  {currentConcern === "meal" ? "이전: 식습관 체크" : "이전: 내 반응 체크"}
+                  {currentConcern === "meal"
+                    ? "이전: 식습관 체크"
+                    : currentConcern === "sleep"
+                    ? "이전: 수면 체크"
+                    : "이전: 내 반응 체크"}
                 </button>
                 <Button size="lg" onClick={handleSaveConflictAndNext}>
                   확인하고 리포트 생성하기
@@ -786,7 +888,7 @@ export default function MomSetupPage() {
           {step === "summary" && (
             <div className="animate-rise space-y-6">
               <div>
-                <Eyebrow>READY TO GENERATE</Eyebrow>
+                <Eyebrow>리포트 준비 완료</Eyebrow>
                 <h1 className="mt-2 text-[24px] font-bold leading-snug tracking-tight text-cocoa">
                   {childDisplayName}와 {momDisplayName}의
                   <br />
@@ -839,9 +941,9 @@ export default function MomSetupPage() {
               </div>
 
               <div className="pt-2">
-                <Button size="lg" onClick={handleCompleteAndGoReport}>
-                  우리 둘 이야기 보기
-                  <Sparkles className="ml-1.5 h-4 w-4" />
+                <Button size="lg" onClick={handleCompleteAndGoCheckout}>
+                  관계 사용설명서 만들기
+                  <ArrowRight className="ml-1.5 h-4 w-4" />
                 </Button>
               </div>
             </div>

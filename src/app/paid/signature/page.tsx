@@ -18,9 +18,18 @@ import { FAMILY_FIXTURES, FamilyFixture } from "@/lib/interaction/fixtures";
 import { buildMomEvidence } from "@/lib/questionnaire/momEvidence";
 import { buildBehaviorEvidence } from "@/lib/questionnaire/evidence";
 import { buildFoodEvidence } from "@/lib/questionnaire/foodQuestions";
+import { buildSleepEvidence } from "@/lib/questionnaire/sleepQuestions";
 import { generateSignatureReport } from "@/lib/interaction/signatureReportGenerator";
 import { computeFortuneFacts } from "@/lib/fortune/engine";
+import { subj } from "@/lib/caregiver";
 import { useKids } from "@/lib/store";
+import {
+  SIGNATURE_PRODUCT_ID,
+} from "@/lib/purchase/commerce";
+import { ReportOwnershipCover } from "@/components/commerce/ReportOwnershipCover";
+import { ShareSummaryCard } from "@/components/commerce/ShareSummaryCard";
+import { apiCheckReportAccess, apiFetchReport } from "@/lib/commerce/apiClient";
+import { loadCommerceDraft } from "@/lib/commerce/commerceDraft";
 import Link from "next/link";
 import { Sparkles, Users, ArrowLeft, RefreshCw, Compass, ShieldCheck } from "lucide-react";
 import type {
@@ -30,6 +39,7 @@ import type {
   CurrentConflictInput,
   FortuneFacts,
   MomEvidence,
+  SignatureReport,
 } from "@/lib/types";
 
 type ViewMode = "real" | "A" | "B" | "C" | "D" | "E";
@@ -37,7 +47,14 @@ type ViewMode = "real" | "A" | "B" | "C" | "D" | "E";
 function PaidSignatureReportInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { child, answers, concern, caregiverProfile, momAnswers, conflictInput, foodAnswers, ready } = useKids();
+  const { child, answers, concern, caregiverProfile, momAnswers, conflictInput, foodAnswers, sleepAnswers, ready } = useKids();
+
+  const reportIdParam =
+    searchParams?.get("reportId") ?? loadCommerceDraft().reportId ?? null;
+
+  const [serverReport, setServerReport] = useState<SignatureReport | null>(null);
+  const [accessChecked, setAccessChecked] = useState(false);
+  const [hasServerAccess, setHasServerAccess] = useState(false);
 
   // URL family param check
   const familyParam = searchParams?.get("family")?.toUpperCase();
@@ -66,14 +83,54 @@ function PaidSignatureReportInner() {
   );
 
   useEffect(() => {
-    if (ready && selectedMode === "real") {
-      if (!hasChildData) {
-        router.replace("/free/child");
-      } else if (!hasMomData) {
-        router.replace("/paid/signature/setup");
-      }
+    if (selectedMode !== "real" || !reportIdParam) {
+      setAccessChecked(true);
+      return;
     }
-  }, [ready, selectedMode, hasChildData, hasMomData, router]);
+    let cancelled = false;
+    async function verifyAccess() {
+      const rid = reportIdParam!;
+      const allowed = await apiCheckReportAccess(rid);
+      if (cancelled) return;
+      setHasServerAccess(allowed);
+      if (allowed) {
+        const payload = await apiFetchReport(rid);
+        if (!cancelled) setServerReport(payload);
+      }
+      setAccessChecked(true);
+    }
+    verifyAccess();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedMode, reportIdParam]);
+
+  useEffect(() => {
+    if (!ready || !accessChecked) return;
+    if (selectedMode !== "real") return;
+    if (reportIdParam) {
+      if (!hasServerAccess) {
+        router.replace("/checkout/signature");
+      }
+      return;
+    }
+    if (!hasChildData) {
+      router.replace("/free/child");
+    } else if (!hasMomData) {
+      router.replace("/paid/signature/setup");
+    } else {
+      router.replace("/checkout/signature");
+    }
+  }, [
+    ready,
+    accessChecked,
+    selectedMode,
+    reportIdParam,
+    hasServerAccess,
+    hasChildData,
+    hasMomData,
+    router,
+  ]);
 
   // Prepare Report Data
   let reportProfile: ChildProfile;
@@ -95,6 +152,10 @@ function PaidSignatureReportInner() {
     if (foodAnswers && Object.keys(foodAnswers).length > 0) {
       const foodEv = buildFoodEvidence(foodAnswers);
       reportChildEv = [...reportChildEv, ...foodEv];
+    }
+    if (sleepAnswers && Object.keys(sleepAnswers).length > 0) {
+      const sleepEv = buildSleepEvidence(sleepAnswers);
+      reportChildEv = [...reportChildEv, ...sleepEv];
     }
     reportMomEv = buildMomEvidence(momAnswers || {});
     reportConflict = conflictInput || {
@@ -126,7 +187,7 @@ function PaidSignatureReportInner() {
     reportCaregiverProfile = currentFixture.caregiverProfile;
   }
 
-  const report = generateSignatureReport(
+  const generatedReport = generateSignatureReport(
     reportProfile,
     reportChildEv,
     reportMomEv,
@@ -134,6 +195,8 @@ function PaidSignatureReportInner() {
     reportFortune,
     reportCaregiverProfile
   );
+
+  const report = serverReport ?? generatedReport;
 
   const fixtureLabels: Record<"A" | "B" | "C" | "D" | "E", string> = {
     A: "A. 엄마 케이스",
@@ -146,6 +209,32 @@ function PaidSignatureReportInner() {
   const childDisplayName = report.meta.childName;
   const momDisplayName = report.meta.momName || report.meta.caregiverRoleLabel;
   const caregiverRoleLabel = report.meta.caregiverRoleLabel;
+  const reportCreatedAt = new Date().toISOString();
+
+  if (
+    selectedMode === "real" &&
+    ready &&
+    accessChecked &&
+    (reportIdParam ? !hasServerAccess : !hasChildData || !hasMomData)
+  ) {
+    return null;
+  }
+
+  if (selectedMode === "real" && ready && !accessChecked) {
+    return (
+      <>
+        <SiteHeader />
+        <main className="flex-1 pb-20 pt-8">
+          <Container>
+            <p className="text-center text-[14px] text-cocoa-soft">
+              구매 정보를 확인하고 있어요…
+            </p>
+          </Container>
+        </main>
+        <SiteFooter />
+      </>
+    );
+  }
 
   return (
     <>
@@ -233,6 +322,20 @@ function PaidSignatureReportInner() {
 
           {/* Report Cover Header */}
           <section id="section-cover" className="animate-rise">
+            {selectedMode === "real" ? (
+              <div>
+                <ReportOwnershipCover
+                  childName={childDisplayName}
+                  caregiverRoleLabel={caregiverRoleLabel}
+                  concernLabel={report.meta.concernLabel}
+                  createdAt={reportCreatedAt}
+                />
+                <p className="mt-4 px-1 text-[14.5px] leading-relaxed text-cocoa-soft">
+                  {subj(childDisplayName)} 움직이는 방식과 {subj(momDisplayName)} 반응하는
+                  방식이 어디에서 만나고 엇갈리는지 직접 알려주신 장면을 바탕으로 살펴봤어요.
+                </p>
+              </div>
+            ) : (
             <div className="rounded-3xl border border-coral-tint bg-gradient-to-b from-cream via-milk to-milk p-6 shadow-xs">
               <div className="flex items-center justify-between border-b border-cream-dark pb-3 text-[12px] font-bold text-coral-deep">
                 <span className="flex items-center gap-1.5">
@@ -240,7 +343,7 @@ function PaidSignatureReportInner() {
                   우리 아이 × 나 관계 사용설명서
                 </span>
                 <span className="rounded-full bg-coral-tint px-2 py-0.5 text-[11px] text-coral-deep">
-                  Signature Report
+                  관계 사용설명서
                 </span>
               </div>
 
@@ -258,7 +361,7 @@ function PaidSignatureReportInner() {
                 </h1>
 
                 <p className="mt-2 text-[14.5px] leading-relaxed text-cocoa-soft">
-                  {childDisplayName}가 움직이는 방식과 {momDisplayName}가 반응하는 방식이
+                  {subj(childDisplayName)} 움직이는 방식과 {subj(momDisplayName)} 반응하는 방식이
                   <br />
                   어디에서 만나고 엇갈리는지 직접 알려주신 장면을 바탕으로 살펴봤어요.
                 </p>
@@ -277,6 +380,7 @@ function PaidSignatureReportInner() {
                 </div>
               </div>
             </div>
+            )}
           </section>
 
           {/* TWO-PERSON SUMMARY (Premium Value Moment 1) */}
@@ -299,7 +403,7 @@ function PaidSignatureReportInner() {
           {/* Chapter 01: 지금 우리 집에서 반복되는 장면 */}
           <section id="section-recurring-scene" className="mt-6 animate-rise">
             <div className="mb-2.5 flex items-center gap-2 px-1">
-              <span className="text-[13px] font-extrabold tracking-wider text-coral">CHAPTER 01</span>
+              <span className="text-[13px] font-extrabold tracking-wider text-coral">01</span>
               <span className="h-1 w-1 rounded-full bg-cream-dark" />
               <span className="text-[13px] font-bold text-cocoa-soft">반복되는 일상 장면</span>
             </div>
@@ -331,9 +435,9 @@ function PaidSignatureReportInner() {
           {/* Chapter 02: 같은 상황, 다른 시선 */}
           <section id="section-perspective-gap" className="mt-6 animate-rise">
             <div className="mb-2.5 flex items-center gap-2 px-1">
-              <span className="text-[13px] font-extrabold tracking-wider text-coral">CHAPTER 02</span>
+              <span className="text-[13px] font-extrabold tracking-wider text-coral">02</span>
               <span className="h-1 w-1 rounded-full bg-cream-dark" />
-              <span className="text-[13px] font-bold text-cocoa-soft">시선의 엇갈림</span>
+              <span className="text-[13px] font-bold text-cocoa-soft">같은 순간, 서로 달랐던 행동</span>
             </div>
             <PerspectiveCompare
               momPerspective={report.chapter02_perspectiveGap.momPerspective}
@@ -346,7 +450,7 @@ function PaidSignatureReportInner() {
           {/* Chapter 03: 우리 둘의 부딪힘 공식 */}
           <section id="section-interaction-pattern" className="mt-6 animate-rise">
             <div className="mb-2.5 flex items-center gap-2 px-1">
-              <span className="text-[13px] font-extrabold tracking-wider text-coral">CHAPTER 03</span>
+              <span className="text-[13px] font-extrabold tracking-wider text-coral">03</span>
               <span className="h-1 w-1 rounded-full bg-cream-dark" />
               <span className="text-[13px] font-bold text-cocoa-soft">상호작용 패턴</span>
             </div>
@@ -389,7 +493,7 @@ function PaidSignatureReportInner() {
           {report.fortuneRelationship && (
             <section id="section-fortune-relationship" className="mt-6 animate-rise">
               <div className="mb-2.5 flex items-center gap-2 px-1">
-                <span className="text-[13px] font-extrabold tracking-wider text-coral">RELATIONSHIP HINT</span>
+                <span className="text-[13px] font-extrabold tracking-wider text-coral">출생정보 힌트</span>
                 <span className="h-1 w-1 rounded-full bg-cream-dark" />
                 <span className="text-[13px] font-bold text-cocoa-soft">출생정보 교차 힌트</span>
               </div>
@@ -397,7 +501,7 @@ function PaidSignatureReportInner() {
                 <div>
                   <div className="flex items-center gap-1.5 text-[12px] font-bold text-coral-deep">
                     <Compass className="h-4 w-4" />
-                    <span>출생정보 기반 보조 힌트 (참고용 REFLECTIVE 레이어)</span>
+                    <span>출생정보 기반 보조 힌트 (참고용)</span>
                   </div>
                   <h2 className="mt-1 text-[20px] font-bold leading-snug text-cocoa">
                     나와 아이의 출생정보로
@@ -487,9 +591,9 @@ function PaidSignatureReportInner() {
           {/* Chapter 04: 우리 둘의 반복 갈등 Chain + WHERE TO BREAK */}
           <section id="section-conflict-chain" className="mt-6 animate-rise">
             <div className="mb-2.5 flex items-center gap-2 px-1">
-              <span className="text-[13px] font-extrabold tracking-wider text-coral">CHAPTER 04</span>
+              <span className="text-[13px] font-extrabold tracking-wider text-coral">04</span>
               <span className="h-1 w-1 rounded-full bg-cream-dark" />
-              <span className="text-[13px] font-bold text-cocoa-soft">갈등의 고리</span>
+              <span className="text-[13px] font-bold text-cocoa-soft">반복되는 갈등 흐름</span>
             </div>
             <Card tone="plain" className="p-6">
               <h2 className="text-[19px] font-bold leading-snug text-cocoa">
@@ -522,12 +626,12 @@ function PaidSignatureReportInner() {
           {/* Chapter 05: 엄마가 이 순간 특히 지치는 이유 / 잘 맞는 지점 */}
           <section id="section-mom-exhaustion" className="mt-6 animate-rise">
             <div className="mb-2.5 flex items-center gap-2 px-1">
-              <span className="text-[13px] font-extrabold tracking-wider text-coral">CHAPTER 05</span>
+              <span className="text-[13px] font-extrabold tracking-wider text-coral">05</span>
               <span className="h-1 w-1 rounded-full bg-cream-dark" />
               <span className="text-[13px] font-bold text-cocoa-soft">
                 {report.chapter05_momExhaustionPoint.isLowFriction
                   ? "호흡의 연결"
-                  : "내 마음 돌봄"}
+                  : "반복되는 반응"}
               </span>
             </div>
             <MomExhaustionCard
@@ -542,7 +646,7 @@ function PaidSignatureReportInner() {
           {/* Chapter 06: 오늘 바로 바꿔볼 말 */}
           <section id="section-phrases" className="mt-6 animate-rise">
             <div className="mb-2.5 flex items-center gap-2 px-1">
-              <span className="text-[13px] font-extrabold tracking-wider text-coral">CHAPTER 06</span>
+              <span className="text-[13px] font-extrabold tracking-wider text-coral">06</span>
               <span className="h-1 w-1 rounded-full bg-cream-dark" />
               <span className="text-[13px] font-bold text-cocoa-soft">말 한마디의 변화</span>
             </div>
@@ -582,7 +686,7 @@ function PaidSignatureReportInner() {
           {/* Chapter 07: 오늘부터 해볼 행동 */}
           <section id="section-actions" className="mt-6 animate-rise">
             <div className="mb-2.5 flex items-center gap-2 px-1">
-              <span className="text-[13px] font-extrabold tracking-wider text-coral">CHAPTER 07</span>
+              <span className="text-[13px] font-extrabold tracking-wider text-coral">07</span>
               <span className="h-1 w-1 rounded-full bg-cream-dark" />
               <span className="text-[13px] font-bold text-cocoa-soft">작은 실천</span>
             </div>
@@ -600,10 +704,25 @@ function PaidSignatureReportInner() {
             </Card>
           </section>
 
+          {selectedMode === "real" && (
+            <section id="section-share" className="mt-6 animate-rise">
+              <ShareSummaryCard report={report} />
+            </section>
+          )}
+
+          <section className="mt-6 text-center">
+            <Link
+              href="/my-results"
+              className="text-[14px] font-semibold text-coral-deep underline"
+            >
+              내 결과 목록에서 다시 보기
+            </Link>
+          </section>
+
           {/* Chapter 08: 우리 둘이 오래 기억할 한 가지 */}
           <section id="section-anchor" className="mt-6 animate-rise">
             <div className="mb-2.5 flex items-center gap-2 px-1">
-              <span className="text-[13px] font-extrabold tracking-wider text-coral">CHAPTER 08</span>
+              <span className="text-[13px] font-extrabold tracking-wider text-coral">08</span>
               <span className="h-1 w-1 rounded-full bg-cream-dark" />
               <span className="text-[13px] font-bold text-cocoa-soft">관계의 닻</span>
             </div>

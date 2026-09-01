@@ -154,7 +154,7 @@ function buildOneSentence(
 function buildMisreading(ax: AxisValues): string {
   // 1. 자기주장이 강할 때
   if (band(ax.strong_self_direction) === "high") {
-    return "엄마 눈에는 고집을 부리는 것처럼 보일 수 있어요. 자기가 정한 순서나 방식이 분명한 편이라, 통제하기보다 두 가지 선택지 안에서 직접 결정하게 해 주면 갈등이 크게 줄어요.";
+    return "보호자 눈에는 고집을 부리는 것처럼 보일 수 있어요. 자기가 정한 순서나 방식이 분명한 편이라, 통제하기보다 두 가지 선택지 안에서 직접 결정하게 해 주면 갈등이 크게 줄어요.";
   }
   // 2. 활동 전환이 어려울 때
   if (band(ax.transition_preference) === "low") {
@@ -203,26 +203,26 @@ function buildPhrasePair(ax: AxisValues): PhrasePair {
   if (band(ax.needs_observation_time) === "low") {
     return {
       before: "빨리 가서 친구들이랑 인사해!",
-      after: "엄마 손 잡고 여기서 조금 구경하다가, 들어가고 싶을 때 가보자.",
+      after: "내 손 잡고 여기서 조금 구경하다가, 들어가고 싶을 때 가보자.",
     };
   }
   // C. 칭찬 반응 높음 -> 구체적 과정 인정
   if (band(ax.motivation_source) === "high") {
     return {
       before: "어~ 잘했네.",
-      after: "이거 혼자 해보려고 끝까지 애썼네! 엄마가 다 봤어.",
+      after: "이거 혼자 해보려고 끝까지 애썼네! 내가 다 봤어.",
     };
   }
   // E. 감정 표현 큼 -> 감정 수용 후 호흡
   if (band(ax.emotional_expression_intensity) === "high") {
     return {
       before: "뚝! 그만 울어.",
-      after: "많이 속상하고 화났구나. 숨 한번 고르고 엄마한테 이야기해 줄래?",
+      after: "많이 속상하고 화났구나. 숨 한번 고르고 나한테 이야기해 줄래?",
     };
   }
   return {
     before: "왜 자꾸 그래!",
-    after: "네 마음은 이런 거였구나. 엄마한테 천천히 알려줄래?",
+    after: "네 마음은 이런 거였구나. 나한테 천천히 알려줄래?",
   };
 }
 

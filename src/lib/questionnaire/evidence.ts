@@ -8,9 +8,9 @@ import type {
   Answers,
   Axis,
   BehaviorEvidence,
-  Confidence,
   QuestionDomain,
 } from "@/lib/types";
+import { generalBehaviorEvidence } from "@/lib/evidence/builders";
 import { DOMAIN_AXIS, QUESTIONS } from "./questions";
 
 interface PatternDef {
@@ -96,15 +96,15 @@ export function buildBehaviorEvidence(answers: Answers): BehaviorEvidence[] {
     const value = answers[domain];
     if (value == null) return;
     const def = PATTERNS[domain][value];
-    const confidence: Confidence = "medium"; // 문항 1개 → 과신하지 않음
-    evidence.push({
-      domain,
-      axis: DOMAIN_AXIS[domain],
-      observedPattern: def.observedPattern,
-      observedLabel: def.observedLabel,
-      confidence,
-      sourceQuestionIds: [questionIdForDomain(domain)],
-    });
+    evidence.push(
+      generalBehaviorEvidence({
+        domain,
+        axis: DOMAIN_AXIS[domain],
+        patternId: def.observedPattern,
+        observedLabel: def.observedLabel,
+        questionIds: [questionIdForDomain(domain)],
+      })
+    );
   });
   return evidence;
 }

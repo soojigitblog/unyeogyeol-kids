@@ -114,10 +114,10 @@ export default function FreeResultPage() {
             </div>
           </section>
 
-          {/* 3. 엄마가 오해하기 쉬운 한 가지 */}
+          {/* 3. 보호자가 오해하기 쉬운 한 가지 */}
           <section className="mt-9 animate-rise-2">
             <h2 className="text-[19px] font-bold tracking-tight text-cocoa">
-              엄마가 오해하기 쉬운 한 가지
+              보호자가 오해하기 쉬운 한 가지
             </h2>
             <Card tone="butter" className="mt-3">
               <p className="text-[15.5px] leading-relaxed text-cocoa">
@@ -156,7 +156,7 @@ export default function FreeResultPage() {
               </p>
               <div className="mt-5">
                 <ButtonLink href="/concern" size="lg">
-                  우리 아이 이야기 이어가기
+                  요즘 가장 힘든 장면 골라보기
                   <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
                 </ButtonLink>
               </div>

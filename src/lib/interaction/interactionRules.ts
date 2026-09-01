@@ -592,7 +592,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
         after: "어떤 냄새가 나는지 먼저 맡아볼까? 먹지 않고 보기만 해도 괜찮아.",
         whyItMayHelp:
           "바로 먹어야 하는 선택지만 주기보다, 냄새나 모양을 먼저 살펴보는 선택지도 함께 열어줄 수 있어요.",
-        evidenceRefs: ["child:new_environment_new_food_hesitation", "concern:meal"],
+        evidenceRefs: ["child:food_new_food_new_food_hesitation", "concern:meal"],
       },
       {
         phraseId: "phrase_meal_favorite_acknowledge",
@@ -601,7 +601,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
         after: "이 반찬이 제일 맛있구나. 좋아하는 거 먼저 먹고 다른 반찬은 젓가락으로 콕 찍어볼까?",
         whyItMayHelp:
           "아이가 좋아하는 음식을 인정해주면서 새로운 음식에 대한 접근을 부드럽게 시도할 수 있어요.",
-        evidenceRefs: ["child:self_assertion_food_familiar_preference", "concern:meal"],
+        evidenceRefs: ["child:food_preference_food_familiar_preference", "concern:meal"],
       },
     ],
     sampleActions: [
@@ -611,7 +611,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
         actionDetail:
           "밥 위에 바로 얹어주기보다 작은 접시에 따로 담아 아이가 스스로 냄새나 모양을 살필 수 있게 해주세요.",
         whyItMayHelp: "아이가 식사 속도와 선택권을 스스로 조절하는 데 도움이 될 수 있어요.",
-        evidenceRefs: ["child:new_environment_new_food_hesitation", "concern:meal"],
+        evidenceRefs: ["child:food_new_food_new_food_hesitation", "concern:meal"],
       },
       {
         actionId: "action_meal_touch_ingredient",
@@ -619,7 +619,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
         actionDetail:
           "식사 준비 때 채소를 씻거나 만져보는 작은 참여 기회를 만들어주세요.",
         whyItMayHelp: "낯선 음식을 먼저 만지거나 살펴보는 선택지를 늘리는 데 도움이 될 수 있어요.",
-        evidenceRefs: ["child:new_environment_new_food_hesitation", "concern:meal"],
+        evidenceRefs: ["child:food_new_food_new_food_hesitation", "concern:meal"],
       },
     ],
     anchorPromise: "식탁에서 한 입 더 먹이는 것보다, 음식을 편안하게 마주할 작은 틈을 열어주는 것부터 시작해보세요.",
@@ -671,7 +671,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
         after: "식사 시간 5분 남았어. 지금 남은 밥 중에 딱 두 숟가락만 맛있게 먹고 정리할까?",
         whyItMayHelp:
           "아이가 식사의 마침표를 예측하고 스스로 마무리할 수 있는 기회를 주는 데 도움이 될 수 있어요.",
-        evidenceRefs: ["child:transition_meal_pacing_autonomy", "concern:meal"],
+        evidenceRefs: ["child:food_meal_flow_meal_pacing_autonomy", "concern:meal"],
       },
       {
         phraseId: "phrase_meal_acknowledge_full",
@@ -680,7 +680,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
         after: "배가 이제 부르구나. 국물 한 모금 마시고 자리에서 일어날까?",
         whyItMayHelp:
           "아이의 배부름 신호를 인정해주면서 부드럽게 식사를 마무리하는 데 도움이 될 수 있어요.",
-        evidenceRefs: ["child:parent_instruction_food_refusal_on_pressure", "concern:meal"],
+        evidenceRefs: ["child:food_prompt_response_food_refusal_on_pressure", "concern:meal"],
       },
     ],
     sampleActions: [
@@ -690,7 +690,7 @@ export const INTERACTION_RULES: InteractionRule[] = [
         actionDetail:
           "식사 시작 시 모래시계를 두거나 끝나는 시간을 미리 알려주어 스스로 속도를 조절하게 해주세요.",
         whyItMayHelp: "잔소리 대신 시각적인 신호로 전환을 돕는 방법이 될 수 있어요.",
-        evidenceRefs: ["child:transition_meal_pacing_autonomy", "concern:meal"],
+        evidenceRefs: ["child:food_meal_flow_meal_pacing_autonomy", "concern:meal"],
       },
       {
         actionId: "action_meal_portion_choice",
@@ -698,9 +698,149 @@ export const INTERACTION_RULES: InteractionRule[] = [
         actionDetail:
           "아이가 직접 먹을 만큼만 덜어먹게 하여 스스로 정한 양을 다 먹는 성취감을 경험하게 해주세요.",
         whyItMayHelp: "자기주도성을 존중하여 식사에 대한 거부감을 줄이는 데 도움이 될 수 있어요.",
-        evidenceRefs: ["child:parent_instruction_food_refusal_on_pressure", "concern:meal"],
+        evidenceRefs: ["child:food_prompt_response_food_refusal_on_pressure", "concern:meal"],
       },
     ],
     anchorPromise: "다 먹이는 것보다, 기분 좋게 식탁을 마무리하는 경험을 쌓는 것부터 시작해보세요.",
+  },
+
+  // 12. 수면/잠자리: 하던 활동 마무리 필요 × 취침 흐름 재촉 (sleep 전용)
+  {
+    ruleId: "rule_friction_sleep_transition_vs_pace",
+    title: "잠자리 전에도 하던 활동을 이어가려는 아이와 취침 흐름을 챙기는 {{CG}}",
+    requiredChildPatterns: [
+      "sleep_transition_needs_completion",
+      "sleep_transition_delays_bedtime",
+      "sleep_prebed_continues_activity",
+      "sleep_transition_strong_refusal",
+    ],
+    requiredMomPatterns: [
+      "fast_pace_directive",
+      "time_notice_prompt",
+      "firm_boundary_insistence",
+      "opt_time_control",
+      "opt_time_notify",
+      "opt_inst_firm",
+    ],
+    applicableConcerns: ["sleep"],
+    confidence: "high",
+    interactionType: "friction",
+    childPerspectiveSummary:
+      "잠자리 시간이 되어도 하던 활동을 이어가려는 모습이 있어요.",
+    momPerspectiveSummary:
+      "정해진 취침 시간과 흐름을 지키려 하며 잠자리로 이끌려는 반응이에요.",
+    synthesisSummary:
+      "{{CG의}} 취침 흐름을 빠르게 이어가려는 권유와 아이가 하던 활동을 이어가려는 반응이 잠자리 직전에 맞부딪히며 실랑이가 길어질 수 있어요.",
+    whereToBreakSummary: {
+      targetStep: 2,
+      breakActionTitle: "잠자리로 가기 전 마지막 행동 하나 정하기",
+      breakActionDetail:
+        "‘이제 자자’고 바로 끊기 전에, 지금 하던 활동에서 마지막으로 할 행동 하나를 같이 정해주세요.",
+    },
+    samplePhrases: [
+      {
+        phraseId: "phrase_sleep_completion_bridge",
+        situation: "하던 놀이를 멈추고 잠자리로 가야 할 때",
+        before: "이제 그만하고 빨리 자.",
+        after: "그림책 한 페이지만 더 보고 잠옷 입으러 갈까?",
+        whyItMayHelp:
+          "바로 잠자리로 가는 선택지만 주기보다, 하던 활동을 어디에서 마칠지 먼저 정해볼 수 있어요.",
+        evidenceRefs: ["child:sleep_bedtime_sleep_transition_needs_completion", "concern:sleep"],
+      },
+      {
+        phraseId: "phrase_sleep_pace_acknowledge",
+        situation: "잠자리로 가기 싫어하며 다른 행동을 찾을 때",
+        before: "빨리 누워! 늦었어.",
+        after: "지금 하던 거 마지막으로 뭐 할지 같이 정해볼까? 정해지면 잠옷 입으러 가자.",
+        whyItMayHelp:
+          "재촉을 반복하기보다 현재 활동의 마지막 지점을 아이와 짧게 확인하는 방식이에요.",
+        evidenceRefs: ["child:sleep_bedtime_sleep_transition_delays_bedtime", "concern:sleep"],
+      },
+    ],
+    sampleActions: [
+      {
+        actionId: "action_sleep_last_step",
+        actionTitle: "마지막 행동 정하기",
+        actionDetail:
+          "잠자리로 넘어가기 전, 지금 하던 활동에서 마지막 행동 하나를 같이 정해보세요.",
+        whyItMayHelp:
+          "마지막 행동을 하나 정하면, 그 행동이 끝난 뒤 다음 순서로 넘어가도록 안내할 수 있어요.",
+        evidenceRefs: ["child:sleep_bedtime_sleep_transition_needs_completion", "concern:sleep"],
+      },
+      {
+        actionId: "action_sleep_transition_preview",
+        actionTitle: "잠자리 전환 한 단계 미리 알려주기",
+        actionDetail:
+          "잠자리로 가기 직전에 ‘이제 ○○하고 잠옷 입으러 가자’처럼 다음 행동을 짧게 미리 알려주세요.",
+        whyItMayHelp:
+          "잠자리로 가기 직전에 다음 행동을 짧게 알려두면, 바로 끊기는 흐름 대신 순서를 함께 확인할 수 있어요.",
+        evidenceRefs: ["child:sleep_bedtime_sleep_transition_delays_bedtime", "concern:sleep"],
+      },
+    ],
+    anchorPromise:
+      "잠자리로 재촉하기 전, 하던 활동의 마지막 지점을 함께 정하는 것부터 시작해보세요.",
+  },
+
+  // 13. 수면/잠자리: 익숙한 순서 선호 × 상황에 맞춘 순서 변경 (sleep 전용)
+  {
+    ruleId: "rule_friction_sleep_routine_vs_change",
+    title: "익숙한 잠자리 순서를 지키려는 아이와 상황에 맞게 바꾸는 {{CG}}",
+    requiredChildPatterns: [
+      "sleep_routine_prefers_familiar_sequence",
+      "sleep_routine_resists_change",
+    ],
+    requiredMomPatterns: [
+      "rapid_rescheduling",
+      "preference_for_structure",
+      "opt_rout_replan",
+      "opt_rout_hold_plan",
+      "opt_time_control",
+    ],
+    applicableConcerns: ["sleep"],
+    confidence: "high",
+    interactionType: "friction",
+    childPerspectiveSummary:
+      "익숙한 잠자리 준비 순서를 따라갈 때 더 편안하게 흐름을 이어가려는 모습이 있어요.",
+    momPerspectiveSummary:
+      "상황에 맞게 순서를 바꾸거나 빠르게 다음 단계로 넘기려는 반응이에요.",
+    synthesisSummary:
+      "{{CG가}} 상황에 맞게 순서를 바꾸려 할 때와 아이가 익숙한 잠자리 흐름을 지키려 할 때 실랑이가 생길 수 있어요.",
+    whereToBreakSummary: {
+      targetStep: 2,
+      breakActionTitle: "익숙한 잠자리 순서 하나 먼저 고정하기",
+      breakActionDetail:
+        "매일 모든 과정을 똑같이 할 필요는 없지만, 아이에게 익숙한 잠자리 순서 하나를 먼저 정해보세요.",
+    },
+    samplePhrases: [
+      {
+        phraseId: "phrase_sleep_routine_anchor",
+        situation: "평소와 다른 순서로 잠자리 준비를 하려 할 때",
+        before: "오늘은 빨리 하자, 순서 상관없어.",
+        after: "오늘은 책 읽기부터 할까, 양치부터 할까? 네가 고른 순서대로 해보자.",
+        whyItMayHelp:
+          "순서를 완전히 바꾸기보다 선택지 안에서 정하면 거부감을 줄이는 데 도움이 될 수 있어요.",
+        evidenceRefs: ["child:sleep_routine_sleep_routine_prefers_familiar_sequence", "concern:sleep"],
+      },
+    ],
+    sampleActions: [
+      {
+        actionId: "action_sleep_familiar_sequence",
+        actionTitle: "익숙한 순서 한 가지 유지하기",
+        actionDetail:
+          "매일 모든 과정을 똑같이 만들 필요는 없지만, 아이에게 익숙한 잠자리 순서 하나를 유지해보세요.",
+        whyItMayHelp: "예측 가능한 흐름이 잠자리 준비 부담을 줄이는 데 도움이 될 수 있어요.",
+        evidenceRefs: ["child:sleep_routine_sleep_routine_resists_change", "concern:sleep"],
+      },
+      {
+        actionId: "action_sleep_sequence_choice",
+        actionTitle: "바뀌는 날은 선택지로 순서 정하기",
+        actionDetail:
+          "순서를 바꿔야 할 때는 ‘A부터 할까, B부터 할까?’처럼 두 가지 안에서 고르게 해주세요.",
+        whyItMayHelp: "일방적 변경 대신 작은 선택권을 주는 방식을 시도해볼 수 있어요.",
+        evidenceRefs: ["child:sleep_routine_sleep_routine_prefers_familiar_sequence", "concern:sleep"],
+      },
+    ],
+    anchorPromise:
+      "순서를 바꿔야 할 때도, 익숙한 흐름 하나를 먼저 정해주는 것부터 시작해보세요.",
   },
 ];

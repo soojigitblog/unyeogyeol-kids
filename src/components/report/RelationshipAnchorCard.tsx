@@ -17,16 +17,18 @@ export function RelationshipAnchorCard({
       </div>
 
       <span className="mt-3 inline-block text-[12px] font-bold tracking-wider text-coral-deep">
-        OUR RELATIONSHIP ANCHOR
+        우리 둘이 기억할 한 가지
       </span>
 
       <p className="font-serif mt-4 text-[19px] font-bold leading-relaxed tracking-tight text-cocoa">
         “{oneSentenceAnchor}”
       </p>
 
-      <div className="mt-4 rounded-2xl bg-milk/80 px-4 py-3 text-[13.5px] leading-relaxed text-cocoa-soft">
-        {meaning}
-      </div>
+      {meaning ? (
+        <div className="mt-4 rounded-2xl bg-milk/80 px-4 py-3 text-[13.5px] leading-relaxed text-cocoa-soft">
+          {meaning}
+        </div>
+      ) : null}
     </div>
   );
 }
