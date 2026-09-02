@@ -382,8 +382,11 @@ describe("P2.0H.1 EVIDENCE & CREDIBILITY ENGINE TEST SUITE", () => {
     const sigI = generateSignatureReport(fixI.childProfile, fixI.childEvidences, momEvI, fixI.conflictInput);
     expect(sigI.chapter06_threePhrases.length).toBeGreaterThan(0);
     const phraseI = sigI.chapter06_threePhrases[0];
-    expect(phraseI.before).toContain("안 된다고");
-    expect(phraseI.after).toContain("네 생각부터 듣고");
+    // P2.4 RECOMMENDATION ALIGNMENT: CurrentConflict.scenarioId(sc_friends_sharing) 기반
+    // 실제 장면 문구로 대체됨. fixture I 는 momFirstReaction 을 입력하지 않았으므로
+    // "안 된다고 했잖아" 같은 근거 없는 대사를 지어내지 않고 중립 fallback 을 쓴다.
+    expect(phraseI.before).toContain("상황을 정리하려 안내함");
+    expect(phraseI.after).toContain("친구한테 줄까");
     expect(phraseI.evidenceRefs).toContain("child:self_assertion_asserts_but_negotiates");
 
     // 13-5. Fixture A Fortune Reflection (ALIGNED)

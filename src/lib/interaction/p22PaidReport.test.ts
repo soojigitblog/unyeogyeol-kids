@@ -148,33 +148,45 @@ describe("P2.2H PAID REPORT EVIDENCE INTEGRITY & HUMAN VALUE PATCH", () => {
   });
 
   it("4. Validates Specific Non-flattering and Non-therapeutic Action & Anchor Copy", () => {
-    // Family A Anchor
+    // P2.4 RECOMMENDATION ALIGNMENT: A/B/D/E는 CurrentConflict.scenarioId 가
+    // scenarioRecommendations 에 매칭되어, 일반 Interaction Rule 예시 대신 실제 장면
+    // 기반 anchor/action 문구를 쓴다(C는 scenarioId가 매칭 테이블에 없어 기존 rule fallback 유지).
+
+    // Family A Anchor — sc_discipline_instruction
     const fixA = FAMILY_FIXTURES.find((f) => f.fixtureId === "A")!;
     const repA = generateSignatureReport(fixA.childProfile, fixA.childEvidences, buildMomEvidence(fixA.momAnswers), fixA.conflictInput);
-    expect(repA.chapter08_corePromise.oneSentenceAnchor).toBe("하던 것을 끝낼 작은 틈을 주면, 다음 순서로 넘어가는 대화도 달라질 수 있어요.");
-    expect(repA.chapter07_threeActions[0].whyItMayHelp).toContain("선택지를 만들 수 있어요");
+    expect(repA.chapter08_corePromise.oneSentenceAnchor).toBe(
+      "'빨리 하자'고 반복하기 전에, 지금 하던 것의 마지막 지점을 먼저 정해보세요."
+    );
+    expect(repA.chapter07_threeActions[0].whyItMayHelp).toContain("받아들이는 데 도움이 될 수 있어요");
 
-    // Family B Anchor
+    // Family B Anchor — sc_shyness_hesitation
     const fixB = FAMILY_FIXTURES.find((f) => f.fixtureId === "B")!;
     const repB = generateSignatureReport(fixB.childProfile, fixB.childEvidences, buildMomEvidence(fixB.momAnswers), fixB.conflictInput);
-    expect(repB.chapter08_corePromise.oneSentenceAnchor).toBe("아이가 상황을 충분히 둘러볼 수 있는 시간을 함께 지켜봐 주는 것부터 시작해보세요.");
+    expect(repB.chapter08_corePromise.oneSentenceAnchor).toBe(
+      "빨리 인사하라고 하기 전에, 잠깐 지켜볼 시간을 먼저 함께 만들어주세요."
+    );
 
-    // Family C Anchor
+    // Family C Anchor — scenarioId(sc_tantrum_burst)가 매칭 테이블에 없어 기존 rule fallback 유지
     const fixC = FAMILY_FIXTURES.find((f) => f.fixtureId === "C")!;
     const repC = generateSignatureReport(fixC.childProfile, fixC.childEvidences, buildMomEvidence(fixC.momAnswers), fixC.conflictInput);
     expect(repC.chapter08_corePromise.oneSentenceAnchor).toBe("설명보다 먼저, 지금 속상하다는 걸 짧게 알아채주는 것부터 시작해보세요.");
     expect(repC.chapter08_corePromise.oneSentenceAnchor).not.toContain("진정제");
 
-    // Family D Anchor
+    // Family D Anchor — sc_stubborn_insistence
     const fixD = FAMILY_FIXTURES.find((f) => f.fixtureId === "D")!;
     const repD = generateSignatureReport(fixD.childProfile, fixD.childEvidences, buildMomEvidence(fixD.momAnswers), fixD.conflictInput);
-    expect(repD.chapter08_corePromise.oneSentenceAnchor).toBe("규칙의 테두리는 지키되, 그 안에서 아이가 직접 고를 수 있는 작은 틈을 열어주세요.");
+    expect(repD.chapter08_corePromise.oneSentenceAnchor).toBe(
+      "방식을 억지로 바꾸려 하기보다, 지켜야 할 한 가지만 짧게 알려주는 것부터 시작해보세요."
+    );
     expect(repD.chapter05_momExhaustionPoint.comfortMessage).not.toContain("가정을 지키는 든든한 기준");
 
-    // Family E Anchor
+    // Family E Anchor — sc_daycare_separation
     const fixE = FAMILY_FIXTURES.find((f) => f.fixtureId === "E")!;
     const repE = generateSignatureReport(fixE.childProfile, fixE.childEvidences, buildMomEvidence(fixE.momAnswers), fixE.conflictInput);
-    expect(repE.chapter08_corePromise.oneSentenceAnchor).toBe("아이의 신중한 속도를 존중하며 곁을 지켜주는 지금의 대화 방식을 편안하게 이어가보세요.");
+    expect(repE.chapter08_corePromise.oneSentenceAnchor).toBe(
+      "빨리 들어가라고 재촉하기 전에, 잠깐 둘러볼 시간을 먼저 함께 지켜봐 주세요."
+    );
     expect(repE.chapter05_momExhaustionPoint.comfortMessage).not.toContain("평생의");
     expect(repE.chapter05_momExhaustionPoint.comfortMessage).not.toContain("안전 울타리");
   });
@@ -341,8 +353,8 @@ describe("P2.2H PAID REPORT EVIDENCE INTEGRITY & HUMAN VALUE PATCH", () => {
     expect(report.chapter04_conflictChain.steps.length).toBe(4);
     expect(report.chapter04_conflictChain.steps[3].description).not.toContain("피곤하고 부담스럽게");
 
-    // Anchor is Food Context
-    expect(report.chapter08_corePromise.oneSentenceAnchor).toContain("식탁");
+    // Anchor is Food Context — sc_meal_new_food_reject scenario 기반 실제 장면 문구
+    expect(report.chapter08_corePromise.oneSentenceAnchor).toContain("음식");
 
     // Fixture Leakage: 0
     expect(serialized).not.toContain("민준");

@@ -198,7 +198,11 @@ describe("P2.2V.8 Sleep Concern Gate", () => {
     }
   });
 
-  it("Sleep Test 6 — sleep no-evidence → phrases/actions 비어 있지 않을 때만 rule match", () => {
+  it("Sleep Test 6 — sleep 관련 세부 행동 Evidence 없이도, CurrentConflict.scenarioId 만으로 실제 장면에 맞는 phrase/action 이 생성된다", () => {
+    // P2.4 RECOMMENDATION ALIGNMENT: CH06/07 은 10문항/미니체크 Evidence 매칭이 아니라
+    // 실제 CurrentConflict.scenarioId 를 1차 근거로 삼는다(Primary Interaction Rule은 fallback).
+    // Setup에서 scenarioId는 항상 실제로 입력되므로, sleep 세부 패턴 Evidence가 없어도
+    // "생성할 근거가 없다"며 비워두는 대신 실제 장면(sc_sleep_bedtime_delay)에 맞는 내용을 낸다.
     const reportNoSleep = generateSignatureReport(
       childProfile,
       buildBehaviorEvidence(childAnswers),
@@ -207,12 +211,29 @@ describe("P2.2V.8 Sleep Concern Gate", () => {
       null,
       fatherProfile
     );
-    expect(reportNoSleep.chapter06_threePhrases.length).toBe(0);
-    expect(reportNoSleep.chapter07_threeActions.length).toBeLessThanOrEqual(1);
+    expect(reportNoSleep.chapter06_threePhrases.length).toBeGreaterThan(0);
+    expect(reportNoSleep.chapter07_threeActions.length).toBeGreaterThanOrEqual(2);
+    // 근거 없이 지어낸 대사가 아니라, 실제 momTypicalPhrase 가 before 에 그대로 실린다.
+    expect(reportNoSleep.chapter06_threePhrases[0].before).toContain(sleepConflict.momTypicalPhrase);
+    expect(reportNoSleep.chapter06_threePhrases[0].evidenceRefs).toContain(
+      `scenario:${sleepConflict.scenarioId}`
+    );
   });
 
-  it("Sleep Test 7 — routine rule match (순서 변경)", () => {
-    const report = generateSignatureReport(
+  it("Sleep Test 7 — CurrentConflict.scenarioId 가 같으면 mom 미니체크 세부 응답이 달라져도 CH06/07 내용이 흔들리지 않는다", () => {
+    // P2.4 RECOMMENDATION ALIGNMENT / Primary Interaction Lock: CH06/07 이 일반 Evidence
+    // 매칭(routine_order 등)에 따라 매번 다른 문구로 흔들리면, CurrentConflict 실제 장면과
+    // 무관한 조언이 섞일 수 있다. 같은 scenarioId 라면 세부 Evidence 가 달라져도
+    // CH06/07 문구는 실제 장면(sc_sleep_bedtime_delay) 기준으로 일관되어야 한다.
+    const baseReport = generateSignatureReport(
+      childProfile,
+      buildBehaviorEvidence(childAnswers),
+      buildMomEvidence(momAnswersPace),
+      sleepConflict,
+      null,
+      fatherProfile
+    );
+    const variedReport = generateSignatureReport(
       childProfile,
       [
         ...buildBehaviorEvidence(childAnswers),
@@ -231,9 +252,16 @@ describe("P2.2V.8 Sleep Concern Gate", () => {
       null,
       fatherProfile
     );
-    const copy = extractCustomerCopy(report);
-    expect(copy).toContain("순서");
-    expect(report.chapter07_threeActions.some((a) => a.actionTitle.includes("순서"))).toBe(true);
+    expect(variedReport.chapter06_threePhrases[0].after).toBe(
+      baseReport.chapter06_threePhrases[0].after
+    );
+    expect(variedReport.chapter08_corePromise.oneSentenceAnchor).toBe(
+      baseReport.chapter08_corePromise.oneSentenceAnchor
+    );
+    // 실제 잠자리 장면(놀이 마무리/전환)과 무관한 다른 Concern 문구가 섞이지 않는다.
+    const copy = extractCustomerCopy(variedReport);
+    expect(copy).not.toContain("식탁");
+    expect(copy).not.toContain("숟가락");
   });
 
   it("Sleep Test 8 — REAL SESSION copy dump (하람×아빠×수면)", () => {

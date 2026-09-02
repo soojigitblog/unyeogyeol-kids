@@ -494,7 +494,7 @@ function PaidSignatureReportInner() {
                   <div className="rounded-2xl bg-milk p-4 shadow-xs">
                     <div className="flex items-center justify-between">
                       <span className="text-[12.5px] font-bold text-sage-deep">
-                        A. {childDisplayName}의 출생정보 힌트
+                        1. {childDisplayName}의 출생정보 힌트
                       </span>
                       <span className="rounded-full bg-sage-tint px-2 py-0.5 text-[10.5px] font-semibold text-sage-deep">
                         출생정보 보조 힌트
@@ -513,7 +513,7 @@ function PaidSignatureReportInner() {
                   <div className="rounded-2xl bg-milk p-4 shadow-xs">
                     <div className="flex items-center justify-between">
                       <span className="text-[12.5px] font-bold text-coral-deep">
-                        B. {momDisplayName}의 출생정보 힌트
+                        2. {momDisplayName}의 출생정보 힌트
                       </span>
                       <span className="rounded-full bg-coral-tint px-2 py-0.5 text-[10.5px] font-semibold text-coral-deep">
                         출생정보 보조 힌트
@@ -530,31 +530,11 @@ function PaidSignatureReportInner() {
                   </div>
                 </div>
 
-                {/* C. 두 사람을 같이 보면 */}
-                <div className="rounded-2xl bg-milk p-4.5 shadow-xs">
-                  <div className="flex items-center justify-between border-b border-cream-dark pb-2">
-                    <span className="text-[13px] font-bold text-cocoa">
-                      C. 두 사람을 같이 보면
-                    </span>
-                    <span className="text-[11px] font-medium text-cocoa-soft">
-                      교차 기질 참고
-                    </span>
-                  </div>
-                  <p className="mt-2.5 text-[14px] leading-relaxed text-cocoa">
-                    {report.fortuneRelationship.reflectionText}
-                  </p>
-                  <div className="mt-3 space-y-1 text-[12.5px] text-cocoa-soft">
-                    {report.fortuneRelationship.contrastingThemes.map((theme, i) => (
-                      <p key={i}>• {theme}</p>
-                    ))}
-                  </div>
-                </div>
-
-                {/* D. 실제 모습과 함께 보면 (관찰 우선주의 원칙) */}
+                {/* 3. 실제 행동과 함께 본 한 문장 (P2.4 §9 Fortune 압축: 4블록 -> 3블록) */}
                 <div className="rounded-2xl border border-coral-tint bg-cream/70 p-4.5 shadow-xs">
                   <div className="flex items-center gap-1.5 text-[12.5px] font-extrabold text-coral-deep">
                     <ShieldCheck className="h-4 w-4" />
-                    <span>D. 실제 모습과 함께 보면 (가장 중요)</span>
+                    <span>3. 실제 행동과 함께 보면 (가장 중요)</span>
                   </div>
                   <p className="mt-2 text-[14px] font-medium leading-relaxed text-cocoa">
                     {report.fortuneRelationship.observationContrastText}

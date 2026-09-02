@@ -12,6 +12,9 @@
 // 9. Real Caregiver Fortune Facts & ParentChildFortuneReflection: 사주 궁합 점수(점수, 찰떡궁합 등) 금지, 나×아이 출생정보 교차 보조 힌트 제공 + 관찰 우선 원칙 명시.
 // 10. P2.2V.6 Caregiver Generalization: 고객 문구의 관계명은 항상 caregiverRoleLabel 기준.
 //     "엄마" 고정 문구 금지, 관계명만으로 심리/행동 추론 금지(부모 전제 문구 포함).
+// 11. P2.4 PAID REPORT RECOMMENDATION ALIGNMENT: CH06(말)/CH07(행동)/CH08(약속)은
+//     CurrentConflict.scenarioId 기반 scenarioRecommendations 를 1차 근거로 쓰고,
+//     Primary Interaction Rule 의 정적 예시는 scenarioId 매칭이 없을 때만 fallback.
 
 import type {
   BehaviorEvidence,
@@ -44,6 +47,8 @@ import {
   formatEscalationFact,
   mergeCaregiverReactionSentence,
 } from "./copyFormatters";
+import { CONFLICT_SCENARIOS } from "./conflictScenarios";
+import { SCENARIO_RECOMMENDATIONS } from "./scenarioRecommendations";
 
 /** 관계 정보가 없는 레거시 호출도 허용하되, 고객 문구는 관계명 기준으로 만든다. */
 type CaregiverInput =
@@ -514,14 +519,56 @@ export function generateSignatureReport(
   ];
   allSentenceClaims.push(...ch5Claims);
 
-  // ── Chapter 08: Core Promise Anchor ──
-  let oneSentenceAnchor = rule.anchorPromise;
-  if (
-    conflictInput.concernId === "sleep" &&
-    rule.ruleId === "rule_friction_sleep_transition_vs_pace"
-  ) {
-    oneSentenceAnchor = `${childName}에게 잠자리로 가자고 말하기 전, 하던 활동의 마지막 지점을 먼저 같이 정해보세요.`;
-  }
+  // ── Chapter 06/07/08: 실제 장면 기반 추천 (P2.4 PAID REPORT RECOMMENDATION ALIGNMENT) ──
+  // Priority: ① CurrentConflict 실제 입력(scenarioId 매칭) → ② Primary Interaction Rule(fallback).
+  // scenarioId 는 Setup에서 사용자가 직접 고른 구체적 장면(conflictScenarios.ts, 30종)이라
+  // 10문항/미니체크로 매칭되는 일반 InteractionRule보다 실제 Current Conflict에 훨씬 가깝다.
+  const scenarioRec = conflictInput.scenarioId
+    ? SCENARIO_RECOMMENDATIONS[conflictInput.scenarioId]
+    : undefined;
+  const scenarioMeta = conflictInput.scenarioId
+    ? CONFLICT_SCENARIOS.find((s) => s.scenarioId === conflictInput.scenarioId)
+    : undefined;
+  // Traceability(§8, 고객 화면 미노출): evidenceRefs 에 scenario/concern/rule 출처를 함께 기록.
+  const recTraceRefs = Array.from(
+    new Set(
+      [
+        ...refs,
+        `concern:${conflictInput.concernId}`,
+        conflictInput.scenarioId ? `scenario:${conflictInput.scenarioId}` : null,
+        scenarioRec ? "source:scenario" : "source:rule_fallback",
+        `rule:${rule.ruleId}`,
+      ].filter((r): r is string => Boolean(r))
+    )
+  );
+
+  const beforeQuote = typicalPhrase || momReact;
+  const situationLabel = scenarioMeta?.title ?? rule.samplePhrases[0]?.situation ?? concernLabel;
+
+  const threePhrases = scenarioRec
+    ? [
+        {
+          phraseId: `scenario_${conflictInput.scenarioId}`,
+          situation: situationLabel,
+          before: beforeQuote,
+          after: scenarioRec.phraseAfter,
+          whyItMayHelp: scenarioRec.phraseWhy,
+          evidenceRefs: recTraceRefs,
+        },
+      ]
+    : rule.samplePhrases.map((p) => ({ ...p, evidenceRefs: p.evidenceRefs || recTraceRefs }));
+
+  const threeActions = scenarioRec
+    ? scenarioRec.actions.map((a, idx) => ({
+        actionId: `scenario_${conflictInput.scenarioId}_${idx + 1}`,
+        actionTitle: a.title,
+        actionDetail: a.detail,
+        whyItMayHelp: a.whyItMayHelp,
+        evidenceRefs: recTraceRefs,
+      }))
+    : rule.sampleActions.map((a) => ({ ...a, evidenceRefs: a.evidenceRefs || recTraceRefs }));
+
+  const oneSentenceAnchor = scenarioRec?.anchor ?? rule.anchorPromise;
 
   const ch8Claims: SentenceClaim[] = [
     {
@@ -529,7 +576,7 @@ export function generateSignatureReport(
       claimType: "RECOMMENDATION",
       chapter: 8,
       text: oneSentenceAnchor,
-      evidenceRefs: refs,
+      evidenceRefs: recTraceRefs,
       inferenceLevel: "direct",
     },
   ];
@@ -640,18 +687,12 @@ export function generateSignatureReport(
       evidenceRefs: refs,
       sentenceClaims: ch5Claims,
     },
-    chapter06_threePhrases: rule.samplePhrases.map((p) => ({
-      ...p,
-      evidenceRefs: p.evidenceRefs || refs,
-    })),
-    chapter07_threeActions: rule.sampleActions.map((a) => ({
-      ...a,
-      evidenceRefs: a.evidenceRefs || refs,
-    })),
+    chapter06_threePhrases: threePhrases,
+    chapter07_threeActions: threeActions,
     chapter08_corePromise: {
       oneSentenceAnchor,
       meaning: "",
-      evidenceRefs: refs,
+      evidenceRefs: recTraceRefs,
       sentenceClaims: ch8Claims,
     },
     fortuneReflection,
