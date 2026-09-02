@@ -182,7 +182,7 @@ export function generateSignatureReport(
       `서로 다른 방식으로 나타나는 지점: 상황을 마주했을 때 ${childName}의 [${ELEMENT_KEYWORD[cEl]}] 방식과 ${momName}의 [${ELEMENT_KEYWORD[mEl]}] 방식의 차이`,
     ];
 
-    const reflectionText = `두 사람의 출생정보에서는 서로 다른 방향의 힌트를 참고해볼 수 있어요. ${cTopic} ${ELEMENT_HINT_CHILD[cEl]} 반면 ${subj(momName)} ${ELEMENT_HINT_MOM[mEl]} 다만 이번 관계 리포트에서는 ${conj(childName)} ${subj(momName)} 실제로 보여준 행동과 반응을 더 중요한 기준으로 봤어요.`;
+    const reflectionText = `두 사람의 출생정보에서는 서로 다른 방향의 힌트를 참고해볼 수 있어요. ${cTopic} ${ELEMENT_HINT_CHILD[cEl]} 반면 ${topic(momName)} ${ELEMENT_HINT_MOM[mEl]} 다만 이번 관계 리포트에서는 ${conj(childName)} ${subj(momName)} 실제로 보여준 행동과 반응을 더 중요한 기준으로 봤어요.`;
 
     const observationContrastText = `출생정보에서는 두 사람의 속도와 표현 방식의 차이를 참고해볼 수 있었지만, 이번 실제 응답에서는 ${concernLabel} 상황에서 관찰된 구체적 행동이 더 분명하게 확인되었어요. 따라서 이 리포트에서는 현재 관찰된 행동을 더 중요하게 반영했습니다.`;
 
