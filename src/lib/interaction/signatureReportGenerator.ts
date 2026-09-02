@@ -128,7 +128,9 @@ export function generateSignatureReport(
     etc: "일상의 작은 마찰",
   };
   const concernLabel = concernLabels[conflictInput.concernId] || "일상의 부딪힘";
-  const isCollaborative = rule.interactionType === "collaborative";
+  // P2.4 긴급 수정: rule.interactionType(collaborative 여부)으로 CH04/CH05 장면 내용을
+  // 바꿔치기하지 않는다. 실제 Current Conflict가 Primary Source of Truth이며,
+  // 근거 없는 "Low-Friction" 서술을 만들지 않는다(PAID REPORT CONTENT INTEGRITY GATE §4).
 
   const allSentenceClaims: SentenceClaim[] = [];
 
@@ -298,7 +300,17 @@ export function generateSignatureReport(
   } else if (rule.ruleId === "rule_collab_observation_and_patience") {
     misalignedPoint = `${childName}의 신중한 관찰 속도를 ${momName}가 묵묵히 지켜봐 주며 서로 편안한 호흡을 맞추고 있어요.`;
   } else {
-    misalignedPoint = `${momName}가 챙기려는 ${concernLabel}의 방향과 ${cSubj} 세상에 반응하는 고유한 속도가 만나는 지점이에요.`;
+    // P2.4 긴급 수정 (§7 CUSTOMER COPY QUALITY): "엄마가 챙기려는 훈육/규칙 거부의 방향" 처럼
+    // Concern label을 문장에 그대로 붙이지 않는다. 실제 입력된 행동으로 설명한다.
+    // (다른 misalignedPoint 분기들과 동일하게 momName — 애칭이 있으면 애칭 — 을 사용)
+    const momRealReaction = formatCaregiverObservedReaction(
+      momName,
+      momReact,
+      typicalPhrase,
+      conflictInput.concernId
+    );
+    const childRealBehavior = formatChildObserved(childName, childReact);
+    misalignedPoint = `${momRealReaction} ${childRealBehavior} 이 순간 둘의 속도가 엇갈리고 있어요.`;
   }
 
   let fortuneRelationshipHint: string | undefined = undefined;
@@ -318,52 +330,44 @@ export function generateSignatureReport(
   };
 
   // ── Chapter 01: 지금 우리 집에서 반복되는 장면 (CurrentConflict literal direct ground) ──
-  let sceneNarrative = "";
-  let sceneKeywords: string[] = [];
+  // P2.4 긴급 수정 (PAID REPORT CONTENT INTEGRITY GATE §1): Concern별 장면 오프너/키워드를
+  // CH01·CH04가 공유하는 단일 소스로 고정한다(Primary Interaction Lock). 이전에는 CH01만
+  // conflictInput 기반이고 CH04는 별도의 하드코딩 템플릿(isCollaborative/ruleId 분기)을 써서
+  // 같은 리포트 안에서 서로 다른 장면(Concern)이 섞여 나오는 문제가 있었다.
+  const CONCERN_SCENE_OPENERS: Partial<Record<string, string>> = {
+    meal: "식사 시간이나 식탁 앞에서 음식을 마주하는 순간",
+    sleep: "잠자리에 들어가거나 수면 시간을 앞둔 순간",
+    tantrum: "뜻대로 되지 않아 감정이 일어나는 순간",
+    shyness: "새로운 장소나 낯선 환경을 마주하는 순간",
+    daycare: "새로운 장소나 낯선 환경을 마주하는 순간",
+    discipline: "일상의 규칙이나 할 일을 챙겨야 하는 순간",
+  };
+  const CONCERN_SCENE_KEYWORDS: Partial<Record<string, string[]>> = {
+    meal: ["식사 시간", "식습관/편식", "식탁에서의 실랑이"],
+    sleep: ["잠자리", "수면/잠자리", "재촉과 미루기"],
+    tantrum: ["감정 표현", "떼쓰기/울음", "대화의 타이밍"],
+    shyness: ["새로운 환경", "낯가림/수줍음", "참여 권유"],
+    daycare: ["새로운 환경", "낯가림/수줍음", "참여 권유"],
+    discipline: ["일상 규칙", "훈육/규칙", "실랑이"],
+  };
+  const sceneOpener =
+    CONCERN_SCENE_OPENERS[conflictInput.concernId] ?? `${concernLabel} 상황에서 반복되는 순간`;
 
   const escalation = conflictInput.subsequentEscalation || "서로의 대화가 길어짐";
+  // Concern Hard Lock: 다른 Concern 전용 문구(잠자리/숟가락 등)가 섞이지 않도록
+  // 실제 선택된 concernId 를 명시적으로 전달한다.
   const caregiverSceneReaction = mergeCaregiverReactionSentence(
     caregiverRoleLabel,
     momReact,
-    typicalPhrase
+    typicalPhrase,
+    conflictInput.concernId
   );
   const childSceneObserved = formatChildObserved(childName, childReact);
   const escalationFact = formatEscalationFact(escalation, childName);
 
-  if (conflictInput.concernId === "meal") {
-    sceneNarrative = `식사 시간이나 식탁 앞에서 음식을 마주하는 순간. ${childSceneObserved.replace(/\.$/, "")}. ${caregiverSceneReaction} 그 뒤 ${escalationFact}`;
-    sceneKeywords = ["식사 시간", "식습관/편식", "식탁에서의 실랑이"];
-  } else if (conflictInput.concernId === "sleep") {
-    sceneNarrative = `잠자리에 들어가거나 수면 시간을 앞두고, ${childSceneObserved.replace(/\.$/, "")}. ${caregiverSceneReaction} 그 뒤 ${escalationFact}`;
-    sceneKeywords = ["잠자리", "수면/잠자리", "재촉과 미루기"];
-  } else if (conflictInput.concernId === "tantrum") {
-    sceneNarrative = `뜻대로 되지 않아 감정이 일어나는 순간. ${childSceneObserved.replace(/\.$/, "")}. ${caregiverSceneReaction} 그 뒤 ${escalationFact}`;
-    sceneKeywords = ["감정 표현", "떼쓰기/울음", "대화의 타이밍"];
-  } else if (conflictInput.concernId === "shyness") {
-    sceneNarrative = `새로운 장소나 낯선 환경을 마주하는 순간. ${childSceneObserved.replace(/\.$/, "")}. ${caregiverSceneReaction} 그 뒤 ${escalationFact}`;
-    sceneKeywords = ["새로운 환경", "낯가림/수줍음", "참여 권유"];
-  } else if (conflictInput.concernId === "discipline") {
-    sceneNarrative = `일상의 규칙이나 할 일을 챙겨야 하는 순간. ${childSceneObserved.replace(/\.$/, "")}. ${caregiverSceneReaction} 그 뒤 ${escalationFact}`;
-    sceneKeywords = ["일상 규칙", "훈육/규칙", "실랑이"];
-  } else if (rule.ruleId === "rule_friction_completion_vs_time") {
-    sceneNarrative = `외출 준비나 상황을 전환해야 하는 순간. ${childSceneObserved.replace(/\.$/, "")}. ${caregiverSceneReaction} 그 뒤 ${escalationFact}`;
-    sceneKeywords = ["외출 준비", "놀이 마침표", "속도 차이"];
-  } else if (rule.ruleId === "rule_friction_observation_vs_stress") {
-    sceneNarrative = `새로운 장소나 낯선 환경을 마주하는 순간. ${childSceneObserved.replace(/\.$/, "")}. ${caregiverSceneReaction} 그 뒤 ${escalationFact}`;
-    sceneKeywords = ["새로운 환경", "주변 탐색", "참여 권유"];
-  } else if (rule.ruleId === "rule_friction_emotion_vs_explanation") {
-    sceneNarrative = `뜻대로 되지 않아 감정이 일어나는 순간. ${childSceneObserved.replace(/\.$/, "")}. ${caregiverSceneReaction} 그 뒤 ${escalationFact}`;
-    sceneKeywords = ["감정 표현", "이유 설명", "대화의 타이밍"];
-  } else if (rule.ruleId === "rule_friction_autonomy_vs_firmness") {
-    sceneNarrative = `일상의 규칙이나 할 일을 챙겨야 하는 순간. ${childSceneObserved.replace(/\.$/, "")}. ${caregiverSceneReaction} 그 뒤 ${escalationFact}`;
-    sceneKeywords = ["일상 규칙", "자기주장", "실랑이"];
-  } else if (rule.ruleId === "rule_collab_observation_and_patience") {
-    sceneNarrative = `새로운 환경이나 활동을 시작하는 순간. ${childSceneObserved.replace(/\.$/, "")}. ${caregiverSceneReaction} 그 뒤 ${escalationFact}`;
-    sceneKeywords = ["신중한 탐색", "묵묵한 기다림", "편안한 대화"];
-  } else {
-    sceneNarrative = `${childName}와(과) 일상을 보내다 보면 특히 ${concernLabel} 상황에서 ${childReact}, ${momReact}. ${escalation}.`;
-    sceneKeywords = [concernLabel, "속도 차이", "반응 방식"];
-  }
+  const sceneNarrative = `${sceneOpener}. ${childSceneObserved.replace(/\.$/, "")}. ${caregiverSceneReaction} 그 뒤 ${escalationFact}`;
+  const sceneKeywords =
+    CONCERN_SCENE_KEYWORDS[conflictInput.concernId] ?? [concernLabel, "속도 차이", "반응 방식"];
 
   const ch1Claims: SentenceClaim[] = [
     {
@@ -381,7 +385,8 @@ export function generateSignatureReport(
   const momObservedReaction = formatCaregiverObservedReaction(
     caregiverRoleLabel,
     momReact,
-    typicalPhrase
+    typicalPhrase,
+    conflictInput.concernId
   );
   const childObservedBehavior = formatChildObserved(childName, childReact);
 
@@ -435,263 +440,38 @@ export function generateSignatureReport(
   allSentenceClaims.push(...ch3Claims);
 
   // ── Chapter 04: Conflict Chain Steps ──
-  let chainSteps = [];
-
-  if (isCollaborative) {
-    chainSteps = [
-      {
-        stepNumber: 1 as const,
-        stage: "trigger" as const,
-        actor: "아이" as const,
-        description: `새로운 환경을 마주해 ${cSubj} 멈춰 서서 주변을 살핍니다.`,
-      },
-      {
-        stepNumber: 2 as const,
-        stage: "mom_reaction" as const,
-        actor: caregiverRoleLabel,
-        description: `${subj(caregiverRoleLabel)} 재촉하지 않고 곁에서 손을 잡고 조용히 기다려줍니다.`,
-      },
-      {
-        stepNumber: 3 as const,
-        stage: "child_reaction" as const,
-        actor: "아이" as const,
-        description: `${cSubj} 스스로 주변 상황을 파악한 뒤 편안하게 둘러봅니다.`,
-      },
-      {
-        stepNumber: 4 as const,
-        stage: "escalation" as const,
-        actor: "둘 다" as const,
-        description: "자연스럽게 다음 행동이나 참여로 한 걸음 내딛습니다.",
-      },
-      {
-        stepNumber: 5 as const,
-        stage: "exhausted_end" as const,
-        actor: "둘 다" as const,
-        description: "큰 마찰 없이 서로 편안하게 일상 흐름을 이어갑니다.",
-      },
-    ];
-  } else if (conflictInput.concernId === "meal") {
-    chainSteps = [
-      {
-        stepNumber: 1 as const,
-        stage: "trigger" as const,
-        actor: "아이" as const,
-        description: "식사 시간, 식탁에 차려진 반찬이나 음식을 마주하는 순간.",
-      },
-      {
-        stepNumber: 2 as const,
-        stage: "child_reaction" as const,
-        actor: "아이" as const,
-        description: formatChildReactShort(childName, childReact),
-      },
-      {
-        stepNumber: 3 as const,
-        stage: "mom_reaction" as const,
-        actor: caregiverRoleLabel,
-        description: mergeCaregiverReactionSentence(caregiverRoleLabel, momReact, typicalPhrase),
-      },
-      {
-        stepNumber: 4 as const,
-        stage: "escalation" as const,
-        actor: "둘 다" as const,
-        description: `그다음 ${escalationFact}`,
-      },
-    ];
-  } else if (conflictInput.concernId === "sleep") {
-    chainSteps = [
-      {
-        stepNumber: 1 as const,
-        stage: "trigger" as const,
-        actor: "아이" as const,
-        description: "잠자리 시간이 됨.",
-      },
-      {
-        stepNumber: 2 as const,
-        stage: "child_reaction" as const,
-        actor: "아이" as const,
-        description: formatChildReactShort(childName, childReact),
-      },
-      {
-        stepNumber: 3 as const,
-        stage: "mom_reaction" as const,
-        actor: caregiverRoleLabel,
-        description: mergeCaregiverReactionSentence(caregiverRoleLabel, momReact, typicalPhrase),
-      },
-      {
-        stepNumber: 4 as const,
-        stage: "escalation" as const,
-        actor: "둘 다" as const,
-        description: `그다음 ${escalationFact}`,
-      },
-    ];
-  } else if (rule.ruleId === "rule_friction_completion_vs_time") {
-    chainSteps = [
-      {
-        stepNumber: 1 as const,
-        stage: "trigger" as const,
-        actor: "아이" as const,
-        description: `${cSubj} 하던 놀이의 마지막 조립이나 정리를 이어가려 합니다.`,
-      },
-      {
-        stepNumber: 2 as const,
-        stage: "mom_reaction" as const,
-        actor: caregiverRoleLabel,
-        description: `일정에 늦지 않으려 ${subj(caregiverRoleLabel)} '빨리 신발 신자, 늦었어!' 하고 재촉합니다.`,
-      },
-      {
-        stepNumber: 3 as const,
-        stage: "child_reaction" as const,
-        actor: "아이" as const,
-        description: "하던 흐름이 끊기자 아이가 제자리에 멈춰 서서 신발 신기를 미룹니다.",
-      },
-      {
-        stepNumber: 4 as const,
-        stage: "escalation" as const,
-        actor: "둘 다" as const,
-        description: `${caregiverRoleLabel}의 말이 반복되고 아이도 버티며 실랑이가 길어집니다.`,
-      },
-      {
-        stepNumber: 5 as const,
-        stage: "exhausted_end" as const,
-        actor: "둘 다" as const,
-        description: "결국 출발은 했지만 서로 감정적 피로감을 안은 채 하루가 시작됩니다.",
-      },
-    ];
-  } else if (rule.ruleId === "rule_friction_observation_vs_stress") {
-    chainSteps = [
-      {
-        stepNumber: 1 as const,
-        stage: "trigger" as const,
-        actor: "아이" as const,
-        description: `새로운 장소를 마주해 ${cSubj} ${caregiverRoleLabel} 곁에 서서 주변을 지켜봅니다.`,
-      },
-      {
-        stepNumber: 2 as const,
-        stage: "mom_reaction" as const,
-        actor: caregiverRoleLabel,
-        description: `아이가 머뭇거리자 ${subj(caregiverRoleLabel)} '어서 가서 인사해보자' 하고 참여를 권합니다.`,
-      },
-      {
-        stepNumber: 3 as const,
-        stage: "child_reaction" as const,
-        actor: "아이" as const,
-        description: `아이가 ${caregiverRoleLabel} 곁에 머물며 살펴보는 시간이 더 길어집니다.`,
-      },
-      {
-        stepNumber: 4 as const,
-        stage: "escalation" as const,
-        actor: "둘 다" as const,
-        description: `${caregiverRoleLabel}의 권유하는 말이 반복되며 어색한 긴장감이 생깁니다.`,
-      },
-      {
-        stepNumber: 5 as const,
-        stage: "exhausted_end" as const,
-        actor: "둘 다" as const,
-        description: "자연스럽게 어울리지 못하고 서로 불편한 마음으로 마무리됩니다.",
-      },
-    ];
-  } else if (rule.ruleId === "rule_friction_emotion_vs_explanation") {
-    chainSteps = [
-      {
-        stepNumber: 1 as const,
-        stage: "trigger" as const,
-        actor: "아이" as const,
-        description: `뜻대로 되지 않는 상황에서 ${childName}의 속상함과 울음이 일어납니다.`,
-      },
-      {
-        stepNumber: 2 as const,
-        stage: "mom_reaction" as const,
-        actor: caregiverRoleLabel,
-        description: `상황을 이해시키려 ${subj(caregiverRoleLabel)} 차근차근 논리적인 이유를 설명합니다.`,
-      },
-      {
-        stepNumber: 3 as const,
-        stage: "child_reaction" as const,
-        actor: "아이" as const,
-        description: "감정이 가라앉지 않은 상태에서 설명이 바로 전달되지 않습니다.",
-      },
-      {
-        stepNumber: 4 as const,
-        stage: "escalation" as const,
-        actor: "둘 다" as const,
-        description: `${caregiverRoleLabel}의 설명이 길어지고 아이의 울음도 이어지며 대화가 어긋납니다.`,
-      },
-      {
-        stepNumber: 5 as const,
-        stage: "exhausted_end" as const,
-        actor: "둘 다" as const,
-        description: "울음이 잦아든 뒤에도 서로 지쳐 말수가 줄어듭니다.",
-      },
-    ];
-  } else if (rule.ruleId === "rule_friction_autonomy_vs_firmness") {
-    chainSteps = [
-      {
-        stepNumber: 1 as const,
-        stage: "trigger" as const,
-        actor: "아이" as const,
-        description: `양치나 정리 등 꼭 해야 하는 규칙 상황에서 자기가 고른 방식을 주장합니다.`,
-      },
-      {
-        stepNumber: 2 as const,
-        stage: "mom_reaction" as const,
-        actor: caregiverRoleLabel,
-        description: "정해진 일과를 위해 '지금 해야 할 시간이야, 어서 해' 하고 단호하게 안내합니다.",
-      },
-      {
-        stepNumber: 3 as const,
-        stage: "child_reaction" as const,
-        actor: "아이" as const,
-        description: "선택권이 없다고 느낀 아이가 자기 방식을 굽히지 않고 버팁니다.",
-      },
-      {
-        stepNumber: 4 as const,
-        stage: "escalation" as const,
-        actor: "둘 다" as const,
-        description: `원칙을 지키려는 ${conj(caregiverRoleLabel)} 고집을 꺾지 않는 아이의 실랑이가 길어집니다.`,
-      },
-      {
-        stepNumber: 5 as const,
-        stage: "exhausted_end" as const,
-        actor: "둘 다" as const,
-        description: "결국 억지로 끝냈지만 서로 감정이 상한 채 일과가 마무리됩니다.",
-      },
-    ];
-  } else {
-    const concernSceneOpeners: Partial<Record<string, string>> = {
-      tantrum: "뜻대로 되지 않아 감정이 일어나는 순간",
-      shyness: "새로운 장소나 낯선 환경을 마주하는 순간",
-      discipline: "일상의 규칙이나 할 일을 챙겨야 하는 순간",
-    };
-    const opener =
-      concernSceneOpeners[conflictInput.concernId] ||
-      `${concernLabel} 상황에서 반복되는 순간`;
-    chainSteps = [
-      {
-        stepNumber: 1 as const,
-        stage: "trigger" as const,
-        actor: "아이" as const,
-        description: `${opener}.`,
-      },
-      {
-        stepNumber: 2 as const,
-        stage: "child_reaction" as const,
-        actor: "아이" as const,
-        description: formatChildReactShort(childName, childReact),
-      },
-      {
-        stepNumber: 3 as const,
-        stage: "mom_reaction" as const,
-        actor: caregiverRoleLabel,
-        description: mergeCaregiverReactionSentence(caregiverRoleLabel, momReact, typicalPhrase),
-      },
-      {
-        stepNumber: 4 as const,
-        stage: "escalation" as const,
-        actor: "둘 다" as const,
-        description: `그다음 ${escalationFact}`,
-      },
-    ];
-  }
+  // P2.4 긴급 수정 (PAID REPORT CONTENT INTEGRITY GATE §1·§3·§4): CH01과 완전히 동일한
+  // Primary Interaction Context(sceneOpener / childSceneObserved / caregiverSceneReaction /
+  // escalationFact)로 4단계를 구성한다. 예전에는 isCollaborative 여부나 ruleId 에 따라
+  // 완전히 다른 하드코딩 장면(예: "새로운 환경에서 멈춰 서서 살핌")을 별도로 썼기 때문에,
+  // 실제 입력(Current Conflict)과 모순되는 문장이 같은 리포트 안에 섞여 나왔다.
+  // isCollaborative 기반 Low-Friction 서술은 실제 마찰 입력이 있는 이상 사용하지 않는다.
+  const chainSteps = [
+    {
+      stepNumber: 1 as const,
+      stage: "trigger" as const,
+      actor: "아이" as const,
+      description: `${sceneOpener}.`,
+    },
+    {
+      stepNumber: 2 as const,
+      stage: "child_reaction" as const,
+      actor: "아이" as const,
+      description: formatChildReactShort(childName, childReact),
+    },
+    {
+      stepNumber: 3 as const,
+      stage: "mom_reaction" as const,
+      actor: caregiverRoleLabel,
+      description: caregiverSceneReaction,
+    },
+    {
+      stepNumber: 4 as const,
+      stage: "escalation" as const,
+      actor: "둘 다" as const,
+      description: `그다음 ${escalationFact}`,
+    },
+  ];
 
   const ch4Claims: SentenceClaim[] = [
     {
@@ -706,27 +486,18 @@ export function generateSignatureReport(
   allSentenceClaims.push(...ch4Claims);
 
   // ── Chapter 05: 같은 순간 반복되는 반응 (관찰 근거) ──
-  let ch5Title = `이 순간 ${caregiverRoleLabel} 쪽에서 반복되는 반응`;
-  let exhaustionReason = "";
-  let comfortMessage = "";
-
-  if (isCollaborative) {
-    ch5Title = "지금 우리 둘이 잘 맞는 지점";
-    exhaustionReason = `${cTopic} 새로운 환경에서 먼저 살펴보는 모습이 있었고, ${topic(caregiverRoleLabel)} 그 순간 속도를 올리기보다 기다리는 반응을 보였어요. 두 방식이 현재 장면에서는 큰 마찰 없이 이어지고 있어요.`;
-    comfortMessage = `아이의 신중한 속도를 존중해주는 ${caregiverRoleLabel}의 차분한 기다림이 서로에게 편안한 소통의 바탕이 되고 있습니다.`;
-  } else {
-    exhaustionReason = formatCaregiverObservedReaction(
-      caregiverRoleLabel,
-      momReact,
-      typicalPhrase
-    );
-    comfortMessage = formatChildObserved(childName, childReact);
-  }
+  // P2.4 긴급 수정 (§4 LOW-FRICTION BRANCH LOCK): isCollaborative 만으로 "지금 우리 둘이
+  // 잘 맞는 지점"이라는 별도 하드코딩 문구로 바꿔치기하지 않는다. 실제 Current Conflict에
+  // 마찰(subsequentEscalation)이 입력된 이상, 근거 없이 "잘 맞는다"고 안심시키는 문장을
+  // 만들 수 없다. CH02와 동일한 실제 입력 기반 문장을 그대로 재사용한다.
+  const ch5Title = `이 순간 ${caregiverRoleLabel} 쪽에서 반복되는 반응`;
+  const exhaustionReason = momObservedReaction;
+  const comfortMessage = childObservedBehavior;
 
   const ch5Claims: SentenceClaim[] = [
     {
       claimId: "ch5_c1",
-      claimType: isCollaborative ? "OBSERVED" : "DIRECT_INPUT",
+      claimType: "DIRECT_INPUT",
       chapter: 5,
       text: exhaustionReason,
       evidenceRefs: refs,
@@ -734,11 +505,11 @@ export function generateSignatureReport(
     },
     {
       claimId: "ch5_c2",
-      claimType: isCollaborative ? "EMOTIONAL_COPY" : "DIRECT_INPUT",
+      claimType: "DIRECT_INPUT",
       chapter: 5,
       text: comfortMessage,
       evidenceRefs: refs,
-      inferenceLevel: isCollaborative ? "reflective" : "direct",
+      inferenceLevel: "direct",
     },
   ];
   allSentenceClaims.push(...ch5Claims);
@@ -850,12 +621,8 @@ export function generateSignatureReport(
       sentenceClaims: ch3Claims,
     },
     chapter04_conflictChain: {
-      title: isCollaborative
-        ? "평소 서로가 맞물리는 대화 흐름"
-        : chainSteps.length === 4
-        ? "4단계 반복되는 갈등 흐름"
-        : "5단계 반복되는 갈등 흐름",
-      isCollaborative,
+      title: "4단계 반복되는 갈등 흐름",
+      isCollaborative: false,
       steps: chainSteps,
       whereToBreak: {
         targetStep: rule.whereToBreakSummary.targetStep,
@@ -867,7 +634,7 @@ export function generateSignatureReport(
     },
     chapter05_momExhaustionPoint: {
       title: ch5Title,
-      isLowFriction: isCollaborative,
+      isLowFriction: false,
       exhaustionReason,
       comfortMessage,
       evidenceRefs: refs,

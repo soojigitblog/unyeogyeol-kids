@@ -115,7 +115,12 @@ describe("P2.2H PAID REPORT EVIDENCE INTEGRITY & HUMAN VALUE PATCH", () => {
     });
   });
 
-  it("3. Validates Low-Friction Family E specifics (no forced conflict, dynamic Chapter 05)", () => {
+  it("3. P2.4 PAID REPORT CONTENT INTEGRITY: Family E(협력형 매칭)도 CH01과 CH04가 동일한 실제 Current Conflict를 사용한다", () => {
+    // P2.4 긴급 수정 배경: 예전에는 rule.interactionType==="collaborative"로 매칭되면
+    // CH04/CH05가 실제 입력과 무관한 하드코딩 장면("새로운 환경에서 멈춰 서서 살핌" 등)을
+    // 별도로 썼다. 지금은 isCollaborative 여부와 무관하게 CH01·CH04가 항상 같은
+    // Primary Interaction Context(실제 conflictInput)를 쓴다 — Fixture E는 그 입력 자체가
+    // 마찰이 적은 장면이라 자연스럽게 차분한 톤으로 나온다(별도 분기 없이도).
     const fixtureE = FAMILY_FIXTURES.find((f) => f.fixtureId === "E")!;
     const momEv = buildMomEvidence(fixtureE.momAnswers);
     const report = generateSignatureReport(
@@ -126,15 +131,20 @@ describe("P2.2H PAID REPORT EVIDENCE INTEGRITY & HUMAN VALUE PATCH", () => {
       fixtureE.fortuneFacts
     );
 
-    expect(report.chapter04_conflictChain.isCollaborative).toBe(true);
-    expect(report.chapter04_conflictChain.title).toContain("흐름");
-    expect(report.chapter04_conflictChain.steps[4].description).toContain("편안하게");
-    expect(report.chapter04_conflictChain.whereToBreak.breakActionTitle).toContain("이어가기");
+    // Low-Friction 특수 분기 제거: 근거 없는 "잘 맞는 지점" 단정을 만들지 않는다.
+    expect(report.chapter04_conflictChain.isCollaborative).toBe(false);
+    expect(report.chapter05_momExhaustionPoint.isLowFriction).toBe(false);
+    expect(report.chapter04_conflictChain.steps).toHaveLength(4);
 
-    // Dynamic Chapter 05
-    expect(report.chapter05_momExhaustionPoint.isLowFriction).toBe(true);
-    expect(report.chapter05_momExhaustionPoint.title).toBe("지금 우리 둘이 잘 맞는 지점");
-    expect(report.chapter05_momExhaustionPoint.exhaustionReason).toContain("큰 마찰 없이 이어지고");
+    // CH01과 CH04는 같은 실제 입력에서 나온 같은 사실을 담아야 한다(모순 금지).
+    const scene = report.chapter01_recurringScene.narrative;
+    const stepTexts = report.chapter04_conflictChain.steps.map((s) => s.description).join(" ");
+    expect(scene).toContain(fixtureE.childProfile.name!);
+    expect(stepTexts).toContain(fixtureE.childProfile.name!);
+    // Fixture E 고유 실제 문구(다른 Concern의 하드코딩 문구가 아니라 진짜 입력)가 그대로 반영된다.
+    expect(stepTexts).toContain("천천히 둘러보고 들어가고 싶을 때 들어가자");
+    // 다른 Concern 전용 하드코딩 장면("멈춰 서서 주변을 살핍니다" 구버전 문구)이 섞이지 않는다.
+    expect(stepTexts).not.toContain("멈춰 서서 주변을 살핍니다");
   });
 
   it("4. Validates Specific Non-flattering and Non-therapeutic Action & Anchor Copy", () => {

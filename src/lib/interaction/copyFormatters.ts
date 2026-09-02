@@ -21,11 +21,21 @@ function extractEmbeddedQuote(text: string): string | undefined {
   return match?.[1]?.trim();
 }
 
-/** structured reaction + typical phrase 중복 없이 한 문장으로 합침 */
+/**
+ * structured reaction + typical phrase 중복 없이 한 문장으로 합침.
+ *
+ * P2.4 긴급 수정: 이전에는 원문 전체에 /잠|취침|자/ 같은 느슨한 정규식을 걸어
+ * "재촉"이면 무조건 수면 문구("잠자리로 가도록")를 붙였다. "하자", "가자" 같은
+ * 극히 흔한 한국어 종결어미에도 "자"가 들어있어, discipline 등 다른 Concern에서도
+ * 수면 문구가 섞여 들어가는 Cross-Concern Leakage 버그였다.
+ * 지금은 concernId 로 명시적으로 게이팅한다 — 실제 Concern이 sleep/meal이 아니면
+ * 해당 Concern 전용 문구를 붙이지 않는다(Concern Hard Lock).
+ */
 export function mergeCaregiverReactionSentence(
   caregiverRoleLabel: string,
   momReact: string,
-  typicalPhrase?: string
+  typicalPhrase?: string,
+  concernId?: string
 ): string {
   const react = momReact.trim();
   const phrase = typicalPhrase?.trim();
@@ -39,27 +49,28 @@ export function mergeCaregiverReactionSentence(
       ? phrase
       : embedded || phrase;
 
+  const isPushHurry = /재촉/.test(react);
+  const isMealHandoff = concernId === "meal" && /숟가락|건넴/.test(react);
+  const isSleepPush = concernId === "sleep" && isPushHurry;
+
   if (effectiveQuote && react.includes(effectiveQuote)) {
-    if (/재촉/.test(react)) {
-      if (/잠|취침|자/.test(`${react}${effectiveQuote}`)) {
-        return `${subj(caregiverRoleLabel)} ‘${effectiveQuote}’라고 말하며 잠자리로 가도록 재촉했어요.`;
-      }
+    if (isSleepPush) {
+      return `${subj(caregiverRoleLabel)} ‘${effectiveQuote}’라고 말하며 잠자리로 가도록 재촉했어요.`;
+    }
+    if (isPushHurry) {
       return `${subj(caregiverRoleLabel)} ‘${effectiveQuote}’라고 말하며 재촉했어요.`;
     }
-    if (/숟가락|건넴|권유/.test(react)) {
+    if (isMealHandoff) {
       return `${subj(caregiverRoleLabel)} ‘${effectiveQuote}’라고 말하며 숟가락을 건넸어요.`;
-    }
-    if (/설명|권유|말/.test(react)) {
-      return `${subj(caregiverRoleLabel)} ‘${effectiveQuote}’라고 말했어요.`;
     }
     return `${subj(caregiverRoleLabel)} ‘${effectiveQuote}’라고 말했어요.`;
   }
 
   if (embedded) {
-    if (/숟가락|건넴/.test(react)) {
+    if (isMealHandoff) {
       return `${subj(caregiverRoleLabel)} ‘${embedded}’라고 말하며 숟가락을 건넸어요.`;
     }
-    if (/재촉/.test(react)) {
+    if (isPushHurry) {
       return `${subj(caregiverRoleLabel)} ‘${embedded}’라고 말하며 재촉했어요.`;
     }
     return `${subj(caregiverRoleLabel)} ‘${embedded}’라고 말했어요.`;
@@ -81,9 +92,10 @@ export function mergeCaregiverReactionSentence(
 export function formatCaregiverObservedReaction(
   caregiverRoleLabel: string,
   momReact: string,
-  typicalPhrase?: string
+  typicalPhrase?: string,
+  concernId?: string
 ): string {
-  const merged = mergeCaregiverReactionSentence(caregiverRoleLabel, momReact, typicalPhrase);
+  const merged = mergeCaregiverReactionSentence(caregiverRoleLabel, momReact, typicalPhrase, concernId);
   return merged
     .replace(/재촉했어요\.$/, "재촉하는 반응이 있었어요.")
     .replace(/말했어요\.$/, "말하는 반응이 있었어요.");
