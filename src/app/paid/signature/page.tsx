@@ -700,7 +700,7 @@ function PaidSignatureReportInner() {
             <div className="mb-2.5 flex items-center gap-2 px-1">
               <span className="text-[13px] font-extrabold tracking-wider text-coral">08</span>
               <span className="h-1 w-1 rounded-full bg-cream-dark" />
-              <span className="text-[13px] font-bold text-cocoa-soft">관계의 닻</span>
+              <span className="text-[13px] font-bold text-cocoa-soft">우리 둘의 약속</span>
             </div>
             <RelationshipAnchorCard
               oneSentenceAnchor={report.chapter08_corePromise.oneSentenceAnchor}
