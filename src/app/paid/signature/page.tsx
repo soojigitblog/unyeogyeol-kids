@@ -7,10 +7,10 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { Container } from "@/components/layout/Container";
 import { Card } from "@/components/ui/Card";
 import { BeforeAfterQuote } from "@/components/ui/BeforeAfterQuote";
-import { PerspectiveCompare } from "@/components/report/PerspectiveCompare";
+// P2.5 CONTENT DENSITY: PerspectiveCompare(옛 CH02) / MomExhaustionCard(옛 CH05) 는
+// 고객 화면에서 제거됐다. 둘 다 앞 Section 의 문장을 그대로 다시 보여주기만 했다.
 import { ConflictChainVisual } from "@/components/report/ConflictChainVisual";
 import { WhereToBreakCard } from "@/components/report/WhereToBreakCard";
-import { MomExhaustionCard } from "@/components/report/MomExhaustionCard";
 import { ActionChecklist } from "@/components/report/ActionChecklist";
 import { RelationshipAnchorCard } from "@/components/report/RelationshipAnchorCard";
 import { TwoPersonSummary } from "@/components/report/TwoPersonSummary";
@@ -359,9 +359,14 @@ function PaidSignatureReportInner() {
             )}
           </section>
 
-          {/* TWO-PERSON SUMMARY (Premium Value Moment 1) */}
+          {/* SECTION 01: 한눈에 보는 우리 둘 (10초 안에 핵심 파악) */}
           {report.twoPersonSummary && (
             <section id="section-two-person" className="mt-6 animate-rise">
+              <div className="mb-2.5 flex items-center gap-2 px-1">
+                <span className="text-[13px] font-extrabold tracking-wider text-coral">01</span>
+                <span className="h-1 w-1 rounded-full bg-cream-dark" />
+                <span className="text-[13px] font-bold text-cocoa-soft">한눈에 보는 우리 둘</span>
+              </div>
               <TwoPersonSummary
                 childName={childDisplayName}
                 momName={momDisplayName}
@@ -376,12 +381,16 @@ function PaidSignatureReportInner() {
             </section>
           )}
 
-          {/* Chapter 01: 지금 우리 집에서 반복되는 장면 */}
+          {/*
+            SECTION 02: 실제로 반복되는 장면.
+            P2.5 §3: 이 장면 전문(상황→아이 행동→나의 반응→그다음 결과)은 리포트 전체에서
+            여기 한 번만 나온다. 이후 Section 들은 이 장면을 다시 복사하지 않는다.
+          */}
           <section id="section-recurring-scene" className="mt-6 animate-rise">
             <div className="mb-2.5 flex items-center gap-2 px-1">
-              <span className="text-[13px] font-extrabold tracking-wider text-coral">01</span>
+              <span className="text-[13px] font-extrabold tracking-wider text-coral">02</span>
               <span className="h-1 w-1 rounded-full bg-cream-dark" />
-              <span className="text-[13px] font-bold text-cocoa-soft">반복되는 일상 장면</span>
+              <span className="text-[13px] font-bold text-cocoa-soft">실제로 반복되는 장면</span>
             </div>
             <Card tone="plain" className="p-6">
               <div className="flex items-center justify-between">
@@ -408,155 +417,82 @@ function PaidSignatureReportInner() {
             </Card>
           </section>
 
-          {/* Chapter 02: 같은 상황, 다른 시선 */}
-          <section id="section-perspective-gap" className="mt-6 animate-rise">
-            <div className="mb-2.5 flex items-center gap-2 px-1">
-              <span className="text-[13px] font-extrabold tracking-wider text-coral">02</span>
-              <span className="h-1 w-1 rounded-full bg-cream-dark" />
-              <span className="text-[13px] font-bold text-cocoa-soft">같은 순간, 서로 달랐던 행동</span>
-            </div>
-            <PerspectiveCompare
-              momPerspective={report.chapter02_perspectiveGap.momPerspective}
-              childPerspective={report.chapter02_perspectiveGap.childPerspective}
-              childName={report.meta.childName}
-              caregiverRoleLabel={caregiverRoleLabel}
-            />
-          </section>
+          {/*
+            SECTION 03: 왜 이 장면이 자꾸 길어질까 — 유료 핵심 INSIGHT.
+            P2.5 §1 §10: 여기에는 고객이 입력한 사실을 다시 쓰지 않는다.
+            입력들(장면 / 아이 첫 반응 / 나의 첫 반응 / 그다음 결과)을 연결해야
+            비로소 보이는 구조(MECHANISM)만 넣는다.
 
-          {/* Chapter 03: 우리 둘의 부딪힘 공식 */}
-          <section id="section-interaction-pattern" className="mt-6 animate-rise">
-            <div className="mb-2.5 flex items-center gap-2 px-1">
-              <span className="text-[13px] font-extrabold tracking-wider text-coral">03</span>
-              <span className="h-1 w-1 rounded-full bg-cream-dark" />
-              <span className="text-[13px] font-bold text-cocoa-soft">상호작용 패턴</span>
-            </div>
-            <Card tone="plain" className="p-6">
-              <h2 className="text-[19px] font-bold leading-snug text-cocoa">
-                {report.chapter03_interactionPattern.title}
-              </h2>
-              <p className="mt-1.5 text-[14px] text-cocoa-soft">
-                어느 한쪽의 잘못이 아니라, 두 사람의 서로 다른 반응 방식이 맞물려 생기는 자연스러운 결과입니다.
-              </p>
-
-              <div className="mt-5 space-y-3">
-                <div className="rounded-2xl bg-milk p-4">
-                  <span className="text-[12px] font-bold text-sage-deep">
-                    [직접 알려주신 실제 모습] {childDisplayName}의 관찰 특성
-                  </span>
-                  <p className="mt-1 text-[14.5px] leading-relaxed text-cocoa">
-                    {report.chapter03_interactionPattern.childBehaviorAspect}
-                  </p>
-                </div>
-                <div className="rounded-2xl bg-milk p-4">
-                  <span className="text-[12px] font-bold text-coral-deep">
-                    [이번 체크에서 보인 {caregiverRoleLabel} 반응] {momDisplayName}의 반응 패턴
-                  </span>
-                  <p className="mt-1 text-[14.5px] leading-relaxed text-cocoa">
-                    {report.chapter03_interactionPattern.momReactionAspect}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-coral/30 bg-coral-tint/30 p-4">
-                  <span className="text-[12px] font-bold text-cocoa">상호작용 종합</span>
-                  <p className="mt-1 text-[14.5px] font-semibold leading-relaxed text-cocoa">
-                    {report.chapter03_interactionPattern.synthesis}
-                  </p>
-                </div>
-              </div>
-            </Card>
-          </section>
-
-          {/* NEW CHAPTER: 태어난 기질로 같이 보는 엄마 × 아이 관계 힌트 */}
-          {report.fortuneRelationship && (
-            <section id="section-fortune-relationship" className="mt-6 animate-rise">
+            제거된 것:
+              - 옛 CH02(PerspectiveCompare): CH01 장면의 두 문장을 그대로 다시 보여줄 뿐이었다.
+              - 옛 CH03(상호작용 패턴): SECTION 01 의 두 요약문과 같은 내용이었다.
+            둘 다 §6 SECTION UNIQUE VALUE TEST 를 통과하지 못해 이 Section 으로 통합했다.
+          */}
+          {report.insightMechanism && (
+            <section id="section-mechanism" className="mt-6 animate-rise">
               <div className="mb-2.5 flex items-center gap-2 px-1">
-                <span className="text-[13px] font-extrabold tracking-wider text-coral">출생정보 힌트</span>
+                <span className="text-[13px] font-extrabold tracking-wider text-coral">03</span>
                 <span className="h-1 w-1 rounded-full bg-cream-dark" />
-                <span className="text-[13px] font-bold text-cocoa-soft">출생정보 교차 힌트</span>
+                <span className="text-[13px] font-bold text-cocoa-soft">이 장면의 구조</span>
               </div>
-              <Card tone="peach" className="p-6 space-y-5">
-                <div>
-                  <div className="flex items-center gap-1.5 text-[12px] font-bold text-coral-deep">
-                    <Compass className="h-4 w-4" />
-                    <span>출생정보 기반 보조 힌트 (참고용)</span>
-                  </div>
-                  <h2 className="mt-1 text-[20px] font-bold leading-snug text-cocoa">
-                    나와 아이의 출생정보로
-                    <br />
-                    함께 보는 관계 힌트
-                  </h2>
-                  <p className="mt-1.5 text-[13.5px] leading-relaxed text-cocoa-soft">
-                    사주 출생정보는 성격을 확정하지 않고 보조 힌트로만 참고하며, 실제 관찰된 행동을 가장 우선으로 분석합니다.
-                  </p>
-                </div>
+              <Card tone="plain" className="p-6">
+                <h2 className="text-[19px] font-bold leading-snug text-cocoa">
+                  왜 이 장면이 자꾸 길어질까요?
+                </h2>
+                <p className="mt-1.5 text-[14px] text-cocoa-soft">
+                  같은 장면을 네 칸으로 나눠 보면, 실랑이의 길이를 만드는 칸이 따로 있어요.
+                </p>
 
-                {/* A & B: 아이와 엄마 출생정보 힌트 */}
-                <div className="grid gap-3.5 sm:grid-cols-2">
-                  <div className="rounded-2xl bg-milk p-4 shadow-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[12.5px] font-bold text-sage-deep">
-                        1. {childDisplayName}의 출생정보 힌트
-                      </span>
-                      <span className="rounded-full bg-sage-tint px-2 py-0.5 text-[10.5px] font-semibold text-sage-deep">
-                        출생정보 보조 힌트
-                      </span>
-                    </div>
-                    <ul className="mt-2.5 space-y-1.5 text-[13.5px] leading-relaxed text-cocoa">
-                      {report.fortuneRelationship.childHints.map((hint, idx) => (
-                        <li key={idx} className="flex items-start gap-1.5">
-                          <span className="mt-1.5 h-1 w-1 rounded-full bg-sage-deep shrink-0" />
-                          <span>{hint}</span>
-                        </li>
-                      ))}
-                    </ul>
+                <div className="mt-5 space-y-3">
+                  <div className="rounded-2xl bg-milk p-4">
+                    <span className="text-[12px] font-bold text-coral-deep">
+                      1. 처음 목표와 마지막에 남은 것
+                    </span>
+                    <p className="mt-1.5 text-[14.5px] leading-relaxed text-cocoa">
+                      {report.insightMechanism.focusShift}
+                    </p>
                   </div>
 
-                  <div className="rounded-2xl bg-milk p-4 shadow-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[12.5px] font-bold text-coral-deep">
-                        2. {momDisplayName}의 출생정보 힌트
-                      </span>
-                      <span className="rounded-full bg-coral-tint px-2 py-0.5 text-[10.5px] font-semibold text-coral-deep">
-                        출생정보 보조 힌트
-                      </span>
-                    </div>
-                    <ul className="mt-2.5 space-y-1.5 text-[13.5px] leading-relaxed text-cocoa">
-                      {report.fortuneRelationship.momHints.map((hint, idx) => (
-                        <li key={idx} className="flex items-start gap-1.5">
-                          <span className="mt-1.5 h-1 w-1 rounded-full bg-coral-deep shrink-0" />
-                          <span>{hint}</span>
-                        </li>
-                      ))}
-                    </ul>
+                  <div className="rounded-2xl bg-milk p-4">
+                    <span className="text-[12px] font-bold text-sage-deep">
+                      2. 길이가 늘어나기 시작하는 칸
+                    </span>
+                    <p className="mt-1.5 text-[14.5px] leading-relaxed text-cocoa">
+                      {report.insightMechanism.escalationPoint}
+                    </p>
                   </div>
-                </div>
 
-                {/* 3. 실제 행동과 함께 본 한 문장 (P2.4 §9 Fortune 압축: 4블록 -> 3블록) */}
-                <div className="rounded-2xl border border-coral-tint bg-cream/70 p-4.5 shadow-xs">
-                  <div className="flex items-center gap-1.5 text-[12.5px] font-extrabold text-coral-deep">
-                    <ShieldCheck className="h-4 w-4" />
-                    <span>3. 실제 행동과 함께 보면 (가장 중요)</span>
+                  <div className="rounded-2xl border border-coral/30 bg-coral-tint/30 p-4">
+                    <span className="text-[12px] font-bold text-cocoa">
+                      3. 그래서 실제로 바꿀 수 있는 것
+                    </span>
+                    <p className="mt-1.5 text-[14.5px] font-semibold leading-relaxed text-cocoa">
+                      {report.insightMechanism.smallestLever}
+                    </p>
                   </div>
-                  <p className="mt-2 text-[14px] font-medium leading-relaxed text-cocoa">
-                    {report.fortuneRelationship.observationContrastText}
-                  </p>
                 </div>
               </Card>
             </section>
           )}
 
-          {/* Chapter 04: 우리 둘의 반복 갈등 Chain + WHERE TO BREAK */}
+          {/*
+            SECTION 04: 가장 먼저 바꿔볼 한 지점.
+            P2.5 §7: 단계 수 문구는 report.chapter04_conflictChain.title 에서 파생된다.
+            (예전에는 제목 "4단계" / 설명문 "5단계 패턴" 이 서로 어긋나 있었다)
+            P2.5 §8: "여기서 끊어볼 수 있어요" CTA 는 아래 WhereToBreakCard 한 곳에서만 나온다.
+          */}
           <section id="section-conflict-chain" className="mt-6 animate-rise">
             <div className="mb-2.5 flex items-center gap-2 px-1">
               <span className="text-[13px] font-extrabold tracking-wider text-coral">04</span>
               <span className="h-1 w-1 rounded-full bg-cream-dark" />
-              <span className="text-[13px] font-bold text-cocoa-soft">반복되는 갈등 흐름</span>
+              <span className="text-[13px] font-bold text-cocoa-soft">가장 먼저 바꿔볼 한 지점</span>
             </div>
             <Card tone="plain" className="p-6">
               <h2 className="text-[19px] font-bold leading-snug text-cocoa">
                 {report.chapter04_conflictChain.title}
               </h2>
               <p className="mt-1.5 text-[14px] text-cocoa-soft">
-                사소한 자극에서 시작해 감정 소모로 끝나는 5단계 패턴과, 이를 끊을 수 있는 단 하나의 지점입니다.
+                전부 바꾸지 않아도 돼요. 이 흐름에서 지금 바꿀 수 있는 칸은 하나입니다.
               </p>
 
               <div className="mt-5">
@@ -569,6 +505,18 @@ function PaidSignatureReportInner() {
                 />
               </div>
 
+              {/* 왜 하필 이 칸인지 — 근거 없이 "여기를 바꾸세요"라고 하지 않는다. */}
+              {report.breakPointWhy && (
+                <div className="mt-5 rounded-2xl bg-milk p-4">
+                  <span className="text-[12px] font-bold text-sage-deep">
+                    왜 이 칸인가요?
+                  </span>
+                  <p className="mt-1.5 text-[14.5px] leading-relaxed text-cocoa">
+                    {report.breakPointWhy}
+                  </p>
+                </div>
+              )}
+
               <div className="mt-5">
                 <WhereToBreakCard
                   breakActionTitle={report.chapter04_conflictChain.whereToBreak.breakActionTitle}
@@ -579,39 +527,25 @@ function PaidSignatureReportInner() {
             </Card>
           </section>
 
-          {/* Chapter 05: 엄마가 이 순간 특히 지치는 이유 / 잘 맞는 지점 */}
-          <section id="section-mom-exhaustion" className="mt-6 animate-rise">
+          {/*
+            SECTION 05: 다음번에 실제로 이렇게.
+            P2.5 §4: 옛 CH05(반복되는 반응)는 옛 CH02 와 완전히 같은 두 문장을 다시
+            보여주기만 해서 고객 화면에서 삭제했다.
+            옛 CH06(말)과 CH07(행동)은 역할이 이어지므로 하나의 실전 카드로 합쳤다.
+            BEFORE(내가 실제로 쓴 말) -> AFTER(대안 한마디) -> 그래도 안 될 때 할 행동 순서.
+          */}
+          <section id="section-next-time" className="mt-6 animate-rise">
             <div className="mb-2.5 flex items-center gap-2 px-1">
               <span className="text-[13px] font-extrabold tracking-wider text-coral">05</span>
               <span className="h-1 w-1 rounded-full bg-cream-dark" />
-              <span className="text-[13px] font-bold text-cocoa-soft">
-                {report.chapter05_momExhaustionPoint.isLowFriction
-                  ? "호흡의 연결"
-                  : "반복되는 반응"}
-              </span>
-            </div>
-            <MomExhaustionCard
-              caregiverRoleLabel={caregiverRoleLabel}
-              title={report.chapter05_momExhaustionPoint.title}
-              isLowFriction={report.chapter05_momExhaustionPoint.isLowFriction}
-              exhaustionReason={report.chapter05_momExhaustionPoint.exhaustionReason}
-              comfortMessage={report.chapter05_momExhaustionPoint.comfortMessage}
-            />
-          </section>
-
-          {/* Chapter 06: 오늘 바로 바꿔볼 말 */}
-          <section id="section-phrases" className="mt-6 animate-rise">
-            <div className="mb-2.5 flex items-center gap-2 px-1">
-              <span className="text-[13px] font-extrabold tracking-wider text-coral">06</span>
-              <span className="h-1 w-1 rounded-full bg-cream-dark" />
-              <span className="text-[13px] font-bold text-cocoa-soft">말 한마디의 변화</span>
+              <span className="text-[13px] font-bold text-cocoa-soft">다음번에 실제로 이렇게</span>
             </div>
             <Card tone="peach" className="p-6">
               <h2 className="text-[19px] font-bold leading-snug text-cocoa">
-                오늘 바로 바꿔볼 말
+                다음번 이 장면에서 실제로 해볼 것
               </h2>
               <p className="mt-1.5 text-[14px] text-cocoa-soft">
-                실제 마찰이 일어나는 순간, 길고 거창한 훈육 대신 바로 입에서 나올 수 있는 짧은 한마디입니다.
+                3번 칸에서 나올 말 한마디와, 그 말만으로 넘어가지 않을 때 이어서 해볼 행동입니다.
               </p>
 
               <div className="mt-5 space-y-4">
@@ -636,30 +570,103 @@ function PaidSignatureReportInner() {
                   </div>
                 )}
               </div>
+
+              {report.chapter07_threeActions.length > 0 && (
+                <div className="mt-6 border-t border-cream-dark pt-5">
+                  <span className="text-[12px] font-bold text-sage-deep">
+                    말만으로 넘어가지 않을 때 이어서 해볼 것
+                  </span>
+                  <div className="mt-3">
+                    <ActionChecklist actions={report.chapter07_threeActions} />
+                  </div>
+                </div>
+              )}
             </Card>
           </section>
 
-          {/* Chapter 07: 오늘부터 해볼 행동 */}
-          <section id="section-actions" className="mt-6 animate-rise">
+          {/*
+            SECTION 06: 출생정보와 함께 보면.
+            P2.5 §6: 3블록 이내로 유지하고, "실제 행동이 더 중요하다"는 안내는
+            블록 3에서 딱 한 번만 한다. (예전에는 헤더와 블록 3에서 두 번 반복해
+            사주 파트를 스스로 무가치하게 만들고 있었다)
+          */}
+          {report.fortuneRelationship && (
+            <section id="section-fortune-relationship" className="mt-6 animate-rise">
+              <div className="mb-2.5 flex items-center gap-2 px-1">
+                <span className="text-[13px] font-extrabold tracking-wider text-coral">06</span>
+                <span className="h-1 w-1 rounded-full bg-cream-dark" />
+                <span className="text-[13px] font-bold text-cocoa-soft">출생정보와 함께 보면</span>
+              </div>
+              <Card tone="peach" className="p-6 space-y-5">
+                <div>
+                  <div className="flex items-center gap-1.5 text-[12px] font-bold text-coral-deep">
+                    <Compass className="h-4 w-4" />
+                    <span>보조 렌즈</span>
+                  </div>
+                  <h2 className="mt-1 text-[20px] font-bold leading-snug text-cocoa">
+                    나와 아이의 출생정보로
+                    <br />
+                    함께 보는 관계 힌트
+                  </h2>
+                </div>
+
+                <div className="grid gap-3.5 sm:grid-cols-2">
+                  <div className="rounded-2xl bg-milk p-4 shadow-xs">
+                    <span className="text-[12.5px] font-bold text-sage-deep">
+                      1. {childDisplayName}의 출생정보 힌트
+                    </span>
+                    <ul className="mt-2.5 space-y-1.5 text-[13.5px] leading-relaxed text-cocoa">
+                      {report.fortuneRelationship.childHints.map((hint, idx) => (
+                        <li key={idx} className="flex items-start gap-1.5">
+                          <span className="mt-1.5 h-1 w-1 rounded-full bg-sage-deep shrink-0" />
+                          <span>{hint}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="rounded-2xl bg-milk p-4 shadow-xs">
+                    <span className="text-[12.5px] font-bold text-coral-deep">
+                      2. {momDisplayName}의 출생정보 힌트
+                    </span>
+                    <ul className="mt-2.5 space-y-1.5 text-[13.5px] leading-relaxed text-cocoa">
+                      {report.fortuneRelationship.momHints.map((hint, idx) => (
+                        <li key={idx} className="flex items-start gap-1.5">
+                          <span className="mt-1.5 h-1 w-1 rounded-full bg-coral-deep shrink-0" />
+                          <span>{hint}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-coral-tint bg-cream/70 p-4 shadow-xs">
+                  <div className="flex items-center gap-1.5 text-[12.5px] font-extrabold text-coral-deep">
+                    <ShieldCheck className="h-4 w-4" />
+                    <span>3. 이 리포트에서 출생정보를 쓴 방식</span>
+                  </div>
+                  <p className="mt-2 text-[14px] font-medium leading-relaxed text-cocoa">
+                    {report.fortuneRelationship.observationContrastText}
+                  </p>
+                </div>
+              </Card>
+            </section>
+          )}
+
+          {/* SECTION 07: 이번 리포트에서 기억할 한 가지 — 한 문장이면 충분하다. */}
+          <section id="section-anchor" className="mt-6 animate-rise">
             <div className="mb-2.5 flex items-center gap-2 px-1">
               <span className="text-[13px] font-extrabold tracking-wider text-coral">07</span>
               <span className="h-1 w-1 rounded-full bg-cream-dark" />
-              <span className="text-[13px] font-bold text-cocoa-soft">작은 실천</span>
+              <span className="text-[13px] font-bold text-cocoa-soft">기억할 한 가지</span>
             </div>
-            <Card tone="plain" className="p-6">
-              <h2 className="text-[19px] font-bold leading-snug text-cocoa">
-                오늘부터 해볼 행동
-              </h2>
-              <p className="mt-1.5 text-[14px] text-cocoa-soft">
-                준비물 없이 오늘 당장 시도해볼 수 있는 2~3가지 행동 원칙입니다.
-              </p>
-
-              <div className="mt-5">
-                <ActionChecklist actions={report.chapter07_threeActions} />
-              </div>
-            </Card>
+            <RelationshipAnchorCard
+              oneSentenceAnchor={report.chapter08_corePromise.oneSentenceAnchor}
+              meaning={report.chapter08_corePromise.meaning}
+            />
           </section>
 
+          {/* 가족 공유 (번호 없음) — P2.5 §12: 본문 복붙 금지, 2줄로 압축 */}
           {selectedMode === "real" && (
             <section id="section-share" className="mt-6 animate-rise">
               <ShareSummaryCard report={report} />
@@ -673,19 +680,6 @@ function PaidSignatureReportInner() {
             >
               내 결과 목록에서 다시 보기
             </Link>
-          </section>
-
-          {/* Chapter 08: 우리 둘이 오래 기억할 한 가지 */}
-          <section id="section-anchor" className="mt-6 animate-rise">
-            <div className="mb-2.5 flex items-center gap-2 px-1">
-              <span className="text-[13px] font-extrabold tracking-wider text-coral">08</span>
-              <span className="h-1 w-1 rounded-full bg-cream-dark" />
-              <span className="text-[13px] font-bold text-cocoa-soft">우리 둘의 약속</span>
-            </div>
-            <RelationshipAnchorCard
-              oneSentenceAnchor={report.chapter08_corePromise.oneSentenceAnchor}
-              meaning={report.chapter08_corePromise.meaning}
-            />
           </section>
         </Container>
       </main>

@@ -28,16 +28,16 @@ export const INTERACTION_RULES: InteractionRule[] = [
     confidence: "high",
     interactionType: "friction",
     childPerspectiveSummary:
-      "지금 하던 놀이나 행동의 마무리를 지어야 마음이 편안하게 정리될 수 있어요.",
+      "지금 하던 놀이나 행동을 끝까지 이어간 뒤에 다음 순서로 넘어가는 모습을 보여요.",
     momPerspectiveSummary:
-      "정해진 시간과 다음 일정에 늦지 않도록 서둘러 챙겨주고 싶은 마음이에요.",
+      "정해진 시간과 다음 일정에 맞추기 위해 말과 행동의 속도를 먼저 높이는 모습을 보여요.",
     synthesisSummary:
       "아이는 ‘하던 일의 마침표’가 필요하고, {{CG는}} ‘일정의 시작점’이 급해져 서로의 속도가 충돌하는 양상이에요.",
     whereToBreakSummary: {
       targetStep: 2,
       breakActionTitle: "갑작스러운 개입 대신 마침표 지점 미리 확인하기",
       breakActionDetail:
-        "재촉하기 전에 아이가 어디까지 끝내고 싶은지 눈으로 확인하고 마무리 행동을 한 가지로 좁혀주세요.",
+        "재촉하기 전에 아이가 지금 어디까지 하고 있는지 확인하고, 마무리할 행동을 한 가지로 좁혀주세요.",
     },
     samplePhrases: [
       {
@@ -677,9 +677,9 @@ export const INTERACTION_RULES: InteractionRule[] = [
         phraseId: "phrase_meal_acknowledge_full",
         situation: "먹기 싫다고 식탁에서 일어나려 할 때",
         before: "다 먹을 때까지 못 일어나.",
-        after: "배가 이제 부르구나. 국물 한 모금 마시고 자리에서 일어날까?",
+        after: "지금은 더 먹지 않겠다는 표시를 했구나. 국물 한 모금 마시고 자리에서 일어날까?",
         whyItMayHelp:
-          "아이의 배부름 신호를 인정해주면서 부드럽게 식사를 마무리하는 데 도움이 될 수 있어요.",
+          "아이가 보인 거부 표시를 그대로 인정해주면서 부드럽게 식사를 마무리하는 데 도움이 될 수 있어요.",
         evidenceRefs: ["child:food_prompt_response_food_refusal_on_pressure", "concern:meal"],
       },
     ],

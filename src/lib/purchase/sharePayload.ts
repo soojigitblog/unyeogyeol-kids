@@ -5,9 +5,8 @@ export function buildShareSummaryText(report: SignatureReport): string {
   const child = report.meta.childName;
   const cg = report.meta.caregiverRoleLabel;
   const concern = report.meta.concernLabel;
+  // P2.5 §12: 본문 복붙 금지. 두 줄로만 압축한다.
   const misaligned = report.twoPersonSummary?.misalignedPoint ?? "";
-  const whereTitle = report.chapter04_conflictChain.whereToBreak.breakActionTitle;
-  const whereDetail = report.chapter04_conflictChain.whereToBreak.breakActionDetail;
   const anchor = report.chapter08_corePromise.oneSentenceAnchor;
 
   return [
@@ -17,9 +16,7 @@ export function buildShareSummaryText(report: SignatureReport): string {
     "우리 둘은 여기서 엇갈려요",
     misaligned,
     "",
-    "여기서 한번 끊어볼 수 있어요",
-    `${whereTitle}: ${whereDetail}`,
-    "",
+    "다음번에 기억할 한 가지",
     anchor,
   ].join("\n");
 }

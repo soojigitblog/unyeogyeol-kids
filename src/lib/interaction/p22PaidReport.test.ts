@@ -141,8 +141,10 @@ describe("P2.2H PAID REPORT EVIDENCE INTEGRITY & HUMAN VALUE PATCH", () => {
     const stepTexts = report.chapter04_conflictChain.steps.map((s) => s.description).join(" ");
     expect(scene).toContain(fixtureE.childProfile.name!);
     expect(stepTexts).toContain(fixtureE.childProfile.name!);
-    // Fixture E 고유 실제 문구(다른 Concern의 하드코딩 문구가 아니라 진짜 입력)가 그대로 반영된다.
-    expect(stepTexts).toContain("천천히 둘러보고 들어가고 싶을 때 들어가자");
+    // Fixture E 고유 실제 문구는 CH01(장면 전문)에 존재한다.
+    // P2.5 CONTENT DENSITY 이후 CH04 흐름도는 이 원문을 다시 복사하지 않는다.
+    expect(scene).toContain("천천히 둘러보고 들어가고 싶을 때 들어가자");
+    expect(stepTexts).not.toContain("천천히 둘러보고 들어가고 싶을 때 들어가자");
     // 다른 Concern 전용 하드코딩 장면("멈춰 서서 주변을 살핍니다" 구버전 문구)이 섞이지 않는다.
     expect(stepTexts).not.toContain("멈춰 서서 주변을 살핍니다");
   });
@@ -158,7 +160,7 @@ describe("P2.2H PAID REPORT EVIDENCE INTEGRITY & HUMAN VALUE PATCH", () => {
     expect(repA.chapter08_corePromise.oneSentenceAnchor).toBe(
       "'빨리 하자'고 반복하기 전에, 지금 하던 것의 마지막 지점을 먼저 정해보세요."
     );
-    expect(repA.chapter07_threeActions[0].whyItMayHelp).toContain("받아들이는 데 도움이 될 수 있어요");
+    expect(repA.chapter07_threeActions[0].whyItMayHelp).toContain("중단 시점을 아이가 미리 알 수 있어요");
 
     // Family B Anchor — sc_shyness_hesitation
     const fixB = FAMILY_FIXTURES.find((f) => f.fixtureId === "B")!;
@@ -309,7 +311,10 @@ describe("P2.2H PAID REPORT EVIDENCE INTEGRITY & HUMAN VALUE PATCH", () => {
     expect(report.fortuneRelationship!.momHints.length).toBeGreaterThan(0);
     expect(report.fortuneRelationship!.momHints[0]).toContain("열무맘의 출생정보에서는");
     expect(report.fortuneRelationship!.reflectionText).toContain("두 사람의 출생정보에서는");
-    expect(report.fortuneRelationship!.observationContrastText).toContain("현재 관찰된 행동을 더 중요하게 반영했습니다");
+    // P2.5 §6: "실제 행동이 더 중요하다"는 안내를 리포트 안에서 반복하면 사주 파트가
+    // 스스로 무가치해진다. 한 번만, 그리고 "무시한다"가 아니라 "어떤 순서로 썼는가"로 서술한다.
+    expect(report.fortuneRelationship!.observationContrastText).toContain("보조 렌즈");
+    expect(report.fortuneRelationship!.observationContrastText).toContain("관찰된 행동");
 
     // Zero Compatibility Score Verification
     const serialized = JSON.stringify(report);
@@ -331,10 +336,17 @@ describe("P2.2H PAID REPORT EVIDENCE INTEGRITY & HUMAN VALUE PATCH", () => {
     expect(report.chapter01_recurringScene.narrative).not.toContain("놀이터");
 
     // Conflict Chain is Food Context (Literal User Input Grounded)
+    // P2.5 CONTENT DENSITY 이후: 장면 원문은 CH01 한 곳에만 있고, 흐름도는 같은 입력에서
+    // 파생된 구조 라벨을 쓴다. 여기서는 "같은 Concern/같은 사람에서 파생됐는가"를 검증한다.
     expect(report.chapter04_conflictChain.steps[0].description).toContain("식사");
-    expect(report.chapter04_conflictChain.steps[1].description).toContain("처음 보는 반찬");
-    expect(report.chapter04_conflictChain.steps[2].description).toContain("한 입만 먹어보자");
-    expect(report.chapter04_conflictChain.steps[3].description).toContain("숟가락");
+    expect(report.chapter04_conflictChain.steps[1].description).toContain(report.meta.childName);
+    expect(report.chapter04_conflictChain.steps[2].description).toContain(
+      report.meta.caregiverRoleLabel
+    );
+    expect(report.chapter04_conflictChain.steps[3].description.length).toBeGreaterThan(0);
+    // 장면 원문(발화/사물)은 CH01 에만 존재한다.
+    expect(report.chapter01_recurringScene.narrative).toContain("한 입만 먹어보자");
+    expect(report.chapter01_recurringScene.narrative).toContain("숟가락");
 
     // Phrases are Food Context
     expect(report.chapter06_threePhrases.length).toBeGreaterThan(0);

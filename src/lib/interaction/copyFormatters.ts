@@ -1,19 +1,24 @@
 import { subj, topic } from "@/lib/caregiver";
 
-/** 입력 관찰 문장(…함)을 자연스러운 과거 관찰형으로 변환 */
+/**
+ * 입력 관찰 문장(…함)을 자연스러운 과거 관찰형으로 변환.
+ *
+ * P2.5 BROKEN KOREAN FIX:
+ *   예전에는 "함"을 떼고 무조건 "-는 모습이 있었어요"를 붙였다.
+ *     "계속 이어가려 함"  -> "이어가려" + "는" = "이어가려는 모습"   (정상)
+ *     "더 분명히 거부함"  -> "거부"     + "는" = "거부는 모습"       (깨짐)
+ *   "명사+하다"의 축약형(거부함/정리함/대답함)은 "하는"을 복원해야 한다.
+ */
 export function formatChildObserved(childName: string, childReact: string): string {
   const trimmed = childReact.trim();
   if (trimmed.endsWith("함")) {
     const body = trimmed.slice(0, -1).trim();
-    return `${topic(childName)} ${body}는 모습이 있었어요.`;
+    // 연결어미(-려/-어/-아/-워/-러/-고)로 끝나면 그대로 "-는"을 붙인다.
+    const endsWithConnective = /[려어아워러고]$/.test(body);
+    const stem = endsWithConnective ? body : `${body}하`;
+    return `${topic(childName)} ${stem}는 모습이 있었어요.`;
   }
   return `${topic(childName)} ${trimmed}`;
-}
-
-/** Conflict Chain 등 간결 서술용 — 입력 문장 유지, 주어만 붙임 */
-export function formatChildReactShort(childName: string, childReact: string): string {
-  const trimmed = childReact.trim();
-  return `${subj(childName)} ${trimmed.endsWith(".") ? trimmed : `${trimmed}.`}`;
 }
 
 function extractEmbeddedQuote(text: string): string | undefined {

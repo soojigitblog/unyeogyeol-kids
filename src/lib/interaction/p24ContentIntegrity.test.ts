@@ -91,8 +91,19 @@ describe("P2.4 PAID REPORT CONTENT INTEGRITY GATE", () => {
     expect(report.chapter01_recurringScene.narrative).toContain(REGRESSION_ESCALATION);
 
     const stepTexts = report.chapter04_conflictChain.steps.map((s) => s.description).join(" ");
-    expect(stepTexts).toContain("빨리 하자, 늦었어");
-    expect(stepTexts).toContain(REGRESSION_ESCALATION);
+    // P2.5 CONTENT DENSITY 이후: CH04 는 CH01 장면을 그대로 다시 복사하지 않는다.
+    // (같은 사실이 리포트 안에서 3회 이상 반복되던 원인이었다)
+    // 대신 "같은 Current Conflict 에서 파생됐는가"를 검증한다 —
+    // 원래 이 테스트가 막으려던 버그는 "CH04가 다른 Concern의 하드코딩 장면을 쓰는 것"이었다.
+    expect(stepTexts).not.toContain("빨리 하자, 늦었어");
+    expect(report.chapter04_conflictChain.steps[0].description).toBe(
+      "일상의 규칙이나 할 일을 챙겨야 하는 순간."
+    );
+    expect(stepTexts).toContain(child.name!);
+    expect(stepTexts).toContain(caregiver.roleLabel);
+    // 다른 Concern 전용 장면이 섞이지 않는다.
+    expect(stepTexts).not.toContain("잠자리");
+    expect(stepTexts).not.toContain("숟가락");
 
     // CH02/CH05 도 같은 사실을 담아야 하며 서로 모순되지 않는다.
     expect(report.chapter02_perspectiveGap.momPerspective.intention).toContain("빨리 하자, 늦었어");
@@ -150,7 +161,11 @@ describe("P2.4 PAID REPORT CONTENT INTEGRITY GATE", () => {
   it("§7 CUSTOMER COPY QUALITY: misalignedPoint에 'Concern label의 방향' 같은 어색한 카테고리 삽입이 없다", () => {
     const report = buildReport("learning");
     expect(report.twoPersonSummary?.misalignedPoint).not.toMatch(/의 방향과.*고유한 속도가 만나는 지점/);
-    // 실제 입력된 행동(재촉/이어가려는 모습)이 문장에 담겨야 한다.
-    expect(report.twoPersonSummary?.misalignedPoint).toContain("빨리 하자, 늦었어");
+    // P2.5 CONTENT DENSITY 이후: SECTION 01 은 장면 원문을 다시 인용하지 않는다
+    // (장면 전문은 SECTION 02 에 한 번만 나온다). 대신 두 사람이 움직이는 방향의
+    // 대비로 서술하며, 여전히 두 사람이 모두 등장해야 한다.
+    expect(report.twoPersonSummary?.misalignedPoint).not.toContain("빨리 하자, 늦었어");
+    expect(report.twoPersonSummary?.misalignedPoint).toContain(child.name!);
+    expect(report.twoPersonSummary?.misalignedPoint).toContain(caregiver.roleLabel);
   });
 });

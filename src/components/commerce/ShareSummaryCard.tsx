@@ -14,9 +14,12 @@ interface ShareSummaryCardProps {
 export function ShareSummaryCard({ report }: ShareSummaryCardProps) {
   const [copied, setCopied] = useState(false);
   const shareText = buildShareSummaryText(report);
+  // P2.5 §12: 가족 공유 카드는 본문 복붙 금지. 최대 두 줄로만 압축한다.
+  //   ① 우리 둘이 엇갈리는 한 문장  ② 다음번에 기억할 한 가지
+  // (예전에는 SECTION 04 의 breakActionTitle + breakActionDetail 을 그대로 다시 실어
+  //  본문을 한 번 더 반복하고 있었다)
   const misaligned = report.twoPersonSummary?.misalignedPoint ?? "";
-  const whereTitle = report.chapter04_conflictChain.whereToBreak.breakActionTitle;
-  const whereDetail = report.chapter04_conflictChain.whereToBreak.breakActionDetail;
+  const anchor = report.chapter08_corePromise.oneSentenceAnchor;
 
   async function handleCopy() {
     try {
@@ -59,9 +62,8 @@ export function ShareSummaryCard({ report }: ShareSummaryCardProps) {
           <p className="mt-1 text-[14px] leading-relaxed text-cocoa">{misaligned}</p>
         </div>
         <div>
-          <p className="text-[12px] font-bold text-sage-deep">여기서 한번 끊어볼 수 있어요</p>
-          <p className="mt-1 text-[14px] font-semibold text-cocoa">{whereTitle}</p>
-          <p className="mt-0.5 text-[13.5px] text-cocoa-soft">{whereDetail}</p>
+          <p className="text-[12px] font-bold text-sage-deep">다음번에 기억할 한 가지</p>
+          <p className="mt-1 text-[14px] font-semibold leading-relaxed text-cocoa">{anchor}</p>
         </div>
       </div>
 

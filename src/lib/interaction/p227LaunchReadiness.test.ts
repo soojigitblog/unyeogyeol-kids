@@ -265,7 +265,15 @@ describe("P2.2V.7 Launch Readiness Gate", () => {
           expect(copy).not.toContain(broken);
         }
 
-        expect(report.chapter04_conflictChain.steps[2].description).toContain(c.phrase.split(",")[0].replace(/'/g, ""));
+        // P2.5 CONTENT DENSITY 이후: 흐름도 3번 칸은 보호자 발화를 그대로 다시
+        // 인용하지 않고(장면 전문은 CH01 한 곳), 어느 관계의 어떤 움직임인지만 보여준다.
+        // 원래 이 단언이 지키려던 것 = "3번 칸이 이 보호자의 반응인가" 는 그대로 검증한다.
+        expect(report.chapter04_conflictChain.steps[2].description).toContain(
+          role.profile.roleLabel
+        );
+        expect(report.chapter01_recurringScene.narrative).toContain(
+          c.phrase.split(",")[0].replace(/'/g, "")
+        );
       }
     }
   });
@@ -306,10 +314,22 @@ describe("P2.2V.7 Launch Readiness Gate", () => {
   it("4. Conflict Chain — 사용자 입력 기반 (장면 창작 0)", () => {
     const report = buildReport(ROLES[0].profile, "meal");
     const chain = report.chapter04_conflictChain.steps;
-    expect(chain[1].description).toContain("처음 보는 반찬");
-    expect(chain[2].description).toContain("한 입만");
-    expect(chain[3].description).toContain("숟가락");
     expect(chain.length).toBe(4);
+
+    // 장면 전문은 CH01 에 한 번만 존재한다 (P2.5 §3).
+    expect(report.chapter01_recurringScene.narrative).toContain("처음 보는 반찬");
+    expect(report.chapter01_recurringScene.narrative).toContain("한 입만");
+
+    // 흐름도는 같은 입력에서 파생된 구조 라벨이며, 없는 장면을 창작하지 않는다.
+    expect(chain[0].description).toContain("식사");
+    expect(chain[1].description).toContain(report.meta.childName);
+    expect(chain[1].actor).toBe("아이");
+    expect(chain[2].description).toContain(ROLES[0].profile.roleLabel);
+    expect(chain[3].actor).toBe("둘 다");
+
+    // 흐름도가 장면 원문을 다시 복사하지 않는다 (중복 3회 방지).
+    const stepTexts = chain.map((s) => s.description).join(" ");
+    expect(stepTexts).not.toContain("처음 보는 반찬");
   });
 
   it("5. Before/After — 효과 단정 금지 패턴", () => {

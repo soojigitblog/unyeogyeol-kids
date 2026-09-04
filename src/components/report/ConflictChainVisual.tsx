@@ -82,10 +82,17 @@ export function ConflictChainVisual({
                 {step.description}
               </p>
 
+              {/*
+                P2.5 §8 DUPLICATE HEADING FIX:
+                예전에는 여기에 "★ 여기서 끊어볼 수 있어요" 배지가 있었고,
+                바로 아래 WhereToBreakCard 에도 "★ 여기서 갈등의 고리를 끊어볼 수 있어요"가
+                또 나와 같은 Chapter 안에서 같은 CTA 가 2번 반복됐다.
+                여기서는 "어느 칸인지" 만 표시하고, 무엇을 할지는 아래 카드 한 곳에서만 말한다.
+              */}
               {isBreak && (
                 <div className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-coral px-3 py-1 text-[12px] font-bold text-white">
                   <Sparkles className="h-3.5 w-3.5" />
-                  ★ 여기서 끊어볼 수 있어요
+                  바꿀 수 있는 칸
                 </div>
               )}
             </div>

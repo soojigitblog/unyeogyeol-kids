@@ -455,6 +455,23 @@ export interface SignatureReport {
     sentenceClaims?: SentenceClaim[];
   };
 
+  /**
+   * P2.5 CONTENT DENSITY: SECTION 3 "왜 이 장면이 자꾸 길어질까".
+   * 입력의 재진술이 아니라, 입력들을 연결해야 보이는 구조(MECHANISM)만 담는다.
+   * 고객이 직접 입력하지 않은 "새로 알게 되는 정보"의 본체.
+   */
+  insightMechanism?: {
+    /** 처음 목표 vs 마지막에 남은 결과의 대비 */
+    focusShift: string;
+    /** 흐름이 길어지기 시작하는 칸 */
+    escalationPoint: string;
+    /** 4칸 중 실제로 통제 가능한 칸 = 가장 작은 개입점 */
+    smallestLever: string;
+  };
+
+  /** P2.5: SECTION 4 — 왜 하필 이 지점을 먼저 바꾸는가. */
+  breakPointWhy?: string;
+
   fortuneReflection?: {
     status: "ALIGNED" | "NEUTRAL" | "CONFLICTING";
     text: string;

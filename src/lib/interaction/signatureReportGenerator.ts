@@ -43,12 +43,12 @@ import { matchInteractionRule } from "./interactionEngine";
 import {
   formatCaregiverObservedReaction,
   formatChildObserved,
-  formatChildReactShort,
   formatEscalationFact,
   mergeCaregiverReactionSentence,
 } from "./copyFormatters";
 import { CONFLICT_SCENARIOS } from "./conflictScenarios";
 import { SCENARIO_RECOMMENDATIONS } from "./scenarioRecommendations";
+import { buildReportInsights } from "./reportInsights";
 
 /** 관계 정보가 없는 레거시 호출도 허용하되, 고객 문구는 관계명 기준으로 만든다. */
 type CaregiverInput =
@@ -67,7 +67,7 @@ type CaregiverInput =
 // P2.2V.4 FIX (Section 7): DayMaster Element 하나만으로 만들어지는 REFLECTIVE_EDITORIAL 문구.
 // 심리적 사실처럼 단정하지 않도록 "~한 방향의 힌트로 참고해볼 수 있어요" 수준으로 고정한다.
 const ELEMENT_HINT_CHILD: Record<Element, string> = {
-  wood: "새로운 시도를 먼저보려는 방향의 힌트로 참고해볼 수 있어요.",
+  wood: "새로운 시도를 먼저 해보려는 방향의 힌트로 참고해볼 수 있어요.",
   fire: "감정과 에너지를 바로 표현하는 방향의 힌트로 참고해볼 수 있어요.",
   earth: "자리를 잡고 천천히 익숙해지는 방향의 힌트로 참고해볼 수 있어요.",
   metal: "기준을 분명히 세우고 마무리하려는 방향의 힌트로 참고해볼 수 있어요.",
@@ -76,7 +76,7 @@ const ELEMENT_HINT_CHILD: Record<Element, string> = {
 
 const ELEMENT_HINT_MOM: Record<Element, string> = {
   wood: "상황의 방향을 먼저 정하려는 쪽의 힌트로 참고해볼 수 있어요.",
-  fire: "마음을 먼저 말로 꺼내며 빠르게 소통하는 방향의 힌트로 참고해볼 수 있어요.",
+  fire: "생각을 먼저 말로 꺼내며 빠르게 소통하는 방향의 힌트로 참고해볼 수 있어요.",
   earth: "상황을 받아들이며 중심을 잡으려는 방향의 힌트로 참고해볼 수 있어요.",
   metal: "규칙과 순서를 먼저 정리하려는 방향의 힌트로 참고해볼 수 있어요.",
   water: "상황을 살핀 뒤 다음 단계를 천천히 정하려는 방향의 힌트로 참고해볼 수 있어요.",
@@ -169,7 +169,7 @@ export function generateSignatureReport(
     ];
     if (childFortune.hourTenGod) {
       childHints.push(
-        `${childName}의 시간(時) 힌트에서는 스스로 느끼고 표현하는 활동에 집중하려는 성향이 엿보여요.`
+        `${childName}의 시간(時) 힌트에서는 스스로 느끼고 표현하는 활동에 집중하려는 방향의 힌트로 참고해볼 수 있어요.`
       );
     }
 
@@ -178,7 +178,7 @@ export function generateSignatureReport(
     ];
     if (momFortune.hourTenGod) {
       momHints.push(
-        `${momName}의 시간(時) 힌트에서는 일상 흐름을 안정적으로 다듬어가려는 성향이 엿보여요.`
+        `${momName}의 시간(時) 힌트에서는 일상 흐름을 안정적으로 다듬어가려는 방향의 힌트로 참고해볼 수 있어요.`
       );
     }
 
@@ -191,7 +191,10 @@ export function generateSignatureReport(
 
     const reflectionText = `두 사람의 출생정보에서는 서로 다른 방향의 힌트를 참고해볼 수 있어요. ${cTopic} ${ELEMENT_HINT_CHILD[cEl]} 반면 ${topic(momName)} ${ELEMENT_HINT_MOM[mEl]} 다만 이번 관계 리포트에서는 ${conj(childName)} ${subj(momName)} 실제로 보여준 행동과 반응을 더 중요한 기준으로 봤어요.`;
 
-    const observationContrastText = `출생정보에서는 두 사람의 속도와 표현 방식의 차이를 참고해볼 수 있었지만, 이번 실제 응답에서는 ${concernLabel} 상황에서 관찰된 구체적 행동이 더 분명하게 확인되었어요. 따라서 이 리포트에서는 현재 관찰된 행동을 더 중요하게 반영했습니다.`;
+    // P2.5 §6: "실제 행동이 더 중요합니다"를 리포트 안에서 여러 번 반복하면
+    // 사주 파트가 스스로를 무가치하게 만든다. 이 안내는 여기 한 번만 하고,
+    // 무시하라는 말이 아니라 "어떤 순서로 썼는지"를 밝히는 포지셔닝으로 서술한다.
+    const observationContrastText = `이 리포트의 결론은 출생정보가 아니라 위에서 본 ${concernLabel} 장면에서 나왔어요. 출생정보는 그 결론을 다른 각도에서 한 번 더 비춰보는 보조 렌즈로만 참고했어요. 두 가지가 서로 달라 보일 때는 언제나 실제로 관찰된 행동 쪽을 따릅니다.`;
 
     fortuneRelationship = {
       childHints,
@@ -213,7 +216,7 @@ export function generateSignatureReport(
     } else if (childPatterns.some((p) => p.includes("completion") || p.includes("own_way"))) {
       childKeywords.push("나만의식사속도가있어요", "스스로선택하고싶어요");
     } else {
-      childKeywords.push("식사속도를지켜요", "내방식으로먹고싶어요");
+      childKeywords.push("식사속도를지켜요", "내방식대로먹어요");
     }
   } else if (conflictInput.concernId === "sleep") {
     if (
@@ -249,7 +252,7 @@ export function generateSignatureReport(
   const momKeywords: string[] = [];
   if (conflictInput.concernId === "meal") {
     if (momPatterns.some((p) => p.includes("fast_pace") || p.includes("firm_boundary"))) {
-      momKeywords.push("골고루다먹이고싶어요", "식사시간을지키려해요");
+      momKeywords.push("골고루챙겨먹여요", "식사시간을지키려해요");
     } else if (momPatterns.some((p) => p.includes("explanation") || p.includes("logical"))) {
       momKeywords.push("영양과이유를설명해요", "한입이라도먹길바라요");
     } else {
@@ -284,6 +287,22 @@ export function generateSignatureReport(
     conflictInput.momFirstReaction ||
     `${subj(caregiverRoleLabel)} 상황을 정리하려 안내함`;
   const typicalPhrase = conflictInput.momTypicalPhrase;
+  const escalation = conflictInput.subsequentEscalation || "서로의 대화가 길어짐";
+
+  // ── P2.5 CONTENT DENSITY: 구조 분석(MECHANISM) 레이어 ──────
+  // 고객 입력 재진술이 아니라, 입력들을 연결해야 보이는 구조를 만든다.
+  // SECTION 1(엇갈리는 지점) / SECTION 3(왜 길어지나) / SECTION 4(왜 이 지점인가) 의 근거.
+  const insights = buildReportInsights({
+    childName,
+    caregiverRoleLabel,
+    caregiverDisplayName: momName,
+    concernId: conflictInput.concernId,
+    childFirstReaction: childReact,
+    momFirstReaction: momReact,
+    momTypicalPhrase: typicalPhrase,
+    subsequentEscalation: escalation,
+    recentFrequency: conflictInput.recentFrequency,
+  });
 
   let misalignedPoint = "";
   if (rule.ruleId === "rule_friction_meal_new_food_hesitation") {
@@ -291,7 +310,9 @@ export function generateSignatureReport(
   } else if (rule.ruleId === "rule_friction_meal_autonomy_pacing") {
     misalignedPoint = `${momName}는 ‘정해진 식사 시간과 양’을 지키려 하고, ${cTopic} ‘자신이 원하는 속도와 선택권’을 지키고 싶어 해요.`;
   } else if (rule.ruleId === "rule_friction_sleep_transition_vs_pace") {
-    misalignedPoint = `${subj(caregiverRoleLabel)} 정해진 취침 시간에 맞춰 잠자리 흐름을 이어가려는 반응이 있었어요. ${formatChildObserved(childName, childReact)}`;
+    // P2.5: 장면 원문을 SECTION 1에서 다시 인용하지 않는다(장면 전문은 SECTION 2에 한 번만).
+    // 다른 분기들과 동일하게 "서로가 지키려는 것"의 대비로만 서술한다.
+    misalignedPoint = `${momName}는 ‘정해진 취침 시간’에 맞추려 하고, ${cTopic} ‘하던 활동의 마무리’까지 이어가는 모습을 보여요.`;
   } else if (rule.ruleId === "rule_friction_sleep_routine_vs_change") {
     misalignedPoint = `${momName}는 ‘상황에 맞게 순서를 바꾸려’ 하고, ${cTopic} ‘익숙한 잠자리 순서’를 지키고 싶어 해요.`;
   } else if (rule.ruleId === "rule_friction_completion_vs_time") {
@@ -305,17 +326,11 @@ export function generateSignatureReport(
   } else if (rule.ruleId === "rule_collab_observation_and_patience") {
     misalignedPoint = `${childName}의 신중한 관찰 속도를 ${momName}가 묵묵히 지켜봐 주며 서로 편안한 호흡을 맞추고 있어요.`;
   } else {
-    // P2.4 긴급 수정 (§7 CUSTOMER COPY QUALITY): "엄마가 챙기려는 훈육/규칙 거부의 방향" 처럼
-    // Concern label을 문장에 그대로 붙이지 않는다. 실제 입력된 행동으로 설명한다.
-    // (다른 misalignedPoint 분기들과 동일하게 momName — 애칭이 있으면 애칭 — 을 사용)
-    const momRealReaction = formatCaregiverObservedReaction(
-      momName,
-      momReact,
-      typicalPhrase,
-      conflictInput.concernId
-    );
-    const childRealBehavior = formatChildObserved(childName, childReact);
-    misalignedPoint = `${momRealReaction} ${childRealBehavior} 이 순간 둘의 속도가 엇갈리고 있어요.`;
+    // P2.4 긴급 수정 (§7 CUSTOMER COPY QUALITY): Concern label을 문장에 그대로 붙이지 않는다.
+    // P2.5 CONTENT DENSITY: 여기서 장면 원문(보호자 발화 + 아이 행동)을 그대로 재인용하면
+    // SECTION 2(장면 전문)와 완전히 같은 문장이 되어 중복 3회 이상이 된다.
+    // 대신 "두 사람이 움직이는 방향의 대비"로만 서술한다(crossingPoint).
+    misalignedPoint = insights.crossingPoint;
   }
 
   let fortuneRelationshipHint: string | undefined = undefined;
@@ -325,11 +340,18 @@ export function generateSignatureReport(
     fortuneRelationshipHint = `아이: ${ELEMENT_KEYWORD[cEl]} 성향 / ${caregiverRoleLabel}: ${ELEMENT_KEYWORD[mEl]} 성향 · 서로 다른 속도와 표현 방식을 참고해볼 수 있어요.`;
   }
 
+  // P2.5 §9 §10: 매칭 규칙이 없어 fallback 으로 떨어지면 규칙의 원래 문구가
+  // "상황에 맞는 최선의 방식을 찾아가는 과정이에요" 같은 빈 문장이라 유료 리포트의
+  // SECTION 01 이 통째로 무의미해진다. 이 경우 실제 분류된 행동 문장으로 대체한다.
   const twoPersonSummary = {
     childKeywords,
-    childSummary: rule.childPerspectiveSummary,
+    childSummary: match.isFallback
+      ? insights.fallbackCopy.childSummary
+      : rule.childPerspectiveSummary,
     momKeywords,
-    momSummary: rule.momPerspectiveSummary,
+    momSummary: match.isFallback
+      ? insights.fallbackCopy.caregiverSummary
+      : rule.momPerspectiveSummary,
     misalignedPoint,
     fortuneRelationshipHint,
   };
@@ -358,7 +380,7 @@ export function generateSignatureReport(
   const sceneOpener =
     CONCERN_SCENE_OPENERS[conflictInput.concernId] ?? `${concernLabel} 상황에서 반복되는 순간`;
 
-  const escalation = conflictInput.subsequentEscalation || "서로의 대화가 길어짐";
+  // (escalation 은 위 MECHANISM 레이어에서 이미 정의됨)
   // Concern Hard Lock: 다른 Concern 전용 문구(잠자리/숟가락 등)가 섞이지 않도록
   // 실제 선택된 concernId 를 명시적으로 전달한다.
   const caregiverSceneReaction = mergeCaregiverReactionSentence(
@@ -451,30 +473,34 @@ export function generateSignatureReport(
   // 완전히 다른 하드코딩 장면(예: "새로운 환경에서 멈춰 서서 살핌")을 별도로 썼기 때문에,
   // 실제 입력(Current Conflict)과 모순되는 문장이 같은 리포트 안에 섞여 나왔다.
   // isCollaborative 기반 Low-Friction 서술은 실제 마찰 입력이 있는 이상 사용하지 않는다.
+  // P2.5 §3 §5: 흐름도는 장면 전문을 다시 복사하는 곳이 아니다.
+  // 예전에는 2·3·4번 칸이 SECTION 02 의 장면 문장을 그대로 다시 실어서, 같은 사실이
+  // 리포트 안에서 3회 이상 반복됐다(보호자 발화는 장면 + 흐름도 + BEFORE = 3회).
+  // 여기서는 "어느 칸에서 무슨 종류의 움직임이 일어나는가"만 짧은 구조 라벨로 보여준다.
   const chainSteps = [
     {
       stepNumber: 1 as const,
       stage: "trigger" as const,
-      actor: "아이" as const,
+      actor: "둘 다" as const,
       description: `${sceneOpener}.`,
     },
     {
       stepNumber: 2 as const,
       stage: "child_reaction" as const,
       actor: "아이" as const,
-      description: formatChildReactShort(childName, childReact),
+      description: insights.chain.childStep,
     },
     {
       stepNumber: 3 as const,
       stage: "mom_reaction" as const,
       actor: caregiverRoleLabel,
-      description: caregiverSceneReaction,
+      description: insights.chain.caregiverStep,
     },
     {
       stepNumber: 4 as const,
       stage: "escalation" as const,
       actor: "둘 다" as const,
-      description: `그다음 ${escalationFact}`,
+      description: insights.chain.resultStep,
     },
   ];
 
@@ -523,8 +549,13 @@ export function generateSignatureReport(
   // Priority: ① CurrentConflict 실제 입력(scenarioId 매칭) → ② Primary Interaction Rule(fallback).
   // scenarioId 는 Setup에서 사용자가 직접 고른 구체적 장면(conflictScenarios.ts, 30종)이라
   // 10문항/미니체크로 매칭되는 일반 InteractionRule보다 실제 Current Conflict에 훨씬 가깝다.
-  const scenarioRec = conflictInput.scenarioId
+  // P2.2V.6: 시나리오 추천 문구도 반드시 단일 렌더러를 거쳐 관계명을 채운다.
+  // (예: sc_sleep_night_waking 의 "{{CG}} 여기 있어" -> 아빠/외할머니 …)
+  const rawScenarioRec = conflictInput.scenarioId
     ? SCENARIO_RECOMMENDATIONS[conflictInput.scenarioId]
+    : undefined;
+  const scenarioRec = rawScenarioRec
+    ? applyCaregiverLabel(rawScenarioRec, caregiverRoleLabel)
     : undefined;
   const scenarioMeta = conflictInput.scenarioId
     ? CONFLICT_SCENARIOS.find((s) => s.scenarioId === conflictInput.scenarioId)
@@ -668,13 +699,25 @@ export function generateSignatureReport(
       sentenceClaims: ch3Claims,
     },
     chapter04_conflictChain: {
-      title: "4단계 반복되는 갈등 흐름",
+      // P2.5 §7: 제목의 단계 수는 실제 steps 길이에서 파생한다.
+      // (예전에는 제목 "4단계" / 설명문 "5단계 패턴" 이 서로 어긋났다)
+      title: `${chainSteps.length}단계로 반복되는 흐름`,
       isCollaborative: false,
       steps: chainSteps,
       whereToBreak: {
-        targetStep: rule.whereToBreakSummary.targetStep,
-        breakActionTitle: rule.whereToBreakSummary.breakActionTitle,
-        breakActionDetail: rule.whereToBreakSummary.breakActionDetail,
+        // P2.5 §7: Chain 은 항상 1=상황 / 2=아이 반응 / 3=보호자 첫 반응 / 4=결과 구조다.
+        // 보호자가 실제로 통제할 수 있는 칸은 3번뿐이므로 끊는 지점을 3번으로 고정한다.
+        // (rule 별 targetStep 은 예전 Chain 번호 체계라 breakPointWhy 의 "3번" 서술과 어긋났다)
+        targetStep:
+          chainSteps.find((s) => s.stage === "mom_reaction")?.stepNumber ??
+          rule.whereToBreakSummary.targetStep,
+        // fallback 규칙의 "현재 상황을 한 걸음 물러서서 관찰하기"는 유료 조언이 될 수 없다.
+        breakActionTitle: match.isFallback
+          ? insights.fallbackCopy.breakActionTitle
+          : rule.whereToBreakSummary.breakActionTitle,
+        breakActionDetail: match.isFallback
+          ? insights.fallbackCopy.breakActionDetail
+          : rule.whereToBreakSummary.breakActionDetail,
       },
       evidenceRefs: refs,
       sentenceClaims: ch4Claims,
@@ -695,6 +738,14 @@ export function generateSignatureReport(
       evidenceRefs: recTraceRefs,
       sentenceClaims: ch8Claims,
     },
+    // ── P2.5 CONTENT DENSITY: 유료다운 "새 정보" 본체 ──────────
+    // 고객이 입력하지 않았고, 입력들을 연결해야 비로소 보이는 구조.
+    insightMechanism: {
+      focusShift: insights.focusShift,
+      escalationPoint: insights.escalationPoint,
+      smallestLever: insights.smallestLever,
+    },
+    breakPointWhy: insights.breakPointWhy,
     fortuneReflection,
     fortuneRelationship,
     allSentenceClaims,
