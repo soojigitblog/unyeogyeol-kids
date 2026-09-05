@@ -267,7 +267,11 @@ describe("P2.2V.8 Sleep Concern Gate", () => {
   it("Sleep Test 8 — REAL SESSION copy dump (하람×아빠×수면)", () => {
     const report = buildSleepReport();
     const fullCopy = formatFullCustomerReport(report);
-    fs.writeFileSync(path.resolve("public/p228-report-copy.txt"), fullCopy, "utf8");
+    // P3.1: public/ 은 production에 그대로 배포되는 정적 경로라 QA 덤프를 두면 안 된다.
+    // git 추적 대상이 아닌 dev-artifacts/ 로 출력한다(사람이 읽어보기 위한 용도, 검증은 아래 assert로).
+    const outDir = path.resolve("dev-artifacts");
+    fs.mkdirSync(outDir, { recursive: true });
+    fs.writeFileSync(path.join(outDir, "p228-report-copy.txt"), fullCopy, "utf8");
     expect(fullCopy).toContain("하람");
     expect(fullCopy).toContain("아빠");
     expect(fullCopy).not.toContain("식탁");

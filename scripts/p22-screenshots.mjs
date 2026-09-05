@@ -2,7 +2,7 @@ import { chromium } from "playwright";
 import fs from "fs";
 import path from "path";
 
-const outDir = path.resolve("public/screenshots/p22");
+const outDir = path.resolve("dev-artifacts/screenshots/p22");
 fs.mkdirSync(outDir, { recursive: true });
 
 async function run() {

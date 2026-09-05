@@ -34,7 +34,7 @@ export default function MyResultsPage() {
     <>
       <SiteHeader />
       <main className="flex-1 pb-16 pt-4">
-        <Container>
+        <Container wide>
           <h1 className="text-[24px] font-bold text-cocoa">내 결과</h1>
           <p className="mt-2 text-[14px] leading-relaxed text-cocoa-soft">
             이 브라우저에서 구매한 결과를 다시 볼 수 있어요. 향후 계정/결과찾기 기능 전까지는
@@ -44,12 +44,12 @@ export default function MyResultsPage() {
           {!ready ? (
             <p className="mt-8 text-[14px] text-cocoa-soft">불러오는 중…</p>
           ) : error ? (
-            <Card className="mt-8 p-6 text-center">
+            <Card className="mt-8 p-6 text-center lg:mx-auto lg:max-w-[460px]">
               <p className="text-[15px] text-cocoa">결과 목록을 불러오지 못했어요.</p>
               <p className="mt-1 text-[13px] text-cocoa-soft">잠시 후 다시 시도해주세요.</p>
             </Card>
           ) : savedResults.length === 0 ? (
-            <Card className="mt-8 p-6 text-center">
+            <Card className="mt-8 p-6 text-center lg:mx-auto lg:max-w-[460px]">
               <p className="text-[15px] text-cocoa">아직 저장된 관계 사용설명서가 없어요.</p>
               <div className="mt-4">
                 <ButtonLink href="/products" variant="secondary">
@@ -58,9 +58,9 @@ export default function MyResultsPage() {
               </div>
             </Card>
           ) : (
-            <div className="mt-6 space-y-3">
+            <div className="mt-6 flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-4">
               {savedResults.map((item) => (
-                <Card key={item.reportId} className="p-5">
+                <Card key={item.reportId} className="flex flex-col p-5">
                   <p className="text-[17px] font-bold text-cocoa">
                     {item.childName} × {item.caregiverRoleLabel}
                   </p>
@@ -69,7 +69,7 @@ export default function MyResultsPage() {
                     관계 사용설명서 ·{" "}
                     {(item.createdAt ?? "").slice(0, 10).replace(/-/g, ".")}
                   </p>
-                  <div className="mt-4">
+                  <div className="mt-4 lg:mt-auto lg:pt-4">
                     <ButtonLink
                       href={`/paid/signature?reportId=${item.reportId}`}
                       size="md"

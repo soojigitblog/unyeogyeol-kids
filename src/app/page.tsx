@@ -23,7 +23,7 @@ export default function Home() {
             className="pointer-events-none absolute -left-20 top-40 h-48 w-48 rounded-full bg-sky-tint blur-2xl"
           />
 
-          <Container className="relative">
+          <Container className="relative" wide>
             <div className="animate-rise">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-coral-tint px-3 py-1 text-[12.5px] font-semibold text-coral-deep">
                 <Heart className="h-3.5 w-3.5" strokeWidth={2.4} />
@@ -95,7 +95,7 @@ export default function Home() {
 
         {/* Hero 바로 아래 — Signature Phrase Preview */}
         <section className="pt-10">
-          <Container>
+          <Container wide>
             <p className="text-[12.5px] font-semibold text-coral-deep">
               그리고, 오늘 이렇게 바꿔볼 수 있어요
             </p>
@@ -110,7 +110,7 @@ export default function Home() {
 
         {/* 2. "나만 그런 거 아니구나." */}
         <section className="pt-16">
-          <Container>
+          <Container wide>
             <h2 className="text-[26px] font-bold leading-snug tracking-tight text-cocoa">
               나만 그런 거,
               <br />
@@ -122,7 +122,7 @@ export default function Home() {
               생각보다 정말 많아요.
             </p>
 
-            <div className="mt-6 flex flex-col gap-3">
+            <div className="mt-6 flex flex-col gap-3 lg:grid lg:grid-cols-3 lg:gap-4">
               {[
                 "혼내도 안 되고, 달래도 안 되고…",
                 "고집이 너무 센데 어떻게 해야 하죠?",
@@ -142,7 +142,7 @@ export default function Home() {
 
         {/* 3. "아이에게 이유가 있을 수도 있겠네." */}
         <section className="pt-16">
-          <Container>
+          <Container wide>
             <Card tone="sage" className="p-6">
               <p className="text-[15px] leading-relaxed text-cocoa-soft">
                 같은 상황도 아이에겐 다르게 느껴져요.
@@ -161,7 +161,7 @@ export default function Home() {
 
         {/* 4. "우리 아이는 어떤 타입이지?" */}
         <section className="pt-16">
-          <Container>
+          <Container wide>
             <h2 className="text-[26px] font-bold leading-snug tracking-tight text-cocoa">
               우리 아이는
               <br />
@@ -188,7 +188,7 @@ export default function Home() {
 
         {/* 5. CTA */}
         <section className="pt-16 pb-20">
-          <Container>
+          <Container wide>
             <div className="relative overflow-hidden rounded-card bg-coral p-7 text-center shadow-lift">
               <Sparkles
                 className="mx-auto h-6 w-6 text-white/90"

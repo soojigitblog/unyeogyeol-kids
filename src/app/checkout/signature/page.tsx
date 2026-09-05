@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { Container } from "@/components/layout/Container";
@@ -179,7 +180,7 @@ export default function SignatureCheckoutPage() {
     <>
       <SiteHeader />
       <main className="flex-1 pb-28 pt-4">
-        <Container>
+        <Container className="lg:max-w-[600px]">
           <Card tone="coral" className="p-6">
             <p className="text-[12px] font-bold text-coral-deep">결제 전 확인</p>
             <h1 className="mt-2 text-[22px] font-bold leading-snug text-cocoa">
@@ -240,12 +241,19 @@ export default function SignatureCheckoutPage() {
             {error && (
               <p className="mt-4 text-[13px] text-coral-deep">{error}</p>
             )}
+
+            <p className="mt-4 text-[11.5px] leading-relaxed text-cocoa-soft/80">
+              결제를 진행하면{" "}
+              <Link href="/terms" className="underline underline-offset-2">이용약관</Link>,{" "}
+              <Link href="/privacy" className="underline underline-offset-2">개인정보처리방침</Link>,{" "}
+              <Link href="/refund" className="underline underline-offset-2">환불·취소 안내</Link>에 동의하는 것으로 간주돼요.
+            </p>
           </Card>
         </Container>
       </main>
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-milk/95 px-4 py-3 backdrop-blur-sm">
-        <Container className="px-0">
+        <Container className="px-0 lg:max-w-[600px]">
           {PAYMENT_MODE === "mock" ? (
             <Button size="lg" disabled={loading || paying || !orderId} onClick={handleMockPayment}>
               {SIGNATURE_PRICE_KRW.toLocaleString("ko-KR")}원 결제하기

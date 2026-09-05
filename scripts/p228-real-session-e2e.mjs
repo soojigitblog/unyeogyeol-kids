@@ -4,7 +4,7 @@ import fs from "fs";
 import path from "path";
 
 const BASE = process.env.BASE_URL || "http://localhost:3000";
-const OUT = path.resolve("public/screenshots/p228");
+const OUT = path.resolve("dev-artifacts/screenshots/p228");
 const STORAGE_KEY = "uyk_session_v1";
 
 fs.mkdirSync(OUT, { recursive: true });

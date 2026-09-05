@@ -73,7 +73,7 @@ export default function FreeResultPage() {
     <>
       <SiteHeader />
       <main className="flex-1 pb-20 pt-2">
-        <Container>
+        <Container wide>
           {/* 1. 한 문장 감성 카드 */}
           <div className="animate-rise">
             <Eyebrow>지금 우리 아이를 한 문장으로 보면</Eyebrow>

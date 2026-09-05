@@ -4,7 +4,7 @@ import fs from "fs";
 import path from "path";
 
 const BASE = process.env.BASE_URL || "http://localhost:3000";
-const OUT = path.resolve("public/screenshots/p24");
+const OUT = path.resolve("dev-artifacts/screenshots/p24");
 const SESSION_KEY = "uyk_session_v1";
 const GUEST_KEY = "uyk_guest_v1";
 const PURCHASE_KEY = "uyk_purchase_v1";

@@ -12,10 +12,27 @@ const gowunBatang = Gowun_Batang({
   display: "swap",
 });
 
+const SITE_NAME = "운의결 KIDS";
+const SITE_TITLE = "운의결 KIDS · 아이를 바꾸기 전에, 이해하는 법부터";
+const SITE_DESCRIPTION =
+  "아이의 실제 행동과 보호자의 반응을 함께 살펴보는 우리 아이 × 나 관계 사용설명서예요. 태어난 기질과 실제로 관찰된 행동을 함께 보고, 서로 엇갈리는 지점을 찾아드려요.";
+
 export const metadata: Metadata = {
-  title: "운의결 KIDS · 우리 아이, 왜 이럴까요?",
-  description:
-    "말 안 듣는 아이가 아니라, 나와 움직이는 방식이 조금 다른 아이일 수도 있어요. 아이를 가장 가까이에서 돌보는 사람과 아이의 관계를 함께 봅니다.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    siteName: SITE_NAME,
+    locale: "ko_KR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export const viewport: Viewport = {

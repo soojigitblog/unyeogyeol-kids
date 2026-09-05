@@ -4,7 +4,7 @@ import fs from "fs";
 import path from "path";
 
 const BASE = process.env.BASE_URL || "http://localhost:3000";
-const outDir = path.resolve("public/screenshots/p227");
+const outDir = path.resolve("dev-artifacts/screenshots/p227");
 fs.mkdirSync(outDir, { recursive: true });
 
 async function hideChrome(page) {

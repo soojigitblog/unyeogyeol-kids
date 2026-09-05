@@ -25,7 +25,13 @@ import type {
 } from "@/lib/types";
 
 const CURRENT_YEAR = new Date().getFullYear();
-const MOM_YEAR_OPTIONS = Array.from({ length: 45 }, (_, i) => CURRENT_YEAR - 18 - i);
+// P3.1: 할머니/할아버지/외할머니/외할아버지 등도 보호자로 선택 가능하므로,
+// 실제 조부모 연령대(1940년대생 포함)까지 정확한 생년을 고를 수 있어야 한다.
+const MOM_YEAR_MIN = 1940;
+const MOM_YEAR_OPTIONS = Array.from(
+  { length: CURRENT_YEAR - 18 - MOM_YEAR_MIN + 1 },
+  (_, i) => CURRENT_YEAR - 18 - i
+);
 const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, h) => h);
 

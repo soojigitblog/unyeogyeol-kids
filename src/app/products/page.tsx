@@ -30,7 +30,7 @@ export default function ProductsPage() {
     <>
       <SiteHeader />
       <main className="flex-1 pb-16 pt-4">
-        <Container>
+        <Container wide>
           <div className="animate-rise">
             <Eyebrow>유료 관계 사용설명서</Eyebrow>
             {concernText && (

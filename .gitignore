@@ -47,3 +47,6 @@ next-env.d.ts
 *.png
 acceptance-screenshots/
 preview-p1.2-output.txt
+
+# 개발/QA 산출물 — public/ 밖, git 추적 대상 아님(정적 파일로 배포되면 안 됨)
+/dev-artifacts/

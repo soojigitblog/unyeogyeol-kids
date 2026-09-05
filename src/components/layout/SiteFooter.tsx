@@ -21,6 +21,18 @@ export function SiteFooter() {
             안내 · 안전 고지
           </Link>
           <span aria-hidden>·</span>
+          <Link href="/terms" className="hover:text-cocoa">
+            이용약관
+          </Link>
+          <span aria-hidden>·</span>
+          <Link href="/privacy" className="hover:text-cocoa">
+            개인정보처리방침
+          </Link>
+          <span aria-hidden>·</span>
+          <Link href="/refund" className="hover:text-cocoa">
+            환불·취소 안내
+          </Link>
+          <span aria-hidden>·</span>
           <span>© {new Date().getFullYear()} 운의결 kids</span>
         </div>
       </Container>
