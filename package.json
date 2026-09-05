@@ -7,7 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "verify:p24:snapshot": "node scripts/p24-snapshot-trigger-verify.mjs --yes",
+    "verify:p24:api": "node scripts/p24-api-verify.mjs --yes",
+    "verify:p24:checkout": "node scripts/p24-checkout-flow.mjs --yes",
+    "verify:p24": "npm run verify:p24:snapshot && npm run verify:p24:api && npm run verify:p24:checkout"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",

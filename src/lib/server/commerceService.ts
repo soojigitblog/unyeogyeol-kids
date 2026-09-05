@@ -1,3 +1,25 @@
+// P2.4 REAL COMMERCE FOUNDATION — 보안 아키텍처 불변조건 (실제 Supabase+Toss TEST 환경에서 검증됨)
+//
+// 1. service_role key는 이 서버 모듈(및 getSupabaseAdmin)에서만 사용되며, 브라우저에는
+//    절대 노출되지 않는다. 클라이언트는 이 키를 직접 볼 수 있는 어떤 경로도 갖지 않는다.
+// 2. DB의 모든 커머스 테이블은 RLS가 켜져 있고 정책은 전부 `using (false)` —
+//    anon key로는 어떤 행도 읽거나 쓸 수 없다(deny-all). 이 앱은 Supabase Auth/anon key를
+//    아예 쓰지 않으므로, RLS는 "service_role 없이는 통째로 차단"이라는 방어선 역할만 한다.
+// 3. Guest 간 격리(A가 B의 report를 볼 수 없음)는 RLS가 아니라 이 애플리케이션 레이어가
+//    담당한다 — hasReportAccess/getUnlockedReport 가 매번 report_ownerships.owner_session_id
+//    를 요청자의 owner_session_id와 대조한다. 새 commerce API를 추가할 때 이 체크를
+//    빠뜨리면 RLS가 대신 막아주지 않는다 — ownership check 누락 = 데이터 유출.
+// 4. 모든 paid report 조회 경로(/api/reports/[id], /api/reports/[id]/access, /my-results)는
+//    guest 인증(requireGuestAuth: x-guest-session-id + x-guest-access-token 해시 대조) +
+//    ownership 확인을 반드시 거친다. 둘 중 하나라도 생략된 새 라우트를 추가하지 말 것.
+// 5. 결제 완료(status=UNLOCKED) 이후의 report_payload_json/report_version은 DB 트리거
+//    (prevent_paid_report_payload_change, errcode P2401)로 재정의를 막는다 — 애플리케이션
+//    코드에도 이 필드를 UPDATE하는 경로가 없어야 한다(정적 감사: p24Snapshot.test.ts).
+// 6. 실제 검증 스크립트: scripts/p24-api-verify.mjs, scripts/p24-snapshot-trigger-verify.mjs,
+//    scripts/p24-checkout-flow.mjs (npm run verify:p24). 전부 ALLOW_P24_TEST_MUTATION=true
+//    또는 --yes 없이는 실행되지 않으며, 자신이 만든 테스트 데이터만 자체 정리하고
+//    PAID row는 삭제 대상이 될 수 없도록 안전장치(scripts/lib/p24-guard.mjs)가 걸려 있다.
+
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
   generateAccessToken,
