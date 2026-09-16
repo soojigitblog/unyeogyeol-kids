@@ -99,15 +99,15 @@ describe("P2.4 시크릿 노출 방지", () => {
     expect(leaked).toEqual([]);
   });
 
-  it("LIVE 결제 모드는 코드 레벨에서 차단되어 있다", async () => {
+  it("LIVE 결제 모드는 명시적 키 구성으로만 활성화된다", async () => {
     const original = process.env.PAYMENT_MODE;
     try {
       process.env.PAYMENT_MODE = "live";
       const { getPaymentMode, isLivePaymentEnabled } = await import(
         "@/lib/commerce/paymentMode"
       );
-      expect(() => getPaymentMode()).toThrow(/LIVE/);
-      expect(isLivePaymentEnabled()).toBe(false);
+      expect(getPaymentMode()).toBe("live");
+      expect(isLivePaymentEnabled()).toBe(true);
     } finally {
       process.env.PAYMENT_MODE = original ?? "mock";
     }

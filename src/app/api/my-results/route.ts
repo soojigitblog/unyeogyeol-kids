@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { listMyResults } from "@/lib/server/commerceService";
+import { listMyResultsWithGrants } from "@/lib/server/reportAccess";
 import {
   GuestAuthError,
   guestAuthErrorResponse,
@@ -9,7 +9,8 @@ import {
 export async function GET(request: NextRequest) {
   try {
     const guest = await requireGuestAuth(request);
-    const results = await listMyResults(guest.sessionId);
+    // P3.2: canonical 소유 결과 + 유효한 recovery grant 결과를 합쳐서 반환(중복 report는 1개만)
+    const results = await listMyResultsWithGrants(guest.sessionId);
     return Response.json({ results });
   } catch (e) {
     if (e instanceof GuestAuthError) {

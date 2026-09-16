@@ -6,8 +6,8 @@ import { ChevronLeft } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { Container } from "@/components/layout/Container";
-import { Card, Eyebrow } from "@/components/ui/Card";
-import { Button, ButtonLink } from "@/components/ui/Button";
+import { Eyebrow } from "@/components/ui/Card";
+import { ButtonLink } from "@/components/ui/Button";
 import { useKids } from "@/lib/store";
 import { concernLabel } from "@/lib/concerns";
 import { SignatureProductCard } from "@/components/commerce/SignatureProductCard";
@@ -60,20 +60,6 @@ export default function ProductsPage() {
 
           <div className="mt-6">
             <SignatureResultPreview />
-          </div>
-
-          <Card className="mt-5 p-5">
-            <span className="text-[12.5px] font-semibold text-sage-deep">아이 중심 리포트</span>
-            <h2 className="mt-2 text-[18px] font-bold text-cocoa">우리 아이 기질 사용설명서</h2>
-            <p className="mt-2 text-[14px] text-cocoa-soft">향후 제공 예정 상품입니다.</p>
-            <Button variant="secondary" className="mt-4 w-full" disabled>
-              곧 열려요
-            </Button>
-          </Card>
-
-          <div className="mt-5 rounded-card border border-line bg-cream p-4">
-            <p className="text-[14.5px] font-semibold text-cocoa">요즘 이 행동, 왜 그럴까?</p>
-            <p className="mt-1 text-[13px] text-cocoa-soft">반복 상담 상품 — 준비 중</p>
           </div>
 
           <div className="mt-8">

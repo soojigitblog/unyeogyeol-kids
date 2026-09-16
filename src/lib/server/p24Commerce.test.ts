@@ -153,11 +153,11 @@ describe("P2.4 Commerce Server", () => {
     expect(text).not.toContain("paymentKey");
   });
 
-  it("live payment mode is blocked", async () => {
+  it("live payment mode is an explicit supported mode", async () => {
     vi.resetModules();
     process.env.PAYMENT_MODE = "live";
     const { getPaymentMode } = await import("@/lib/commerce/paymentMode");
-    expect(() => getPaymentMode()).toThrow("LIVE payment is not enabled");
+    expect(getPaymentMode()).toBe("live");
     vi.resetModules();
     process.env.PAYMENT_MODE = "mock";
   });

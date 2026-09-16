@@ -9,13 +9,9 @@ import {
   guestAuthErrorResponse,
   requireGuestAuth,
 } from "@/lib/server/guestAuth";
-import { getPaymentMode } from "@/lib/commerce/paymentMode";
 
 export async function POST(request: NextRequest) {
   try {
-    if (getPaymentMode() === "live") {
-      return Response.json({ error: "LIVE_DISABLED" }, { status: 403 });
-    }
     const guest = await requireGuestAuth(request);
     const body = (await request.json()) as {
       paymentKey?: string;

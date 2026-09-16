@@ -148,11 +148,13 @@ export default function SignatureCheckoutPage() {
   }
 
   async function handleTossPayment() {
-    if (!orderId || !reportId || PAYMENT_MODE !== "toss_test") return;
+    if (!orderId || !reportId || (PAYMENT_MODE !== "toss_test" && PAYMENT_MODE !== "live")) return;
     setPaying(true);
     setError(null);
     try {
-      const clientKey = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY_TEST;
+      const clientKey = PAYMENT_MODE === "live"
+        ? process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY
+        : process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY_TEST;
       if (!clientKey) throw new Error("TOSS_CLIENT_KEY_MISSING");
       const guest = await ensureGuestSession();
       const { loadTossPayments } = await import("@tosspayments/tosspayments-sdk");
@@ -258,7 +260,7 @@ export default function SignatureCheckoutPage() {
             <Button size="lg" disabled={loading || paying || !orderId} onClick={handleMockPayment}>
               {SIGNATURE_PRICE_KRW.toLocaleString("ko-KR")}원 결제하기
             </Button>
-          ) : PAYMENT_MODE === "toss_test" ? (
+          ) : PAYMENT_MODE === "toss_test" || PAYMENT_MODE === "live" ? (
             <Button size="lg" disabled={loading || paying || !orderId} onClick={handleTossPayment}>
               {SIGNATURE_PRICE_KRW.toLocaleString("ko-KR")}원 결제하기
             </Button>

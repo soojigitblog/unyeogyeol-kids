@@ -12,6 +12,7 @@ import {
   apiConfirmTossPayment,
 } from "@/lib/commerce/apiClient";
 import { saveCommerceDraft } from "@/lib/commerce/commerceDraft";
+import { RecoveryCodeManager } from "@/components/commerce/RecoveryCodeManager";
 
 const PAYMENT_MODE = process.env.NEXT_PUBLIC_PAYMENT_MODE ?? "mock";
 
@@ -30,7 +31,7 @@ function PaymentSuccessInner() {
       const reportParam = searchParams?.get("reportId");
 
       try {
-        if (PAYMENT_MODE === "toss_test" && paymentKey && orderId && amountParam) {
+        if ((PAYMENT_MODE === "toss_test" || PAYMENT_MODE === "live") && paymentKey && orderId && amountParam) {
           const amount = Number(amountParam);
           const result = await apiConfirmTossPayment(paymentKey, orderId, amount);
           setReportId(result.reportId);
@@ -93,6 +94,11 @@ function PaymentSuccessInner() {
                 <p className="mt-3 text-[14.5px] leading-relaxed text-cocoa-soft">
                   직접 알려주신 장면과 반응을 바탕으로 정리했어요.
                 </p>
+                {reportId && (
+                  <div className="mt-5 text-left">
+                    <RecoveryCodeManager reportId={reportId} autoIssueOnMount />
+                  </div>
+                )}
                 <div className="mt-6">
                   <ButtonLink
                     href={reportId ? `/paid/signature?reportId=${reportId}` : "/my-results"}

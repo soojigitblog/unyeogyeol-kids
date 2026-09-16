@@ -7,6 +7,7 @@ import { buildMomEvidence } from "../questionnaire/momEvidence";
 import { buildBehaviorEvidence } from "../questionnaire/evidence";
 import { buildFoodEvidence } from "../questionnaire/foodQuestions";
 import { CONFLICT_SCENARIOS } from "./conflictScenarios";
+import { runLexicalGuard } from "./safetyValidators";
 import type {
   CaregiverProfile,
   ChildProfile,
@@ -230,6 +231,25 @@ function hasStandaloneLabel(text: string, label: string): boolean {
 }
 
 describe("P2.2V.7 Launch Readiness Gate", () => {
+  it("0. 아이를 본질적으로 낙인찍는 전역 라벨은 고객 문구에서 차단한다", () => {
+    const report = buildReport(ROLES[0].profile, "discipline");
+    const copy = extractCustomerCopy(report);
+    const globalLabels = [
+      "고집 센 아이",
+      "문제 있는 아이",
+      "말 안 듣는 아이",
+      "산만한 아이",
+      "사회성이 떨어지는 아이",
+      "공격적인 아이",
+      "까다로운 아이",
+    ];
+
+    for (const label of globalLabels) {
+      expect(copy).not.toContain(label);
+      expect(runLexicalGuard(`이 아이는 ${label}입니다.`)).not.toHaveLength(0);
+    }
+  });
+
   it("1. 5 역할 × 5 Concern — 관계명 유지 + Concern 정합 + 내부 코드 0", () => {
     for (const role of ROLES) {
       for (const concernId of CORE_CONCERNS) {

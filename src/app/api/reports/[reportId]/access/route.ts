@@ -1,9 +1,6 @@
 import { NextRequest } from "next/server";
-import {
-  commerceErrorResponse,
-  getUnlockedReport,
-  hasReportAccess,
-} from "@/lib/server/commerceService";
+import { commerceErrorResponse } from "@/lib/server/commerceService";
+import { hasReportAccessAny } from "@/lib/server/reportAccess";
 import {
   GuestAuthError,
   guestAuthErrorResponse,
@@ -17,7 +14,8 @@ export async function GET(
   try {
     const guest = await requireGuestAuth(request);
     const { reportId } = await params;
-    const allowed = await hasReportAccess(guest.sessionId, reportId);
+    // P3.2: canonical ownership OR 유효한 recovery grant
+    const allowed = await hasReportAccessAny(guest.sessionId, reportId);
     return Response.json({ allowed, reportId });
   } catch (e) {
     if (e instanceof GuestAuthError) {

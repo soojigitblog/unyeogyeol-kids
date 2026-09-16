@@ -2,17 +2,14 @@ export type PaymentMode = "mock" | "toss_test" | "live";
 
 export function getPaymentMode(): PaymentMode {
   const mode = (process.env.PAYMENT_MODE ?? "mock") as PaymentMode;
-  if (mode === "live") {
-    throw new Error("LIVE payment is not enabled in P2.4");
-  }
-  if (mode !== "mock" && mode !== "toss_test") {
+  if (mode !== "mock" && mode !== "toss_test" && mode !== "live") {
     throw new Error(`Invalid PAYMENT_MODE: ${mode}`);
   }
   return mode;
 }
 
 export function isLivePaymentEnabled(): boolean {
-  return false;
+  return getPaymentMode() === "live";
 }
 
 export function isTossTestMode(): boolean {
@@ -24,16 +21,21 @@ export function isMockPaymentMode(): boolean {
 }
 
 export function getTossClientKey(): string | null {
+  if (isLivePaymentEnabled()) {
+    return process.env.TOSS_CLIENT_KEY_LIVE ?? process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY ?? null;
+  }
   return process.env.TOSS_CLIENT_KEY_TEST ?? process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY_TEST ?? null;
 }
 
 export function getTossSecretKey(): string | null {
-  return process.env.TOSS_SECRET_KEY_TEST ?? null;
+  return isLivePaymentEnabled()
+    ? process.env.TOSS_SECRET_KEY_LIVE ?? null
+    : process.env.TOSS_SECRET_KEY_TEST ?? null;
 }
 
 export function assertPaymentEnv(): void {
   const mode = getPaymentMode();
-  if (mode === "toss_test") {
+  if (mode === "toss_test" || mode === "live") {
     if (!getTossClientKey() || !getTossSecretKey()) {
       throw new Error("TOSS_TEST_KEYS_MISSING");
     }

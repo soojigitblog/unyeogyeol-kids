@@ -1,8 +1,6 @@
 import { NextRequest } from "next/server";
-import {
-  commerceErrorResponse,
-  getUnlockedReport,
-} from "@/lib/server/commerceService";
+import { commerceErrorResponse } from "@/lib/server/commerceService";
+import { getUnlockedReportAny } from "@/lib/server/reportAccess";
 import {
   GuestAuthError,
   guestAuthErrorResponse,
@@ -16,7 +14,8 @@ export async function GET(
   try {
     const guest = await requireGuestAuth(request);
     const { reportId } = await params;
-    const report = await getUnlockedReport(guest.sessionId, reportId);
+    // P3.2: canonical ownership OR 유효한 recovery grant (reportAccess.ts, hasReportAccess/getUnlockedReport 원본 무변경)
+    const report = await getUnlockedReportAny(guest.sessionId, reportId);
     if (!report) {
       return commerceErrorResponse("ACCESS_DENIED", 403);
     }

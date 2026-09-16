@@ -166,7 +166,12 @@ export async function createOrder(
       amount,
       currency: product.currency,
       status: "PAYMENT_PENDING",
-      payment_provider: getPaymentMode() === "toss_test" ? "toss_test" : "mock",
+      payment_provider:
+        getPaymentMode() === "mock"
+          ? "mock"
+          : getPaymentMode() === "live"
+            ? "toss"
+            : "toss_test",
       requested_at: new Date().toISOString(),
     })
     .select("id")
@@ -224,7 +229,7 @@ export async function confirmPayment(
   }
 
   const mode = getPaymentMode();
-  if (mode === "toss_test") {
+  if (mode === "toss_test" || mode === "live") {
     if (!input.paymentKey) {
       throw new CommerceError("PAYMENT_KEY_REQUIRED");
     }
@@ -267,6 +272,23 @@ export async function confirmPayment(
     orderId: order.order_id,
     alreadyPaid: false,
   };
+}
+
+/**
+ * Server-to-server fallback for the Toss webhook. The webhook body is never
+ * trusted as proof of payment: before a report is unlocked we send the same
+ * paymentKey/orderId/amount tuple to Toss with our server-only secret.
+ */
+export async function confirmPaymentFromTossWebhook(input: ConfirmPaymentInput): Promise<ConfirmPaymentResult> {
+  const supabase = getSupabaseAdmin();
+  const { data: order, error } = await supabase
+    .from("orders")
+    .select("owner_session_id")
+    .eq("order_id", input.orderId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!order) throw new CommerceError("ORDER_NOT_FOUND");
+  return confirmPayment(order.owner_session_id, input);
 }
 
 async function confirmTossPayment(
@@ -407,6 +429,12 @@ export function commerceErrorResponse(code: string, status = 400) {
     ACCESS_DENIED: "이 결과를 볼 수 있는 구매 정보를 확인하지 못했어요.",
     PAYMENT_KEY_REQUIRED: "결제 정보가 올바르지 않아요.",
     TOSS_CONFIRM_FAILED: "결제 승인에 실패했어요.",
+    // P3.2 Guest Recovery — 기존 코드/문구 변경 없이 항목만 추가.
+    REPORT_NOT_UNLOCKED: "이 결과를 볼 수 있는 구매 정보를 확인하지 못했어요.",
+    ORDER_NOT_PAID: "이 결과를 볼 수 있는 구매 정보를 확인하지 못했어요.",
+    CODE_ALREADY_ISSUED: "이미 결과 보관 코드가 발급되어 있어요.",
+    RECOVERY_CODE_ISSUE_FAILED: "보관 코드를 발급하지 못했어요. 잠시 후 다시 시도해주세요.",
+    RECOVERY_CODE_INVALID: "결과 보관 코드를 확인해 주세요.",
   };
   return Response.json(
     { error: code, message: messages[code] ?? "요청을 처리하지 못했어요." },
