@@ -98,6 +98,10 @@ export function KidsProvider({ children }: { children: React.ReactNode }) {
       if (!merged.caregiverProfile && legacyMom) {
         merged.caregiverProfile = migrateLegacyMomProfile(legacyMom);
       }
+      // localStorage(외부 시스템)를 읽어와 React 상태와 동기화하는 최초 1회
+      // hydration이다. localStorage는 브라우저에만 있어 SSR 중엔 읽을 수 없으므로
+      // lazy useState 초기값으로 옮길 수 없고, 반드시 마운트 후 effect에서 해야 한다.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setState(merged);
     }
     setReady(true);

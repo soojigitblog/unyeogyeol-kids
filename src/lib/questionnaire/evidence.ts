@@ -125,6 +125,18 @@ export function answeredCount(answers: Answers): number {
   return Object.values(answers).filter((x) => x != null).length;
 }
 
+/** P3.6: evidenceRefs("evidence:domain:patternId")를 사람이 읽는 관찰 문장으로 역매핑할 때 사용. */
+export function findGeneralObservedLabel(patternId: string): string | null {
+  for (const domain of Object.keys(PATTERNS) as QuestionDomain[]) {
+    for (const value of [1, 2, 3, 4] as const) {
+      if (PATTERNS[domain][value].observedPattern === patternId) {
+        return PATTERNS[domain][value].observedLabel;
+      }
+    }
+  }
+  return null;
+}
+
 export type Band = "low" | "mid_low" | "mid_high" | "high";
 export function band(v: number | undefined): Band {
   if (v == null) return "mid_low";

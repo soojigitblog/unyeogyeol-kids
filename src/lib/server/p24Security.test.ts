@@ -19,6 +19,7 @@ import {
 } from "@/lib/server/commerceService";
 import { getProductPrice, PRODUCTS, SIGNATURE_PRODUCT_ID } from "@/lib/commerce/products";
 import type { SignaturePrepareInput } from "@/lib/server/reportBuilder";
+import type { SignatureReport } from "@/lib/types";
 
 const caseA = {
   child: {
@@ -111,6 +112,17 @@ describe("P2.4 결제 소유권 보안", () => {
     expect(await hasReportAccess(guest.sessionId, reportId)).toBe(false);
     expect(await getUnlockedReport(guest.sessionId, reportId)).toBeNull();
     expect(await listMyResults(guest.sessionId)).toHaveLength(0);
+  });
+
+  it("결제가 명시적으로 비활성화되면 주문 생성과 리포트 해제가 모두 차단된다", async () => {
+    process.env.PAYMENT_MODE = "disabled";
+    const guest = await createGuestSession();
+    const { reportId } = await prepareSignatureReport(guest.sessionId, caseA);
+
+    await expect(
+      createOrder(guest.sessionId, SIGNATURE_PRODUCT_ID, reportId)
+    ).rejects.toMatchObject({ message: "PAYMENT_DISABLED" });
+    expect(await hasReportAccess(guest.sessionId, reportId)).toBe(false);
   });
 
   it("주문만 만들고 결제하지 않으면 리포트는 LOCKED 로 남는다", async () => {
@@ -245,14 +257,26 @@ describe("P2.4 결제 소유권 보안", () => {
     expect(first).not.toBeNull();
     expect(JSON.stringify(second)).toBe(JSON.stringify(first));
 
-    // 저장된 payload 와 고객이 보는 결과가 동일해야 한다.
+    // 저장된 payload 는 고객이 보는 결과의 기반이 되어야 한다.
+    // P3.4/P3.5: 고객이 보는 결과에는 paid_extras(talkingPoints/conflictMap/talentSeeds/
+    // growthContent/guides)가 read-time에 얹혀서 나오므로, 저장된 report_payload_json
+    // 자체와는 그 필드들만큼 차이가 난다 — report_payload_json 스냅샷 자체는 여전히
+    // 불변이다(별도 static audit로 보장).
     const supabase = getSupabaseAdmin();
     const { data } = await supabase
       .from("reports")
       .select("report_payload_json, report_version")
       .eq("id", reportId)
       .maybeSingle();
-    expect(JSON.stringify(data?.report_payload_json)).toBe(JSON.stringify(first));
+    const {
+      talkingPoints: _talkingPoints,
+      conflictMap: _conflictMap,
+      talentSeeds: _talentSeeds,
+      growthContent: _growthContent,
+      guides: _guides,
+      ...baseFromFirst
+    } = first as SignatureReport;
+    expect(JSON.stringify(data?.report_payload_json)).toBe(JSON.stringify(baseFromFirst));
     expect(data?.report_version).toBe("signature-v1");
   });
 

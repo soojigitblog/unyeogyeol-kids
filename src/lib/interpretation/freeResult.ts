@@ -88,7 +88,6 @@ function collectKeywords(ax: AxisValues): string[] {
 function buildOneSentence(
   ax: AxisValues,
   fortune: FortuneSignal | null,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _ageBandVal: AgeBand,
 ): string {
   const outward = fortune ? fortuneOutwardness(fortune.dayMasterElement) : "steady";

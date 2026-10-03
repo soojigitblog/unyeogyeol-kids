@@ -1,11 +1,14 @@
 import type {
   Answers,
+  BehaviorEvidence,
   CaregiverProfile,
   ChildProfile,
   ConcernId,
   CurrentConflictInput,
   FoodMicroCheckAnswers,
+  FortuneFacts,
   MomAnswers,
+  MomEvidence,
   SignatureReport,
   SleepMicroCheckAnswers,
 } from "@/lib/types";
@@ -28,9 +31,23 @@ export interface SignaturePrepareInput {
   sleepAnswers?: SleepMicroCheckAnswers;
 }
 
-export function buildSignatureReportPayload(
-  input: SignaturePrepareInput
-): SignatureReport {
+export interface EvidenceBundle {
+  childEv: BehaviorEvidence[];
+  momEv: MomEvidence[];
+  fortune: FortuneFacts | null;
+}
+
+/**
+ * P3.4: prepareSignatureReport(무료 단계)와 generatePaidExtras(결제 확인 단계)가
+ * 공유하는 evidence 빌드 로직. 둘 다 이 함수를 호출해야 두 경로의 evidence가
+ * 어긋나지 않는다.
+ */
+export function buildEvidenceBundle(
+  input: Pick<
+    SignaturePrepareInput,
+    "child" | "answers" | "momAnswers" | "foodAnswers" | "sleepAnswers"
+  >
+): EvidenceBundle {
   let childEv = buildBehaviorEvidence(input.answers || {});
   if (input.foodAnswers && Object.keys(input.foodAnswers).length > 0) {
     childEv = [...childEv, ...buildFoodEvidence(input.foodAnswers)];
@@ -46,6 +63,14 @@ export function buildSignatureReportPayload(
         input.child.birthTime
       )
     : null;
+
+  return { childEv, momEv, fortune };
+}
+
+export function buildSignatureReportPayload(
+  input: SignaturePrepareInput
+): SignatureReport {
+  const { childEv, momEv, fortune } = buildEvidenceBundle(input);
 
   return generateSignatureReport(
     input.child,

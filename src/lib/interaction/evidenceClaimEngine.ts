@@ -19,7 +19,6 @@ import type {
   EvidenceDomain,
   FortuneFacts,
   MomEvidence,
-  QuestionDomain,
 } from "@/lib/types";
 import { childEvidenceRef, momEvidenceRef } from "@/lib/evidence/ref";
 
@@ -125,7 +124,7 @@ export function buildEvidenceClaims(
 ): EvidenceEngineOutput {
   const claims: EvidenceClaim[] = [];
   const recommendations: RecommendationClaim[] = [];
-  let boostCount = 0;
+  const boostCount = 0;
   let contradictionCount = 0;
   let insufficientCount = 0;
 

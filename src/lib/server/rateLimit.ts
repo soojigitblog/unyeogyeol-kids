@@ -5,7 +5,7 @@ import { createHmac } from "node:crypto";
 import type { NextRequest } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
-  useMemoryCommerceStore as isMemoryCommerceStore,
+  isMemoryCommerceStore,
   memoryRecordAttempt,
   memoryCountAttempts,
   memoryPruneAttempts,

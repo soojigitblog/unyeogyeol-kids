@@ -112,6 +112,44 @@ export const BANNED_LEXICAL_TERMS = [
   "안전하다고 느",
   "통제권을 빼앗겼다고 느",
   "정서적 안정감을 얻",
+  // P3.4 추가 금지어: 절대적 단정 표현(스펙 17번) + 명리 원문 용어 노출 차단(스펙 8번 검증)
+  "반드시 될 것",
+  "될 운명",
+  "할 운명",
+  "타고난 운명",
+  "궁합이 나빠",
+  "궁합이 안 좋",
+  "일간",
+  "십신",
+  "십성",
+  "천간",
+  "편재",
+  "정재",
+  "편관",
+  "정인",
+  "식신",
+  "비견",
+  "겁재",
+  // 주의: "지지"(支)/"상관"(傷)/"편인"(偏印)은 명리 용어지만 "지지(support)"/
+  // "상관없다"/"~하는 편인지" 등 일상어·문법과 그대로 겹쳐 오탐이 나므로
+  // 단순 문자열 금지어로 넣지 않는다.
+  // P3.5 추가 금지어: 감정 사용설명서의 진단성 표현 + 미래연결분야의 입시/서열 표현
+  "불안장애",
+  "사회불안장애",
+  "선택적함구증",
+  "분노조절장애",
+  "적대적반항장애",
+  "품행장애",
+  "입시",
+  "수능",
+  "명문대",
+  "특목고",
+  "추천 직업",
+  "될 사주",
+  // P3.6 랜딩페이지 신뢰 문구 추가 금지어
+  "과학적으로 증명",
+  "미래 예측",
+  "정확도 95%",
 ];
 
 export function runLexicalGuard(text: string): SafetyViolation[] {
@@ -142,7 +180,13 @@ export function runStructuredClaimGuard(report: SignatureReport): SafetyViolatio
   // 4. Parent-blame Causality Guard
   const blamePatterns = [/엄마.*때문에.*비뚤/, /부모.*잘못으로/, /엄마의.*실패/];
   // 5. Long term promise Guard
-  const longTermPatterns = [/평생.*보장/, /미래.*결정/, /평생의.*지지/];
+  const longTermPatterns = [
+    /평생.*보장/,
+    /미래.*결정/,
+    /평생의.*지지/,
+    /미래.*예측/,
+    /정확도\s*\d+\s*%/,
+  ];
 
   const fullText = JSON.stringify(report);
 
@@ -240,6 +284,71 @@ export function runStructuredClaimGuard(report: SignatureReport): SafetyViolatio
     }
   }
 
+  // 6-4. P3.4 Talking Points / Conflict Map evidenceRefs 검사 (구버전 리포트는 필드 자체가 없어 스킵)
+  if (report.talkingPoints && report.talkingPoints.items.length > 0) {
+    const missing = report.talkingPoints.items.some(
+      (item) => !item.groundedInGeneric && (!item.evidenceRefs || item.evidenceRefs.length === 0)
+    );
+    if (missing) {
+      violations.push({
+        layer: "structured_claim",
+        category: "unsupported_behavior",
+        reason: "아이에게 통하는 말 항목에 근거(evidenceRefs)가 누락되어 있습니다.",
+      });
+    }
+  }
+  if (report.conflictMap && report.conflictMap.items.length > 0) {
+    const missing = report.conflictMap.items.some(
+      (item) => !item.groundedInGeneric && (!item.evidenceRefs || item.evidenceRefs.length === 0)
+    );
+    if (missing) {
+      violations.push({
+        layer: "structured_claim",
+        category: "unsupported_behavior",
+        reason: "충돌지도 항목에 근거(evidenceRefs)가 누락되어 있습니다.",
+      });
+    }
+  }
+
+  // 6-5. P3.5 재능 씨앗 evidenceRefs 검사 (sourceType="generic"이면 근거 없어도 정상)
+  if (report.talentSeeds && report.talentSeeds.items.length > 0) {
+    const missing = report.talentSeeds.items.some(
+      (item) => item.sourceType !== "generic" && (!item.evidenceRefs || item.evidenceRefs.length === 0)
+    );
+    if (missing) {
+      violations.push({
+        layer: "structured_claim",
+        category: "unsupported_behavior",
+        reason: "재능 씨앗 항목에 근거(evidenceRefs)가 누락되어 있습니다.",
+      });
+    }
+  }
+
+  // 6-6. P3.5 감정/학습/관계 가이드 evidenceRefs 검사
+  if (report.guides) {
+    const missingEmotion = report.guides.emotionGuide.some(
+      (item) => !item.groundedInGeneric && (!item.evidenceRefs || item.evidenceRefs.length === 0)
+    );
+    const missingLearning = report.guides.learningGuide.some(
+      (item) => !item.groundedInGeneric && (!item.evidenceRefs || item.evidenceRefs.length === 0)
+    );
+    if (missingEmotion || missingLearning) {
+      violations.push({
+        layer: "structured_claim",
+        category: "unsupported_behavior",
+        reason: "감정/학습 사용설명서 항목에 근거(evidenceRefs)가 누락되어 있습니다.",
+      });
+    }
+    const primary = report.guides.relationshipGuide.primary;
+    if (primary.sourceType !== "generic" && (!primary.evidenceRefs || primary.evidenceRefs.length === 0)) {
+      violations.push({
+        layer: "structured_claim",
+        category: "unsupported_behavior",
+        reason: "관계별 사용설명서에 근거(evidenceRefs)가 누락되어 있습니다.",
+      });
+    }
+  }
+
   return violations;
 }
 
@@ -254,3 +363,11 @@ export function validateSignatureSafety(report: SignatureReport): SafetyValidati
 }
 
 export const validateSignatureReportSafety = validateSignatureSafety;
+
+/**
+ * P3.4: AI가 갓 생성한 talkingPoints/conflictMap 텍스트를 report에 병합하기 전에
+ * 미리 검사한다(어휘 가드만 — structured claim 가드는 report 전체가 조립된 뒤 검사).
+ */
+export function runLexicalGuardOnTexts(texts: string[]): SafetyViolation[] {
+  return texts.flatMap((t) => runLexicalGuard(t));
+}

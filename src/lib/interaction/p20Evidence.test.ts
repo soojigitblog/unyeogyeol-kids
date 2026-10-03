@@ -1,10 +1,8 @@
 // p20Evidence.test.ts: P2.0H.1 EVIDENCE & CREDIBILITY GATE 종합 검증 테스트
 
 import { describe, expect, it } from "vitest";
-import { getAgeBandCode } from "@/lib/questionnaire/ageBandTypes";
 import {
   getQuestionsForAgeBand,
-  QUESTIONS,
   QUESTIONS_WITH_VARIANTS,
   TOTAL_QUESTIONS,
 } from "@/lib/questionnaire/questions";
@@ -17,7 +15,6 @@ import { buildMomEvidence } from "@/lib/questionnaire/momEvidence";
 import { EXTENDED_FIXTURES } from "@/lib/interaction/fixturesP20";
 import { validateSignatureReportSafety } from "@/lib/interaction/safetyValidators";
 import { generateSignatureReport } from "@/lib/interaction/signatureReportGenerator";
-import { TRANSPARENCY_COPY } from "@/lib/safety/transparencyCopy";
 import type { BehaviorEvidence } from "@/lib/types";
 
 describe("P2.0H.1 EVIDENCE & CREDIBILITY ENGINE TEST SUITE", () => {

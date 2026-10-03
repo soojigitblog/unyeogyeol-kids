@@ -13,8 +13,11 @@ import {
 } from "@/lib/commerce/apiClient";
 import { saveCommerceDraft } from "@/lib/commerce/commerceDraft";
 import { RecoveryCodeManager } from "@/components/commerce/RecoveryCodeManager";
+import { trackEvent } from "@/lib/analytics/track";
 
-const PAYMENT_MODE = process.env.NEXT_PUBLIC_PAYMENT_MODE ?? "mock";
+const PAYMENT_MODE = process.env.NEXT_PUBLIC_PAYMENT_MODE ?? "disabled";
+const IS_MOCK_PAYMENT =
+  PAYMENT_MODE === "mock" && process.env.NODE_ENV !== "production";
 
 function PaymentSuccessInner() {
   const router = useRouter();
@@ -22,6 +25,15 @@ function PaymentSuccessInner() {
   const [status, setStatus] = useState<"loading" | "ok" | "error">("loading");
   const [reportId, setReportId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  // 결제 확인 요청 안에서 AI 리포트 생성(최대 4회 호출)까지 함께 처리되므로,
+  // 오래 걸리면 "결제 확인 중"만 계속 보이는 게 아니라 실제로 뭘 하고 있는지 안내한다.
+  const [showGeneratingCopy, setShowGeneratingCopy] = useState(false);
+
+  useEffect(() => {
+    if (status !== "loading") return;
+    const timer = setTimeout(() => setShowGeneratingCopy(true), 2500);
+    return () => clearTimeout(timer);
+  }, [status]);
 
   useEffect(() => {
     async function confirm() {
@@ -36,11 +48,12 @@ function PaymentSuccessInner() {
           const result = await apiConfirmTossPayment(paymentKey, orderId, amount);
           setReportId(result.reportId);
           saveCommerceDraft({ reportId: result.reportId, orderId: result.orderId, amount });
+          trackEvent("payment_completed", { method: "toss" });
           setStatus("ok");
           return;
         }
 
-        if (PAYMENT_MODE === "mock" && orderId && amountParam) {
+        if (IS_MOCK_PAYMENT && orderId && amountParam) {
           const amount = Number(amountParam);
           const result = await apiConfirmMockPayment(orderId, amount);
           setReportId(result.reportId);
@@ -49,7 +62,7 @@ function PaymentSuccessInner() {
           return;
         }
 
-        if (reportParam && PAYMENT_MODE === "mock") {
+        if (reportParam && IS_MOCK_PAYMENT) {
           setReportId(reportParam);
           setStatus("ok");
           return;
@@ -82,7 +95,11 @@ function PaymentSuccessInner() {
         <Container>
           <Card tone="coral" className="p-8 text-center">
             {status === "loading" && (
-              <p className="text-[15px] text-cocoa-soft">결제를 확인하고 있어요…</p>
+              <p className="text-[15px] text-cocoa-soft">
+                {showGeneratingCopy
+                  ? "우리 아이의 성장 사용설명서를 만들고 있어요…"
+                  : "결제를 확인하고 있어요…"}
+              </p>
             )}
             {status === "ok" && (
               <>

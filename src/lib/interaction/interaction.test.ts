@@ -6,7 +6,7 @@ import { buildMomEvidence } from "@/lib/questionnaire/momEvidence";
 import { matchInteractionRule } from "@/lib/interaction/interactionEngine";
 import { generateSignatureReport } from "@/lib/interaction/signatureReportGenerator";
 import { generateChildDeepReport } from "@/lib/interaction/childReportGenerator";
-import { validateSignatureReportSafety, BANNED_LEXICAL_TERMS } from "@/lib/interaction/safetyValidators";
+import { validateSignatureReportSafety } from "@/lib/interaction/safetyValidators";
 import { FAMILY_FIXTURES } from "@/lib/interaction/fixtures";
 
 describe("P2.1 INTERACTION MODEL SPEC & LOCKS TEST", () => {
@@ -22,7 +22,7 @@ describe("P2.1 INTERACTION MODEL SPEC & LOCKS TEST", () => {
         expect(opt).toHaveProperty("patternId");
         expect(opt).toHaveProperty("label");
         // value 속성이 없어야 함 (No numeric score)
-        expect((opt as any).value).toBeUndefined();
+        expect((opt as unknown as Record<string, unknown>).value).toBeUndefined();
       });
     });
   });

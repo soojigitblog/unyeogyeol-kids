@@ -480,7 +480,190 @@ export interface SignatureReport {
 
   fortuneRelationship?: ParentChildFortuneReflection;
 
+  /** P3.4: "아이에게 통하는 말" — 13개 고정 상황, 결제 확인 시 1회 생성(AI 또는 fallback). */
+  talkingPoints?: TalkingPointsSection;
+
+  /** P3.4: "부모×아이 충돌지도" — level은 결정론 코드, 설명은 AI(또는 fallback). */
+  conflictMap?: ConflictMapSection;
+
+  /** P3.5: 재능 씨앗 TOP5 — strengthLevel/순위는 결정론 코드, 설명은 AI(또는 fallback). */
+  talentSeeds?: TalentSeedsSection;
+
+  /** P3.5: 재능을 키우는 실제 행동 + 연령별 성장 로드맵 — 전부 결정론 큐레이션(AI 없음). */
+  growthContent?: GrowthContentSection;
+
+  /** P3.5: 감정/학습/관계별 사용설명서 — AI(또는 fallback), 근거 없는 축은 정직한 generic 처리. */
+  guides?: GuidesSection;
+
   allSentenceClaims?: SentenceClaim[];
+}
+
+// ── P3.5 공통 provenance 타입 ───────────────────────────────
+/** 이 결과가 어떤 근거층에서 왔는지: 사주 / 관찰설문 / 사주+관찰 혼합 / 근거 없음. */
+export type SourceType = "fortune" | "observation" | "mixed" | "generic";
+
+// ── P3.4 아이에게 통하는 말 ─────────────────────────────────
+export type TalkingPointSituationId =
+  | "tp_dressing_refusal"
+  | "tp_meal_refusal"
+  | "tp_tantrum"
+  | "tp_bedtime_refusal"
+  | "tp_outing_prep_delay"
+  | "tp_cleanup_refusal"
+  | "tp_sibling_conflict"
+  | "tp_peer_conflict"
+  | "tp_media_stop_refusal"
+  | "tp_emotional_outburst"
+  | "tp_rule_defiance"
+  | "tp_learning_refusal"
+  | "tp_new_situation_hesitation";
+
+export interface TalkingPointItem {
+  situationId: TalkingPointSituationId;
+  situationLabel: string;
+  avoidPhrase: string;
+  workingPhrase: string;
+  whyItWorks: string;
+  parentActionTip: string;
+  evidenceRefs: string[];
+  groundedInGeneric: boolean;
+}
+
+export interface TalkingPointsSection {
+  items: TalkingPointItem[];
+  generationSource: "ai" | "fallback";
+}
+
+// ── P3.4 부모×아이 충돌지도 ─────────────────────────────────
+export type ConflictMapCategoryId =
+  | "cm_morning_routine"
+  | "cm_meal"
+  | "cm_outing"
+  | "cm_tidy_up"
+  | "cm_tantrum"
+  | "cm_emotional_burst"
+  | "cm_bedtime"
+  | "cm_study"
+  | "cm_friends"
+  | "cm_media"
+  | "cm_rules"
+  | "cm_siblings"
+  | "cm_discipline";
+
+export type ConflictLevel = "낮음" | "보통" | "높음" | "매우높음";
+
+export interface ConflictMapItem {
+  categoryId: ConflictMapCategoryId;
+  categoryLabel: string;
+  level: ConflictLevel;
+  whyItHappens: string;
+  avoidExample: string;
+  workingExample: string;
+  oneThingToChange: string;
+  evidenceRefs: string[];
+  groundedInGeneric: boolean;
+}
+
+export interface ConflictMapSection {
+  items: ConflictMapItem[];
+  generationSource: "ai" | "fallback";
+}
+
+// ── P3.5 재능 씨앗 ──────────────────────────────────────────
+export interface TalentSeedItem {
+  talentId: string;
+  label: string;
+  strengthLevel: "매우강함" | "강함" | "보통" | "잠재";
+  sourceType: SourceType;
+  strengthLine: string;
+  fortuneReasonLine: string | null;
+  realLifeLine: string;
+  observationNote: string;
+  evidenceRefs: string[];
+}
+
+export interface TalentSeedsSection {
+  items: TalentSeedItem[]; // TOP5, 순위순
+  futureFields: { field: string; fromTalentLabel: string }[];
+  generationSource: "ai" | "fallback";
+}
+
+// ── P3.5 재능을 키우는 행동 + 성장 로드맵 (전부 결정론, AI 없음) ──
+export interface GrowthActionItem {
+  talentId: string;
+  talentLabel: string;
+  recommendedPlay: string[];
+  parentQuestions: string[];
+  experienceActivities: string[];
+  avoidParentingPattern: string;
+  nextAgeExtension: string;
+  groundedInGeneric: boolean;
+}
+
+export interface RoadmapStageItem {
+  stageId: string;
+  ageLabel: string;
+  relativeLabel: "지금" | "다음 성장 단계" | null;
+  keyKeyword: string;
+  strengthToNurture: string;
+  recommendedExperience: string;
+  parentRole: string;
+  watchOutFor: string;
+  talentSignal: string;
+  detailLevel: "full" | "brief";
+}
+
+export interface GrowthContentSection {
+  growthActions: GrowthActionItem[];
+  roadmap: RoadmapStageItem[];
+}
+
+// ── P3.5 감정/학습/관계별 사용설명서 ─────────────────────────
+export interface EmotionGuideItem {
+  situationId: string;
+  situationLabel: string;
+  signal: string;
+  misreadPoint: string;
+  helpfulResponse: string;
+  avoidPhrase: string;
+  workingPhrase: string;
+  afterCalmAction: string;
+  evidenceRefs: string[];
+  groundedInGeneric: boolean;
+}
+
+export interface LearningGuideItem {
+  axisId: string;
+  axisLabel: string;
+  howTheyLearn: string;
+  signOfIt: string;
+  parentTip: string;
+  evidenceRefs: string[];
+  groundedInGeneric: boolean;
+}
+
+export interface RelationshipGuidePrimary {
+  caregiverRoleLabel: string;
+  goodFitPoints: string[];
+  frictionPoints: string[];
+  unintendedTriggers: string[];
+  whatChildWants: string;
+  disciplineApproach: string;
+  quickRepairMethod: string;
+  evidenceRefs: string[];
+  sourceType: SourceType;
+}
+
+export interface RelationshipGuideSection {
+  primary: RelationshipGuidePrimary;
+  otherCaregiverCta: { ctaText: string };
+}
+
+export interface GuidesSection {
+  emotionGuide: EmotionGuideItem[];
+  learningGuide: LearningGuideItem[];
+  relationshipGuide: RelationshipGuideSection;
+  generationSource: "ai" | "fallback";
 }
 
 // ── P2 Child Deep Report Schema ───────────────────────────

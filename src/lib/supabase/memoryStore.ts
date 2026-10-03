@@ -1,3 +1,4 @@
+import "server-only";
 import { randomUUID } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -17,6 +18,9 @@ interface MemoryDb {
   report_recovery_attempts: Row[];
   // P3.3 Refund requests — 기존 컬렉션은 건드리지 않고 추가.
   refund_requests: Row[];
+  // P3.4 Paid extras (talking points / conflict map) — report_payload_json 은
+  // 건드리지 않고 별도 테이블에 저장한다.
+  paid_extras: Row[];
 }
 
 function emptyDb(): MemoryDb {
@@ -32,6 +36,7 @@ function emptyDb(): MemoryDb {
     report_access_grants: [],
     report_recovery_attempts: [],
     refund_requests: [],
+    paid_extras: [],
   };
 }
 
@@ -50,7 +55,7 @@ function match(row: Row, filters: Record<string, unknown>): boolean {
 
 function createQuery(table: keyof MemoryDb) {
   const db = getDb();
-  let filters: Record<string, unknown> = {};
+  const filters: Record<string, unknown> = {};
   let inFilter: { col: string; vals: unknown[] } | null = null;
   let isNullCol: string | null = null;
   let orderCol: string | null = null;
@@ -199,7 +204,7 @@ export function resetMemoryDb(): void {
   globalStore.__uykCommerceDb = emptyDb();
 }
 
-export function useMemoryCommerceStore(): boolean {
+export function isMemoryCommerceStore(): boolean {
   return process.env.COMMERCE_STORE === "memory";
 }
 

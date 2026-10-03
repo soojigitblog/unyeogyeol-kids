@@ -28,14 +28,32 @@ import {
   hashAccessToken,
 } from "@/lib/commerce/crypto";
 import { getProduct, getProductPrice, SIGNATURE_PRODUCT_ID } from "@/lib/commerce/products";
-import { getPaymentMode, getTossSecretKey } from "@/lib/commerce/paymentMode";
 import {
+  getPaymentMode,
+  getTossSecretKey,
+  isPaymentCheckoutEnabled,
+} from "@/lib/commerce/paymentMode";
+import {
+  buildEvidenceBundle,
   buildSignatureReportPayload,
   parseBirthTime,
   SIGNATURE_REPORT_VERSION,
   type SignaturePrepareInput,
 } from "@/lib/server/reportBuilder";
-import type { SignatureReport } from "@/lib/types";
+import { generatePaidExtras } from "@/lib/server/generatePaidExtras";
+import { getPaidExtrasByReportId, insertPaidExtras } from "@/lib/server/paidExtrasStore";
+import { computeFortuneFacts } from "@/lib/fortune/engine";
+import { ageBand, computeAge } from "@/lib/age";
+import type {
+  Answers,
+  CaregiverProfile,
+  ChildProfile,
+  CurrentConflictInput,
+  FoodMicroCheckAnswers,
+  MomAnswers,
+  SignatureReport,
+  SleepMicroCheckAnswers,
+} from "@/lib/types";
 
 export interface GuestSessionResult {
   sessionId: string;
@@ -138,6 +156,9 @@ export async function createOrder(
   productId: string,
   reportId: string
 ): Promise<{ orderId: string; amount: number; currency: string; dbOrderId: string }> {
+  if (!isPaymentCheckoutEnabled()) {
+    throw new CommerceError("PAYMENT_DISABLED");
+  }
   const supabase = getSupabaseAdmin();
   const product = getProduct(productId);
   const amount = getProductPrice(productId);
@@ -203,6 +224,9 @@ export async function confirmPayment(
   ownerSessionId: string,
   input: ConfirmPaymentInput
 ): Promise<ConfirmPaymentResult> {
+  if (!isPaymentCheckoutEnabled()) {
+    throw new CommerceError("PAYMENT_DISABLED");
+  }
   const supabase = getSupabaseAdmin();
   const { data: order, error: orderErr } = await supabase
     .from("orders")
@@ -266,12 +290,108 @@ export async function confirmPayment(
     .eq("id", order.report_id);
   if (unlockErr) throw unlockErr;
 
+  // P3.4: "아이에게 통하는 말" / "충돌지도" 생성 — 결제 1건당 딱 1회.
+  // reports 테이블의 스냅샷 컬럼은 여기서도 절대 건드리지 않는다(별도 paid_extras
+  // 테이블에 저장하고, 읽을 때 합쳐서 응답한다 — §0 PAID REPORT SNAPSHOT IMMUTABILITY 유지).
+  // AI/DB 문제로 이 단계가 실패해도 결제 확정(위 단계들)에는 영향을 주지 않는다.
+  try {
+    await generateAndStorePaidExtras(order.report_id);
+  } catch (e) {
+    console.error("[confirmPayment] paid extras generation failed", e);
+  }
+
   return {
     status: "PAID",
     reportId: order.report_id,
     orderId: order.order_id,
     alreadyPaid: false,
   };
+}
+
+async function generateAndStorePaidExtras(reportId: string): Promise<void> {
+  const supabase = getSupabaseAdmin();
+
+  const { data: reportRow, error: reportErr } = await supabase
+    .from("reports")
+    .select("child_profile_id, caregiver_profile_id, assessment_input_id")
+    .eq("id", reportId)
+    .maybeSingle();
+  if (reportErr) throw reportErr;
+  if (!reportRow) throw new Error("REPORT_NOT_FOUND_FOR_EXTRAS");
+
+  const [{ data: childRow, error: childErr }, { data: cgRow, error: cgErr }, { data: assessRow, error: assessErr }] =
+    await Promise.all([
+      supabase
+        .from("child_profiles")
+        .select("name, gender, birth_date, birth_time, birth_time_unknown")
+        .eq("id", reportRow.child_profile_id)
+        .maybeSingle(),
+      supabase
+        .from("caregiver_profiles")
+        .select("role, role_label, birth_date, birth_time, birth_time_unknown")
+        .eq("id", reportRow.caregiver_profile_id)
+        .maybeSingle(),
+      supabase
+        .from("assessment_inputs")
+        .select("free_answers_json, caregiver_answers_json, concern_micro_answers_json, current_conflict_json")
+        .eq("id", reportRow.assessment_input_id)
+        .maybeSingle(),
+    ]);
+  if (childErr) throw childErr;
+  if (cgErr) throw cgErr;
+  if (assessErr) throw assessErr;
+  if (!childRow || !cgRow || !assessRow) throw new Error("PROFILE_ROWS_MISSING_FOR_EXTRAS");
+
+  const child: ChildProfile = {
+    name: childRow.name ?? undefined,
+    birthDate: childRow.birth_date,
+    birthTimeKnown: !childRow.birth_time_unknown,
+    birthTime: childRow.birth_time ?? undefined,
+    gender: childRow.gender,
+  };
+  const caregiverProfile: CaregiverProfile = {
+    role: cgRow.role,
+    roleLabel: cgRow.role_label,
+    birthDate: cgRow.birth_date,
+    birthTimeKnown: !cgRow.birth_time_unknown,
+    birthTime: cgRow.birth_time ?? undefined,
+  };
+  const microAnswers = (assessRow.concern_micro_answers_json ?? {}) as {
+    food?: FoodMicroCheckAnswers;
+    sleep?: SleepMicroCheckAnswers;
+  };
+  const conflictInput = assessRow.current_conflict_json as CurrentConflictInput;
+
+  const { childEv, momEv, fortune } = buildEvidenceBundle({
+    child,
+    answers: (assessRow.free_answers_json ?? {}) as Answers,
+    momAnswers: (assessRow.caregiver_answers_json ?? {}) as MomAnswers,
+    foodAnswers: microAnswers.food,
+    sleepAnswers: microAnswers.sleep,
+  });
+
+  const caregiverFortune = caregiverProfile.birthDate
+    ? computeFortuneFacts(
+        caregiverProfile.birthDate,
+        caregiverProfile.birthTimeKnown,
+        caregiverProfile.birthTime
+      )
+    : null;
+  const currentAgeBand = ageBand(computeAge(child.birthDate)?.ageInMonths ?? 36);
+
+  const extras = await generatePaidExtras({
+    child,
+    caregiverProfile,
+    caregiverRoleLabel: cgRow.role_label,
+    childEvidences: childEv,
+    momEvidences: momEv,
+    conflictInput,
+    fortune,
+    caregiverFortune,
+    currentAgeBand,
+  });
+
+  await insertPaidExtras(reportId, extras);
 }
 
 /**
@@ -350,7 +470,18 @@ export async function getUnlockedReport(
   if (error) throw error;
   if (!data || data.owner_session_id !== ownerSessionId) return null;
   if (data.status !== "UNLOCKED") return null;
-  return data.report_payload_json as SignatureReport;
+
+  const payload = data.report_payload_json as SignatureReport;
+  const extras = await getPaidExtrasByReportId(reportId);
+  if (!extras) return payload;
+  return {
+    ...payload,
+    talkingPoints: extras.talkingPoints ?? undefined,
+    conflictMap: extras.conflictMap ?? undefined,
+    talentSeeds: extras.talentSeeds ?? undefined,
+    growthContent: extras.growthContent ?? undefined,
+    guides: extras.guides ?? undefined,
+  };
 }
 
 export interface MyResultItem {
@@ -428,6 +559,7 @@ export function commerceErrorResponse(code: string, status = 400) {
     AMOUNT_MISMATCH: "결제 금액이 일치하지 않아요.",
     ACCESS_DENIED: "이 결과를 볼 수 있는 구매 정보를 확인하지 못했어요.",
     PAYMENT_KEY_REQUIRED: "결제 정보가 올바르지 않아요.",
+    PAYMENT_DISABLED: "유료 리포트 결제는 현재 오픈 준비 중이에요.",
     TOSS_CONFIRM_FAILED: "결제 승인에 실패했어요.",
     // P3.2 Guest Recovery — 기존 코드/문구 변경 없이 항목만 추가.
     REPORT_NOT_UNLOCKED: "이 결과를 볼 수 있는 구매 정보를 확인하지 못했어요.",

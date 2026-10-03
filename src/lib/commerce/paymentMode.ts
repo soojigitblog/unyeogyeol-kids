@@ -1,8 +1,15 @@
-export type PaymentMode = "mock" | "toss_test" | "live";
+import "server-only";
+
+/**
+ * Payment must be explicitly enabled.  `disabled` is deliberately the
+ * default so a newly deployed environment can never unlock a paid report
+ * through the local mock flow.
+ */
+export type PaymentMode = "disabled" | "mock" | "toss_test" | "live";
 
 export function getPaymentMode(): PaymentMode {
-  const mode = (process.env.PAYMENT_MODE ?? "mock") as PaymentMode;
-  if (mode !== "mock" && mode !== "toss_test" && mode !== "live") {
+  const mode = (process.env.PAYMENT_MODE ?? "disabled") as PaymentMode;
+  if (mode !== "disabled" && mode !== "mock" && mode !== "toss_test" && mode !== "live") {
     throw new Error(`Invalid PAYMENT_MODE: ${mode}`);
   }
   return mode;
@@ -17,7 +24,14 @@ export function isTossTestMode(): boolean {
 }
 
 export function isMockPaymentMode(): boolean {
-  return getPaymentMode() === "mock";
+  // Mock confirmation is a development/CI convenience only.  A production
+  // deploy must never turn a report into PAID without a processor response.
+  return getPaymentMode() === "mock" && process.env.NODE_ENV !== "production";
+}
+
+export function isPaymentCheckoutEnabled(): boolean {
+  const mode = getPaymentMode();
+  return mode === "live" || mode === "toss_test" || isMockPaymentMode();
 }
 
 export function getTossClientKey(): string | null {

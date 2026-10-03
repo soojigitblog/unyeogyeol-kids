@@ -16,16 +16,20 @@ import { isSignatureSetupComplete } from "@/lib/purchase/setupGuard";
 import { apiCreateOrder, apiPrepareSignature, apiCheckReportAccess } from "@/lib/commerce/apiClient";
 import { loadCommerceDraft, saveCommerceDraft } from "@/lib/commerce/commerceDraft";
 import { ensureGuestSession } from "@/lib/commerce/guestSession";
+import { trackEvent } from "@/lib/analytics/track";
 
 const INCLUDES = [
-  "우리 둘이 자주 엇갈리는 지점",
-  "실제 반복 갈등 흐름",
-  "여기서 끊어볼 한 지점",
-  "오늘 바꿔볼 말 · 바로 해볼 행동",
-  "두 사람 출생정보 관계 힌트",
+  "아이에게 통하는 말 13가지 · 부모×아이 충돌지도 13가지",
+  "재능 씨앗 TOP5 + 재능별 추천 놀이와 활동",
+  "감정·학습 사용설명서 · 엄마·아빠 관계 가이드",
+  "연령별 성장 로드맵 · 미래 연결 분야 · 오늘의 육아 미션",
 ];
 
-const PAYMENT_MODE = process.env.NEXT_PUBLIC_PAYMENT_MODE ?? "mock";
+const PAYMENT_MODE = process.env.NEXT_PUBLIC_PAYMENT_MODE ?? "disabled";
+const IS_MOCK_PAYMENT =
+  PAYMENT_MODE === "mock" && process.env.NODE_ENV !== "production";
+const IS_PAYMENT_ENABLED =
+  IS_MOCK_PAYMENT || PAYMENT_MODE === "toss_test" || PAYMENT_MODE === "live";
 
 export default function SignatureCheckoutPage() {
   const router = useRouter();
@@ -70,8 +74,14 @@ export default function SignatureCheckoutPage() {
 
   const initCheckout = useCallback(async () => {
     if (!child || !caregiverProfile || !conflictInput || !concern) return;
+    if (!IS_PAYMENT_ENABLED) {
+      setError("유료 리포트 결제는 현재 오픈 준비 중이에요.");
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
+    trackEvent("checkout_started");
     try {
       await ensureGuestSession();
       const draft = loadCommerceDraft();
@@ -132,13 +142,15 @@ export default function SignatureCheckoutPage() {
   }, [ready, setupComplete, initCheckout]);
 
   async function handleMockPayment() {
-    if (!orderId || PAYMENT_MODE !== "mock") return;
+    if (!orderId || !IS_MOCK_PAYMENT) return;
+    trackEvent("checkout_clicked", { method: "mock" });
     setPaying(true);
     setError(null);
     try {
       const { apiConfirmMockPayment } = await import("@/lib/commerce/apiClient");
       const result = await apiConfirmMockPayment(orderId, amount);
       saveCommerceDraft({ reportId: result.reportId, orderId: result.orderId, amount });
+      trackEvent("payment_completed", { method: "mock" });
       router.push(`/payment/success?orderId=${result.orderId}&reportId=${result.reportId}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "PAYMENT_FAILED");
@@ -149,6 +161,7 @@ export default function SignatureCheckoutPage() {
 
   async function handleTossPayment() {
     if (!orderId || !reportId || (PAYMENT_MODE !== "toss_test" && PAYMENT_MODE !== "live")) return;
+    trackEvent("checkout_clicked", { method: "toss" });
     setPaying(true);
     setError(null);
     try {
@@ -176,7 +189,7 @@ export default function SignatureCheckoutPage() {
 
   const cgLabel = resolveRoleLabel(caregiverProfile);
   const childName = child?.name || "우리 아이";
-  const isTestPayment = PAYMENT_MODE === "toss_test" || PAYMENT_MODE === "mock";
+  const isTestPayment = PAYMENT_MODE === "toss_test" || IS_MOCK_PAYMENT;
 
   return (
     <>
@@ -256,7 +269,7 @@ export default function SignatureCheckoutPage() {
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-milk/95 px-4 py-3 backdrop-blur-sm">
         <Container className="px-0 lg:max-w-[600px]">
-          {PAYMENT_MODE === "mock" ? (
+          {IS_MOCK_PAYMENT ? (
             <Button size="lg" disabled={loading || paying || !orderId} onClick={handleMockPayment}>
               {SIGNATURE_PRICE_KRW.toLocaleString("ko-KR")}원 결제하기
             </Button>
@@ -266,7 +279,7 @@ export default function SignatureCheckoutPage() {
             </Button>
           ) : (
             <Button size="lg" disabled>
-              결제 준비 중입니다
+              유료 리포트 오픈 준비 중입니다
             </Button>
           )}
         </Container>

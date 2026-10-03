@@ -1,11 +1,12 @@
+import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { createMemorySupabaseClient, useMemoryCommerceStore } from "./memoryStore";
+import { createMemorySupabaseClient, isMemoryCommerceStore } from "./memoryStore";
 
 let adminClient: SupabaseClient | null = null;
 
 export function getSupabaseAdmin(): SupabaseClient {
   if (adminClient) return adminClient;
-  if (useMemoryCommerceStore()) {
+  if (isMemoryCommerceStore()) {
     adminClient = createMemorySupabaseClient();
     return adminClient;
   }

@@ -13,24 +13,13 @@ import { buildEvidenceClaims } from "@/lib/interaction/evidenceClaimEngine";
 import { buildMomEvidence } from "@/lib/questionnaire/momEvidence";
 import type {
   BehaviorEvidence,
-  ChildProfile,
   CurrentConflictInput,
   FortuneFacts,
   MomAnswers,
-  QuestionDomain,
 } from "@/lib/types";
 
 describe("P2.0H 30-CASE SYNTHETIC COMBINATION SWEEP", () => {
   it("runs 36 synthetic combinations and verifies zero violations", () => {
-    const domains: QuestionDomain[] = [
-      "transition",
-      "new_environment",
-      "self_assertion",
-      "social_approach",
-      "play_immersion",
-      "praise",
-    ];
-
     const elements: ("wood" | "fire" | "earth" | "metal" | "water")[] = [
       "wood",
       "fire",
@@ -51,14 +40,6 @@ describe("P2.0H 30-CASE SYNTHETIC COMBINATION SWEEP", () => {
       totalCases++;
       const isKnown = i % 2 === 0;
       const el = elements[i % elements.length];
-
-      const profile: ChildProfile = {
-        name: `아이_${i + 1}`,
-        birthDate: "2023-01-01",
-        birthTimeKnown: isKnown,
-        birthTime: isKnown ? "10:00" : undefined,
-        gender: i % 2 === 0 ? "boy" : "girl",
-      };
 
       const fortuneFacts: FortuneFacts | null = {
         day: { stem: "갑", branch: "자", stemElement: el, branchElement: "water" },

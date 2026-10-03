@@ -1,5 +1,5 @@
 import React from "react";
-import { Bookmark, Sparkles } from "lucide-react";
+import { Bookmark } from "lucide-react";
 
 interface RelationshipAnchorCardProps {
   oneSentenceAnchor: string;

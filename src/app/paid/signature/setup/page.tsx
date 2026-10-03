@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowRight, ArrowLeft } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { Container } from "@/components/layout/Container";
@@ -12,7 +12,7 @@ import { useKids } from "@/lib/store";
 import { MOM_QUESTIONS } from "@/lib/questionnaire/momQuestions";
 import { FOOD_QUESTIONS } from "@/lib/questionnaire/foodQuestions";
 import { SLEEP_QUESTIONS } from "@/lib/questionnaire/sleepQuestions";
-import { CONFLICT_SCENARIOS, ConflictScenario } from "@/lib/interaction/conflictScenarios";
+import { CONFLICT_SCENARIOS } from "@/lib/interaction/conflictScenarios";
 import { computeAge } from "@/lib/age";
 import { concernLabel } from "@/lib/concerns";
 import { CAREGIVER_ROLE_OPTIONS, findRoleOption } from "@/lib/caregiver";
@@ -211,6 +211,9 @@ export default function MomSetupPage() {
   // Sync if concern changed and no custom input was given
   useEffect(() => {
     if (!conflictInput) {
+      // 이전 단계(고민 선택)에서 저장된 conflictInput이 없을 때만 기본값으로
+      // 되돌리는 동기화라 렌더 중 계산으로 옮기면 무한 루프 위험이 있다.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setScenarioId(defaultScenario.scenarioId);
       setChildFirstReaction(defaultDefaultsForConcern.childReaction);
       setMomFirstReaction(defaultDefaultsForConcern.momReaction);

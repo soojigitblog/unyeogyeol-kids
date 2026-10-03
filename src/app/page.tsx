@@ -3,16 +3,51 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { Container } from "@/components/layout/Container";
 import { ButtonLink } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { BeforeAfterQuote } from "@/components/ui/BeforeAfterQuote";
 import { Heart, MessageCircleHeart, Sparkles, ShieldCheck } from "lucide-react";
+import { SampleResultShowcase } from "@/components/landing/SampleResultShowcase";
+import { VsGeneralSajuDiagram } from "@/components/landing/VsGeneralSajuDiagram";
+import { LandingViewBeacon } from "@/components/landing/LandingViewBeacon";
+
+const DIFFERENTIATORS = [
+  {
+    icon: "💬",
+    title: "아이에게 통하는 말",
+    body: (
+      <>
+        &ldquo;하지 마&rdquo;가 통하는 아이와 선택권을 줘야 움직이는 아이는
+        다릅니다. 상황별 실제 대사를 제공합니다.
+      </>
+    ),
+  },
+  {
+    icon: "⚡",
+    title: "우리 집 충돌지도",
+    body: (
+      <>
+        누구와, 어떤 순간에, 왜 부딪히는지 13가지 상황으로 보여줍니다.
+      </>
+    ),
+  },
+  {
+    icon: "🌱",
+    title: "재능을 키우는 실제 행동",
+    body: (
+      <>
+        &ldquo;관찰력이 좋아요&rdquo;에서 끝나지 않아요. 지금 어떤 놀이를 하고,
+        어떤 질문을 해주고, 어떤 경험을 주면 좋은지 알려드려요.
+      </>
+    ),
+  },
+];
 
 export default function Home() {
   return (
     <>
+      <LandingViewBeacon />
       <SiteHeader />
 
       <main className="flex-1">
-        {/* 1. Hero — 전환 중심: hook → headline → 결과 preview → CTA → trust */}
+        {/* 1. Hero */}
         <section className="relative overflow-hidden pt-5 pb-4">
           <div
             aria-hidden
@@ -27,55 +62,44 @@ export default function Home() {
             <div className="animate-rise">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-coral-tint px-3 py-1 text-[12.5px] font-semibold text-coral-deep">
                 <Heart className="h-3.5 w-3.5" strokeWidth={2.4} />
-                요즘 우리 아이, 이해하기
+                사주로 만드는 성장 사용설명서
               </span>
 
-              <h1 className="mt-3.5 font-accent text-[36px] font-bold leading-[1.2] tracking-tight text-cocoa">
-                우리 아이,
-                <br />왜 나한테만 이럴까요?
+              <h1 className="mt-3.5 font-accent text-[32px] font-bold leading-[1.25] tracking-tight text-cocoa">
+                우리 아이는 무엇을 잘할까요?
               </h1>
+              <p className="mt-2 text-[16px] font-semibold leading-relaxed text-cocoa">
+                그보다 먼저 알아야 할 것이 있어요.
+              </p>
+              <p className="mt-3 font-accent text-[24px] font-bold leading-[1.35] text-coral-deep">
+                어떻게 키워야
+                <br />그 재능이 살아날까요?
+              </p>
 
-              <p className="mt-3 text-[15px] font-medium leading-relaxed text-cocoa-soft">
-                고집이 센 걸까요? 낯가림이 심한 걸까요?
+              <p className="mt-4 text-[14.5px] leading-relaxed text-cocoa-soft">
+                타고난 기질부터 아이에게 통하는 말, 엄마·아빠와 부딪히는 순간,
+                재능을 키우는 방법까지.
                 <br />
-                아니면 이 아이만의{" "}
-                <span className="font-semibold text-cocoa">움직이는 방식</span>이
-                있는 걸까요?
+                <b className="font-semibold text-cocoa">
+                  사주로 만드는 우리 아이 성장 사용설명서.
+                </b>
               </p>
-            </div>
-
-            {/* 결과 Preview Card — 실제 Free Result 와 동일한 design language */}
-            <div className="animate-rise-2 mt-5">
-              <p className="text-[12.5px] font-semibold text-coral-deep">
-                우리 아이를 한 문장으로 보면
-              </p>
-              <div className="mt-2 rounded-card bg-coral p-5 shadow-lift">
-                <p className="font-accent text-[20px] font-bold leading-[1.45] text-white">
-                  “충분히 살펴본 뒤 마음이 정해지면 힘 있게 움직이는 아이”
-                </p>
-              </div>
-              <div className="mt-2.5 flex flex-wrap gap-2">
-                {["신중하게 시작해요", "자기 방식이 있어요", "마음이 정해지면 적극적"].map(
-                  (t) => (
-                    <span
-                      key={t}
-                      className="rounded-full bg-sage-tint px-3 py-1.5 text-[13px] font-semibold text-sage-deep"
-                    >
-                      #{t}
-                    </span>
-                  ),
-                )}
-              </div>
             </div>
 
             {/* CTA */}
-            <div className="animate-rise-2 mt-5">
+            <div className="animate-rise-2 mt-6">
               <ButtonLink href="/free/child" size="lg">
-                무료로 우리 아이 기질 보기
+                우리 아이 사용설명서 보기
               </ButtonLink>
               <p className="mt-2 text-center text-[13px] text-cocoa-faint">
                 2분 · 10개 질문 · 회원가입 없이
               </p>
+              <a
+                href="#sample-preview"
+                className="mt-3 block text-center text-[13.5px] font-semibold text-cocoa-soft underline underline-offset-2"
+              >
+                결과 미리보기
+              </a>
             </div>
 
             {/* Trust / 차별점 */}
@@ -90,110 +114,86 @@ export default function Home() {
                 를 함께 보고, 우리 아이를 이해하는 힌트를 찾아드려요.
               </p>
             </div>
-          </Container>
-        </section>
 
-        {/* Hero 바로 아래 — Signature Phrase Preview */}
-        <section className="pt-10">
-          <Container wide>
-            <p className="text-[12.5px] font-semibold text-coral-deep">
-              그리고, 오늘 이렇게 바꿔볼 수 있어요
-            </p>
-            <div className="mt-3">
-              <BeforeAfterQuote
-                before="빨리 신발 신어!"
-                after="내가 신겨줄까, 네가 먼저 해볼래?"
-              />
+            {/* 2. 즉시 결과 예시(샘플) */}
+            <div id="sample-preview">
+              <SampleResultShowcase />
             </div>
           </Container>
         </section>
 
-        {/* 2. "나만 그런 거 아니구나." */}
+        {/* 3. 공감 */}
         <section className="pt-16">
           <Container wide>
             <h2 className="text-[26px] font-bold leading-snug tracking-tight text-cocoa">
-              나만 그런 거,
+              아이를 사랑하는데,
               <br />
-              아니었어요.
+              왜 자꾸 같은 순간에 부딪힐까요?
             </h2>
-            <p className="mt-3 text-[15px] leading-relaxed text-cocoa-soft">
-              매일 밤 ‘내가 뭘 잘못했나’ 곱씹는 보호자들이
-              <br />
-              생각보다 정말 많아요.
-            </p>
 
-            <div className="mt-6 flex flex-col gap-3 lg:grid lg:grid-cols-3 lg:gap-4">
+            <div className="mt-6 flex flex-col gap-3">
               {[
-                "혼내도 안 되고, 달래도 안 되고…",
-                "고집이 너무 센데 어떻게 해야 하죠?",
-                "어떤 방식으로 가르쳐야 할지 모르겠어요.",
+                "밥 먹으라고 하면 더 안 먹어요.",
+                "빨리 준비하라고 할수록 더 느려져요.",
+                "안 된다고 하면 바로 울거나 화를 내요.",
+                "집에서는 적극적인데 낯선 곳에서는 얼어붙어요.",
+                "제가 해주는 말이 아이에게 안 통하는 것 같아요.",
+                "장점은 많은 것 같은데 어떻게 키워줘야 할지 모르겠어요.",
               ].map((t) => (
                 <Card key={t} tone="plain" className="flex items-center gap-3">
-                  <MessageCircleHeart
-                    className="h-5 w-5 shrink-0 text-coral"
-                    strokeWidth={2}
-                  />
+                  <MessageCircleHeart className="h-5 w-5 shrink-0 text-coral" strokeWidth={2} />
                   <p className="text-[15px] text-cocoa">{t}</p>
+                </Card>
+              ))}
+            </div>
+
+            <Card tone="sage" className="mt-6 p-6">
+              <p className="text-[15px] leading-relaxed text-cocoa">
+                아이에게 문제가 있어서가 아니라,
+                <br />
+                아이마다 반응하는 방식이 다를 수 있습니다.
+              </p>
+              <p className="mt-3 text-[14.5px] leading-relaxed text-cocoa-soft">
+                운의결 키즈는 타고난 성향과 실제 생활 모습을 함께 보고
+                &ldquo;그래서 부모가 어떻게 하면 좋은지&rdquo;까지 연결합니다.
+              </p>
+            </Card>
+          </Container>
+        </section>
+
+        {/* 4. 차별화 */}
+        <section className="pt-16">
+          <Container wide>
+            <h2 className="text-[24px] font-bold leading-snug tracking-tight text-cocoa">
+              풀이만 읽고 끝나지 않도록
+              <br />
+              오늘부터 바로 써먹을 수 있게 만들었어요.
+            </h2>
+            <div className="mt-6 flex flex-col gap-3">
+              {DIFFERENTIATORS.map((d) => (
+                <Card key={d.title} tone="plain" className="p-5">
+                  <p className="text-[14px] font-bold text-cocoa-soft">
+                    {d.icon} {d.title}
+                  </p>
+                  <p className="mt-2 text-[14.5px] leading-relaxed text-cocoa">{d.body}</p>
                 </Card>
               ))}
             </div>
           </Container>
         </section>
 
-        {/* 3. "아이에게 이유가 있을 수도 있겠네." */}
+        {/* 5. 일반 사주와의 차이 */}
         <section className="pt-16">
           <Container wide>
-            <Card tone="sage" className="p-6">
-              <p className="text-[15px] leading-relaxed text-cocoa-soft">
-                같은 상황도 아이에겐 다르게 느껴져요.
-              </p>
-              <p className="mt-3 text-[19px] font-bold leading-snug text-cocoa">
-                “빨리 준비시키려는” 보호자와
-                <br />
-                “하던 걸 자꾸 끊는다”고 느끼는 아이.
-              </p>
-              <p className="mt-3 text-[15px] leading-relaxed text-cocoa-soft">
-                틀린 게 아니라, 움직이는 방식이 다른 거예요.
-              </p>
-            </Card>
+            <VsGeneralSajuDiagram />
           </Container>
         </section>
 
-        {/* 4. "우리 아이는 어떤 타입이지?" */}
-        <section className="pt-16">
-          <Container wide>
-            <h2 className="text-[26px] font-bold leading-snug tracking-tight text-cocoa">
-              우리 아이는
-              <br />
-              어떤 결일까요?
-            </h2>
-            <p className="mt-3 text-[15px] leading-relaxed text-cocoa-soft">
-              10개의 질문에 답하면, 지금 우리 아이의 모습을
-              <br />한 문장으로 정리해 드려요.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              {["#관찰형", "#자기주도형", "#감정 풍부형", "#깊이 몰입형", "#호기심 탐색형"].map(
-                (c) => (
-                  <span
-                    key={c}
-                    className="rounded-full bg-butter-tint px-3.5 py-1.5 text-[13.5px] font-semibold text-[#a98416]"
-                  >
-                    {c}
-                  </span>
-                ),
-              )}
-            </div>
-          </Container>
-        </section>
-
-        {/* 5. CTA */}
+        {/* 6. 최종 CTA */}
         <section className="pt-16 pb-20">
           <Container wide>
             <div className="relative overflow-hidden rounded-card bg-coral p-7 text-center shadow-lift">
-              <Sparkles
-                className="mx-auto h-6 w-6 text-white/90"
-                strokeWidth={2}
-              />
+              <Sparkles className="mx-auto h-6 w-6 text-white/90" strokeWidth={2} />
               <p className="mt-3 text-[21px] font-bold leading-snug text-white">
                 오늘 저녁, 아이와의 대화가
                 <br />
@@ -201,7 +201,7 @@ export default function Home() {
               </p>
               <div className="mt-6">
                 <ButtonLink href="/free/child" size="lg" variant="onColor">
-                  무료로 우리 아이 기질 보기
+                  우리 아이 사용설명서 보기
                 </ButtonLink>
                 <p className="mt-2.5 text-[13px] text-white/80">
                   2분 · 10개 질문 · 회원가입 없이

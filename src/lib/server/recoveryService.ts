@@ -2,7 +2,7 @@
 // 완전히 분리된 새 서비스 레이어. confirmPayment는 이 파일을 import하지 않는다(diff 0).
 
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { useMemoryCommerceStore as isMemoryCommerceStore, memoryIssueOrRotateRecoveryCode } from "@/lib/supabase/memoryStore";
+import { isMemoryCommerceStore, memoryIssueOrRotateRecoveryCode } from "@/lib/supabase/memoryStore";
 import {
   generateRecoveryCode,
   formatRecoveryCode,

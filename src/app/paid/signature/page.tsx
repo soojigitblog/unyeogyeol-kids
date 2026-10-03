@@ -14,6 +14,16 @@ import { WhereToBreakCard } from "@/components/report/WhereToBreakCard";
 import { ActionChecklist } from "@/components/report/ActionChecklist";
 import { RelationshipAnchorCard } from "@/components/report/RelationshipAnchorCard";
 import { TwoPersonSummary } from "@/components/report/TwoPersonSummary";
+import { TalkingPointCard } from "@/components/report/TalkingPointCard";
+import { AccordionCard } from "@/components/report/AccordionCard";
+import { ConflictLevelMeter } from "@/components/report/ConflictLevelMeter";
+import { TalentSeedCard } from "@/components/report/TalentSeedCard";
+import {
+  buildKeywordChips,
+  buildSummaryCards,
+  buildTodayMission,
+} from "@/lib/interaction/summaryCards";
+import { TodayMissionCard } from "@/components/report/TodayMissionCard";
 import { FAMILY_FIXTURES, FamilyFixture } from "@/lib/interaction/fixtures";
 import { buildMomEvidence } from "@/lib/questionnaire/momEvidence";
 import { generateSignatureReport } from "@/lib/interaction/signatureReportGenerator";
@@ -26,6 +36,7 @@ import { loadCommerceDraft } from "@/lib/commerce/commerceDraft";
 import Link from "next/link";
 import { Sparkles, Users, ArrowLeft, RefreshCw, Compass, ShieldCheck } from "lucide-react";
 import type { SignatureReport } from "@/lib/types";
+import { trackEvent } from "@/lib/analytics/track";
 
 type ViewMode = "real" | "A" | "B" | "C" | "D" | "E";
 
@@ -52,7 +63,10 @@ function PaidSignatureReportInner() {
   const [selectedMode, setSelectedMode] = useState<ViewMode>(initialMode);
 
   useEffect(() => {
+    // 초기 렌더는 useState(initialMode)가 이미 처리한다. 이 effect는 마운트 후
+    // "family" 쿼리(개발용 QA fixture 스위치)만 바뀌는 드문 경우를 재동기화한다.
     if (familyParam && ["A", "B", "C", "D", "E"].includes(familyParam)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedMode(familyParam as "A" | "B" | "C" | "D" | "E");
     }
   }, [familyParam]);
@@ -70,6 +84,9 @@ function PaidSignatureReportInner() {
 
   useEffect(() => {
     if (selectedMode !== "real" || !reportIdParam) {
+      // 아래 async 분기와 마찬가지로 서버 접근권한 확인 결과를 반영하는 하나의
+      // effect 안에서 "확인할 필요 없음" 조기 종료도 같은 상태를 설정한다.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setAccessChecked(true);
       return;
     }
@@ -134,6 +151,10 @@ function PaidSignatureReportInner() {
       currentFixture.caregiverProfile
     );
   }, [isReviewEnv, selectedMode]);
+
+  useEffect(() => {
+    if (selectedMode === "real" && serverReport) trackEvent("report_opened");
+  }, [selectedMode, serverReport]);
 
   const report: SignatureReport | null =
     selectedMode === "real" ? serverReport : fixtureReport;
@@ -359,6 +380,32 @@ function PaidSignatureReportInner() {
             )}
           </section>
 
+          {/* P3.5 최상단 요약카드 + 키워드 (스펙 12번) — 이미 생성된 내용에서 조립, 새 AI 호출 없음 */}
+          {selectedMode === "real" && (
+            <section id="section-summary-cards" className="mt-6 animate-rise">
+              <div className="grid grid-cols-2 gap-2.5">
+                {buildSummaryCards(report).map((c) => (
+                  <div key={c.label} className="rounded-2xl border border-line bg-card p-3.5">
+                    <p className="text-[12px] text-cocoa-soft">
+                      {c.icon} {c.label}
+                    </p>
+                    <p className="mt-1 text-[14px] font-bold leading-snug text-cocoa">{c.value}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {buildKeywordChips(report).map((kw) => (
+                  <span
+                    key={kw}
+                    className="rounded-lg bg-cream px-2.5 py-1 text-[12px] font-bold text-cocoa"
+                  >
+                    #{kw}
+                  </span>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* SECTION 01: 한눈에 보는 우리 둘 (10초 안에 핵심 파악) */}
           {report.twoPersonSummary && (
             <section id="section-two-person" className="mt-6 animate-rise">
@@ -381,14 +428,298 @@ function PaidSignatureReportInner() {
             </section>
           )}
 
+          {/* SECTION 02: 아이에게 통하는 말 (P3.4 신규 — AI + 결정론 evidence 근거) */}
+          {report.talkingPoints && (
+            <section id="section-talking-points" className="mt-6 animate-rise">
+              <div className="mb-2.5 flex items-center gap-2 px-1">
+                <span className="text-[13px] font-extrabold tracking-wider text-coral">02</span>
+                <span className="h-1 w-1 rounded-full bg-cream-dark" />
+                <span className="text-[13px] font-bold text-cocoa-soft">아이에게 통하는 말</span>
+              </div>
+              <p className="mb-3 px-1 text-[13.5px] leading-relaxed text-cocoa-soft">
+                자주 부딪히는 상황마다, 이 아이에게 더 잘 통할 만한 말을 정리했어요.
+              </p>
+              <div className="space-y-3">
+                {report.talkingPoints.items.map((item) => (
+                  <TalkingPointCard key={item.situationId} item={item} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* SECTION 03: 부모×아이 충돌지도 (P3.4 신규 — level=결정론 코드, 설명=AI) */}
+          {report.conflictMap && (
+            <section id="section-conflict-map" className="mt-6 animate-rise">
+              <div className="mb-2.5 flex items-center gap-2 px-1">
+                <span className="text-[13px] font-extrabold tracking-wider text-coral">03</span>
+                <span className="h-1 w-1 rounded-full bg-cream-dark" />
+                <span className="text-[13px] font-bold text-cocoa-soft">
+                  {caregiverRoleLabel}×아이 충돌지도
+                </span>
+              </div>
+              <p className="mb-3 px-1 text-[13.5px] leading-relaxed text-cocoa-soft">
+                일상 속 13가지 상황에서 얼마나 부딪히기 쉬운지 정리했어요. 눌러보면 이유와
+                바꿔볼 점을 볼 수 있어요.
+              </p>
+              <div className="space-y-2.5">
+                {report.conflictMap.items.map((item) => (
+                  <AccordionCard
+                    key={item.categoryId}
+                    title={item.categoryLabel}
+                    summary={<ConflictLevelMeter level={item.level} />}
+                  >
+                    <div className="space-y-3 text-[14px]">
+                      <p className="text-cocoa-soft">{item.whyItHappens}</p>
+                      <div className="space-y-1.5">
+                        <p className="text-cocoa-soft">
+                          <span aria-hidden>❌ </span>
+                          <span className="line-through decoration-cocoa-soft/60">
+                            {item.avoidExample}
+                          </span>
+                        </p>
+                        <p className="font-semibold text-coral-deep">
+                          <span aria-hidden>✅ </span>
+                          {item.workingExample}
+                        </p>
+                      </div>
+                      <p className="rounded-lg bg-butter-tint px-3 py-2 text-[13px] text-cocoa">
+                        💡 {item.oneThingToChange}
+                      </p>
+                    </div>
+                  </AccordionCard>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* SECTION 04: 재능 씨앗 TOP5 (P3.5 신규 — 순위/등급은 결정론 코드, 설명은 AI) */}
+          {report.talentSeeds && (
+            <section id="section-talent-seeds" className="mt-6 animate-rise">
+              <div className="mb-2.5 flex items-center gap-2 px-1">
+                <span className="text-[13px] font-extrabold tracking-wider text-coral">04</span>
+                <span className="h-1 w-1 rounded-full bg-cream-dark" />
+                <span className="text-[13px] font-bold text-cocoa-soft">재능 씨앗</span>
+              </div>
+              <div className="space-y-3">
+                {report.talentSeeds.items.map((item, idx) => (
+                  <TalentSeedCard key={item.talentId} item={item} rank={idx + 1} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* SECTION 05: 재능을 키우는 실제 행동 (P3.5 신규 — 전부 결정론 큐레이션, AI 없음) */}
+          {report.growthContent && (
+            <section id="section-growth-actions" className="mt-6 animate-rise">
+              <div className="mb-2.5 flex items-center gap-2 px-1">
+                <span className="text-[13px] font-extrabold tracking-wider text-coral">05</span>
+                <span className="h-1 w-1 rounded-full bg-cream-dark" />
+                <span className="text-[13px] font-bold text-cocoa-soft">재능을 키우는 실제 행동</span>
+              </div>
+              <div className="space-y-2.5">
+                {report.growthContent.growthActions.map((action) => (
+                  <AccordionCard key={action.talentId} title={`${action.talentLabel} 키우기`}>
+                    <div className="space-y-3 text-[13.5px] leading-relaxed text-cocoa">
+                      <div>
+                        <p className="text-[12px] font-bold text-sage-deep">추천 놀이</p>
+                        <p className="mt-1 text-cocoa-soft">{action.recommendedPlay.join(" · ")}</p>
+                      </div>
+                      <div>
+                        <p className="text-[12px] font-bold text-sage-deep">부모가 해주면 좋은 질문</p>
+                        <p className="mt-1 text-cocoa-soft">{action.parentQuestions.join(" · ")}</p>
+                      </div>
+                      <div>
+                        <p className="text-[12px] font-bold text-sage-deep">경험시키면 좋은 활동</p>
+                        <p className="mt-1 text-cocoa-soft">{action.experienceActivities.join(" · ")}</p>
+                      </div>
+                      <p className="rounded-lg bg-milk px-3 py-2 text-cocoa-soft">
+                        피할 것: {action.avoidParentingPattern}
+                      </p>
+                      <p className="rounded-lg bg-butter-tint px-3 py-2 text-cocoa">
+                        다음 연령 확장: {action.nextAgeExtension}
+                      </p>
+                    </div>
+                  </AccordionCard>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* SECTION 06: 감정 사용설명서 (P3.5 신규 — AI, 근거 없는 상황은 정직한 generic) */}
+          {report.guides && (
+            <section id="section-emotion-guide" className="mt-6 animate-rise">
+              <div className="mb-2.5 flex items-center gap-2 px-1">
+                <span className="text-[13px] font-extrabold tracking-wider text-coral">06</span>
+                <span className="h-1 w-1 rounded-full bg-cream-dark" />
+                <span className="text-[13px] font-bold text-cocoa-soft">감정 사용설명서</span>
+              </div>
+              <div className="space-y-2.5">
+                {report.guides.emotionGuide.map((item) => (
+                  <AccordionCard key={item.situationId} title={item.situationLabel}>
+                    <div className="space-y-2.5 text-[13.5px] leading-relaxed">
+                      <p className="text-cocoa-soft">신호: {item.signal}</p>
+                      <p className="text-cocoa-soft">오해하기 쉬운 점: {item.misreadPoint}</p>
+                      <p className="text-cocoa">도움되는 대응: {item.helpfulResponse}</p>
+                      <div className="space-y-1">
+                        <p className="text-cocoa-soft">
+                          <span aria-hidden>❌ </span>
+                          <span className="line-through decoration-cocoa-soft/60">{item.avoidPhrase}</span>
+                        </p>
+                        <p className="font-semibold text-coral-deep">
+                          <span aria-hidden>✅ </span>
+                          {item.workingPhrase}
+                        </p>
+                      </div>
+                      <p className="rounded-lg bg-milk px-3 py-2 text-cocoa">
+                        진정 후: {item.afterCalmAction}
+                      </p>
+                    </div>
+                  </AccordionCard>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* SECTION 07: 학습 사용설명서 (P3.5 신규 — AI, 근거 없는 축은 정직한 generic) */}
+          {report.guides && (
+            <section id="section-learning-guide" className="mt-6 animate-rise">
+              <div className="mb-2.5 flex items-center gap-2 px-1">
+                <span className="text-[13px] font-extrabold tracking-wider text-coral">07</span>
+                <span className="h-1 w-1 rounded-full bg-cream-dark" />
+                <span className="text-[13px] font-bold text-cocoa-soft">학습 사용설명서</span>
+              </div>
+              <div className="space-y-2.5">
+                {report.guides.learningGuide.map((item) => (
+                  <AccordionCard key={item.axisId} title={item.axisLabel}>
+                    <div className="space-y-2.5 text-[13.5px] leading-relaxed">
+                      <p className="text-cocoa">{item.howTheyLearn}</p>
+                      <p className="text-cocoa-soft">신호: {item.signOfIt}</p>
+                      <p className="rounded-lg bg-butter-tint px-3 py-2 text-cocoa">
+                        💡 {item.parentTip}
+                      </p>
+                    </div>
+                  </AccordionCard>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* SECTION 08: 관계별 사용설명서 (P3.5 신규 — 실제 보호자 1명 + 다른 보호자 CTA) */}
+          {report.guides && (
+            <section id="section-relationship-guide" className="mt-6 animate-rise">
+              <div className="mb-2.5 flex items-center gap-2 px-1">
+                <span className="text-[13px] font-extrabold tracking-wider text-coral">08</span>
+                <span className="h-1 w-1 rounded-full bg-cream-dark" />
+                <span className="text-[13px] font-bold text-cocoa-soft">
+                  {report.guides.relationshipGuide.primary.caregiverRoleLabel}×아이 사용설명서
+                </span>
+              </div>
+              <Card tone="sage" className="p-6 space-y-3 text-[13.5px] leading-relaxed">
+                <div>
+                  <p className="text-[12px] font-bold text-sage-deep">잘 맞는 부분</p>
+                  <ul className="mt-1 space-y-1 text-cocoa">
+                    {report.guides.relationshipGuide.primary.goodFitPoints.map((p, i) => (
+                      <li key={i}>· {p}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <p className="text-[12px] font-bold text-coral-deep">가장 부딪히기 쉬운 부분</p>
+                  <ul className="mt-1 space-y-1 text-cocoa">
+                    {report.guides.relationshipGuide.primary.frictionPoints.map((p, i) => (
+                      <li key={i}>· {p}</li>
+                    ))}
+                  </ul>
+                </div>
+                <p className="text-cocoa-soft">
+                  무심코 하는 자극: {report.guides.relationshipGuide.primary.unintendedTriggers.join(" · ")}
+                </p>
+                <p className="text-cocoa">아이가 원하는 방식: {report.guides.relationshipGuide.primary.whatChildWants}</p>
+                <p className="text-cocoa">맞는 훈육법: {report.guides.relationshipGuide.primary.disciplineApproach}</p>
+                <p className="rounded-lg bg-milk px-3 py-2 text-cocoa">
+                  💛 회복이 빠른 화해법: {report.guides.relationshipGuide.primary.quickRepairMethod}
+                </p>
+              </Card>
+              <div className="mt-2.5 rounded-2xl border border-dashed border-line p-4 text-center text-[13px] text-cocoa-soft">
+                {report.guides.relationshipGuide.otherCaregiverCta.ctaText}
+              </div>
+            </section>
+          )}
+
+          {/* SECTION 09: 연령별 성장 로드맵 (P3.5 신규 — 전부 결정론, AI 없음) */}
+          {report.growthContent && (
+            <section id="section-roadmap" className="mt-6 animate-rise">
+              <div className="mb-2.5 flex items-center gap-2 px-1">
+                <span className="text-[13px] font-extrabold tracking-wider text-coral">09</span>
+                <span className="h-1 w-1 rounded-full bg-cream-dark" />
+                <span className="text-[13px] font-bold text-cocoa-soft">연령별 성장 로드맵</span>
+              </div>
+              <div className="space-y-2.5">
+                {report.growthContent.roadmap.map((stage) => (
+                  <AccordionCard
+                    key={stage.stageId}
+                    title={`${stage.ageLabel}${stage.relativeLabel ? ` · ${stage.relativeLabel}` : ""}`}
+                    summary={stage.keyKeyword}
+                    defaultOpen={stage.detailLevel === "full"}
+                  >
+                    <div className="space-y-2 text-[13.5px] leading-relaxed text-cocoa">
+                      <p>키울 힘: {stage.strengthToNurture}</p>
+                      <p>추천 경험: {stage.recommendedExperience}</p>
+                      <p>부모 역할: {stage.parentRole}</p>
+                      <p className="text-cocoa-soft">조심할 것: {stage.watchOutFor}</p>
+                      <p className="text-cocoa-soft">재능 신호: {stage.talentSignal}</p>
+                    </div>
+                  </AccordionCard>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* SECTION 10: 미래 연결 분야 (P3.5 신규 — 정적 lookup, AI/순위 없음) */}
+          {report.talentSeeds && report.talentSeeds.futureFields.length > 0 && (
+            <section id="section-future-fields" className="mt-6 animate-rise">
+              <div className="mb-2.5 flex items-center gap-2 px-1">
+                <span className="text-[13px] font-extrabold tracking-wider text-coral">10</span>
+                <span className="h-1 w-1 rounded-full bg-cream-dark" />
+                <span className="text-[13px] font-bold text-cocoa-soft">이 재능이 커지면 연결될 수 있는 세계</span>
+              </div>
+              <Card tone="plain" className="p-6">
+                <ul className="space-y-2 text-[14px] leading-relaxed text-cocoa">
+                  {report.talentSeeds.futureFields.map((f, i) => (
+                    <li key={i}>
+                      🔭 {f.fromTalentLabel} 재능이 자라면{" "}
+                      <span className="font-bold text-coral-deep">{f.field}</span> 분야와 연결될 수 있어요.
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            </section>
+          )}
+
+          {/* SECTION 11: 오늘의 육아 미션 (P3.5 신규 — 이미 생성된 콘텐츠 조립, 저장 없이 화면 상태만) */}
+          {(() => {
+            const mission = buildTodayMission(report);
+            if (!mission) return null;
+            return (
+              <section id="section-today-mission" className="mt-6 animate-rise">
+                <div className="mb-2.5 flex items-center gap-2 px-1">
+                  <span className="text-[13px] font-extrabold tracking-wider text-coral">11</span>
+                  <span className="h-1 w-1 rounded-full bg-cream-dark" />
+                  <span className="text-[13px] font-bold text-cocoa-soft">오늘의 육아 미션</span>
+                </div>
+                <TodayMissionCard mission={mission} />
+              </section>
+            );
+          })()}
+
           {/*
-            SECTION 02: 실제로 반복되는 장면.
+            SECTION 12: 실제로 반복되는 장면.
             P2.5 §3: 이 장면 전문(상황→아이 행동→나의 반응→그다음 결과)은 리포트 전체에서
             여기 한 번만 나온다. 이후 Section 들은 이 장면을 다시 복사하지 않는다.
           */}
           <section id="section-recurring-scene" className="mt-6 animate-rise">
             <div className="mb-2.5 flex items-center gap-2 px-1">
-              <span className="text-[13px] font-extrabold tracking-wider text-coral">02</span>
+              <span className="text-[13px] font-extrabold tracking-wider text-coral">12</span>
               <span className="h-1 w-1 rounded-full bg-cream-dark" />
               <span className="text-[13px] font-bold text-cocoa-soft">실제로 반복되는 장면</span>
             </div>
@@ -431,7 +762,7 @@ function PaidSignatureReportInner() {
           {report.insightMechanism && (
             <section id="section-mechanism" className="mt-6 animate-rise">
               <div className="mb-2.5 flex items-center gap-2 px-1">
-                <span className="text-[13px] font-extrabold tracking-wider text-coral">03</span>
+                <span className="text-[13px] font-extrabold tracking-wider text-coral">13</span>
                 <span className="h-1 w-1 rounded-full bg-cream-dark" />
                 <span className="text-[13px] font-bold text-cocoa-soft">이 장면의 구조</span>
               </div>
@@ -483,7 +814,7 @@ function PaidSignatureReportInner() {
           */}
           <section id="section-conflict-chain" className="mt-6 animate-rise">
             <div className="mb-2.5 flex items-center gap-2 px-1">
-              <span className="text-[13px] font-extrabold tracking-wider text-coral">04</span>
+              <span className="text-[13px] font-extrabold tracking-wider text-coral">14</span>
               <span className="h-1 w-1 rounded-full bg-cream-dark" />
               <span className="text-[13px] font-bold text-cocoa-soft">가장 먼저 바꿔볼 한 지점</span>
             </div>
@@ -536,7 +867,7 @@ function PaidSignatureReportInner() {
           */}
           <section id="section-next-time" className="mt-6 animate-rise">
             <div className="mb-2.5 flex items-center gap-2 px-1">
-              <span className="text-[13px] font-extrabold tracking-wider text-coral">05</span>
+              <span className="text-[13px] font-extrabold tracking-wider text-coral">15</span>
               <span className="h-1 w-1 rounded-full bg-cream-dark" />
               <span className="text-[13px] font-bold text-cocoa-soft">다음번에 실제로 이렇게</span>
             </div>
@@ -593,7 +924,7 @@ function PaidSignatureReportInner() {
           {report.fortuneRelationship && (
             <section id="section-fortune-relationship" className="mt-6 animate-rise">
               <div className="mb-2.5 flex items-center gap-2 px-1">
-                <span className="text-[13px] font-extrabold tracking-wider text-coral">06</span>
+                <span className="text-[13px] font-extrabold tracking-wider text-coral">16</span>
                 <span className="h-1 w-1 rounded-full bg-cream-dark" />
                 <span className="text-[13px] font-bold text-cocoa-soft">출생정보와 함께 보면</span>
               </div>
@@ -656,7 +987,7 @@ function PaidSignatureReportInner() {
           {/* SECTION 07: 이번 리포트에서 기억할 한 가지 — 한 문장이면 충분하다. */}
           <section id="section-anchor" className="mt-6 animate-rise">
             <div className="mb-2.5 flex items-center gap-2 px-1">
-              <span className="text-[13px] font-extrabold tracking-wider text-coral">07</span>
+              <span className="text-[13px] font-extrabold tracking-wider text-coral">17</span>
               <span className="h-1 w-1 rounded-full bg-cream-dark" />
               <span className="text-[13px] font-bold text-cocoa-soft">기억할 한 가지</span>
             </div>

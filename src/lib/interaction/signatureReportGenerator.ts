@@ -82,7 +82,7 @@ const ELEMENT_HINT_MOM: Record<Element, string> = {
   water: "상황을 살핀 뒤 다음 단계를 천천히 정하려는 방향의 힌트로 참고해볼 수 있어요.",
 };
 
-const ELEMENT_KEYWORD: Record<Element, string> = {
+export const ELEMENT_KEYWORD: Record<Element, string> = {
   wood: "주도적 탐색",
   fire: "적극적 표현",
   earth: "안정적 포용",

@@ -1,5 +1,5 @@
 import React from "react";
-import { ArrowDown, CheckCircle2, Sparkles } from "lucide-react";
+import { ArrowDown, Sparkles } from "lucide-react";
 
 interface Step {
   stepNumber: number;

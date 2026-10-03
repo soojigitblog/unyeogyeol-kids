@@ -10,6 +10,7 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getProduct } from "@/lib/commerce/products";
 import { hasReportAccess, listMyResults, type MyResultItem } from "./commerceService";
+import { getPaidExtrasByReportId } from "./paidExtrasStore";
 import type { SignatureReport } from "@/lib/types";
 
 export interface MyResultItemWithGrantInfo extends MyResultItem {
@@ -54,7 +55,18 @@ export async function getUnlockedReportAny(
     .maybeSingle();
   if (error) throw error;
   if (!data || data.status !== "UNLOCKED") return null;
-  return data.report_payload_json as SignatureReport;
+
+  const payload = data.report_payload_json as SignatureReport;
+  const extras = await getPaidExtrasByReportId(reportId);
+  if (!extras) return payload;
+  return {
+    ...payload,
+    talkingPoints: extras.talkingPoints ?? undefined,
+    conflictMap: extras.conflictMap ?? undefined,
+    talentSeeds: extras.talentSeeds ?? undefined,
+    growthContent: extras.growthContent ?? undefined,
+    guides: extras.guides ?? undefined,
+  };
 }
 
 export async function listMyResultsWithGrants(

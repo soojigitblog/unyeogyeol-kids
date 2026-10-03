@@ -21,6 +21,8 @@ export function usePurchase() {
   }, []);
 
   useEffect(() => {
+    // refresh()는 localStorage(외부 시스템)를 읽어 상태에 반영하는 최초 hydration이다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refresh();
   }, [refresh]);
 
