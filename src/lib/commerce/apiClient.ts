@@ -59,10 +59,11 @@ export async function apiConfirmMockPayment(orderId: string, amount: number) {
 export async function apiConfirmTossPayment(
   paymentKey: string,
   orderId: string,
-  amount: number
+  amount: number,
+  provider: "toss" | "portone" = "toss"
 ) {
   const guest = await ensureGuestSession();
-  const res = await fetch("/api/payments/toss/confirm", {
+  const res = await fetch(`/api/payments/${provider}/confirm`, {
     method: "POST",
     headers: guestAuthHeaders(guest),
     body: JSON.stringify({ paymentKey, orderId, amount }),

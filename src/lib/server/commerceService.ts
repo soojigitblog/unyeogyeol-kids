@@ -21,6 +21,8 @@
 //    PAID row는 삭제 대상이 될 수 없도록 안전장치(scripts/lib/p24-guard.mjs)가 걸려 있다.
 
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { PaymentClient } from "@portone/server-sdk";
+import { isUnrecognizedPayment } from "@portone/server-sdk/payment";
 import {
   generateAccessToken,
   generateGuestSessionId,
@@ -190,6 +192,8 @@ export async function createOrder(
       payment_provider:
         getPaymentMode() === "mock"
           ? "mock"
+          : getPaymentMode() === "portone_test"
+            ? "portone"
           : getPaymentMode() === "live"
             ? "toss"
             : "toss_test",
@@ -258,6 +262,10 @@ export async function confirmPayment(
       throw new CommerceError("PAYMENT_KEY_REQUIRED");
     }
     await confirmTossPayment(input.paymentKey, order.order_id, serverAmount);
+  }
+  if (mode === "portone_test") {
+    if (!input.paymentKey) throw new CommerceError("PAYMENT_KEY_REQUIRED");
+    await confirmPortOnePayment(input.paymentKey, order.order_id, serverAmount);
   }
 
   const now = new Date().toISOString();
@@ -409,6 +417,24 @@ export async function confirmPaymentFromTossWebhook(input: ConfirmPaymentInput):
   if (error) throw error;
   if (!order) throw new CommerceError("ORDER_NOT_FOUND");
   return confirmPayment(order.owner_session_id, input);
+}
+
+export async function confirmPaymentFromPortOneWebhook(input: ConfirmPaymentInput): Promise<ConfirmPaymentResult> {
+  const supabase = getSupabaseAdmin();
+  const { data: order, error } = await supabase.from("orders").select("owner_session_id, amount").eq("order_id", input.orderId).maybeSingle();
+  if (error) throw error;
+  if (!order) throw new CommerceError("ORDER_NOT_FOUND");
+  return confirmPayment(order.owner_session_id, { ...input, amount: order.amount });
+}
+
+async function confirmPortOnePayment(paymentId: string, orderId: string, amount: number): Promise<void> {
+  const secret = process.env.PORTONE_API_SECRET?.trim();
+  if (!secret) throw new CommerceError("PORTONE_KEYS_MISSING");
+  const payment = await PaymentClient({ secret }).getPayment({ paymentId });
+  const custom = typeof payment.customData === "string" ? payment.customData : "";
+  let mappedOrderId = custom;
+  try { const parsed = JSON.parse(custom) as { orderId?: unknown }; if (parsed.orderId) mappedOrderId = String(parsed.orderId); } catch { /* plain legacy string */ }
+  if (isUnrecognizedPayment(payment) || payment.status !== "PAID" || payment.amount.total !== amount || payment.currency !== "KRW" || mappedOrderId !== orderId) throw new CommerceError("PORTONE_CONFIRM_INVALID");
 }
 
 async function confirmTossPayment(

@@ -39,8 +39,16 @@ function PaymentSuccessInner() {
     async function confirm() {
       const orderId = searchParams?.get("orderId");
       const paymentKey = searchParams?.get("paymentKey");
+      const portonePaymentId = searchParams?.get("paymentId");
       const amountParam = searchParams?.get("amount");
       const reportParam = searchParams?.get("reportId");
+      const provider = searchParams?.get("provider");
+
+      if (PAYMENT_MODE === "portone_test" && provider === "portone" && portonePaymentId && orderId && amountParam) {
+        const amount = Number(amountParam);
+        const result = await apiConfirmTossPayment(portonePaymentId, orderId, amount, "portone");
+        setReportId(result.reportId); saveCommerceDraft({ reportId: result.reportId, orderId: result.orderId, amount }); setStatus("ok"); return;
+      }
 
       try {
         if ((PAYMENT_MODE === "toss_test" || PAYMENT_MODE === "live") && paymentKey && orderId && amountParam) {

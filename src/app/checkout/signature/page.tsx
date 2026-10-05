@@ -29,7 +29,7 @@ const PAYMENT_MODE = process.env.NEXT_PUBLIC_PAYMENT_MODE ?? "disabled";
 const IS_MOCK_PAYMENT =
   PAYMENT_MODE === "mock" && process.env.NODE_ENV !== "production";
 const IS_PAYMENT_ENABLED =
-  IS_MOCK_PAYMENT || PAYMENT_MODE === "toss_test" || PAYMENT_MODE === "live";
+  IS_MOCK_PAYMENT || PAYMENT_MODE === "toss_test" || PAYMENT_MODE === "portone_test" || PAYMENT_MODE === "live";
 
 export default function SignatureCheckoutPage() {
   const router = useRouter();
@@ -188,6 +188,19 @@ export default function SignatureCheckoutPage() {
     }
   }
 
+  async function handlePortOnePayment() {
+    if (!orderId || !reportId || PAYMENT_MODE !== "portone_test" || !Object.values(consents).every(Boolean)) return;
+    setPaying(true); setError(null);
+    try {
+      const storeId = process.env.NEXT_PUBLIC_PORTONE_STORE_ID;
+      const channelKey = process.env.NEXT_PUBLIC_PORTONE_KSNET_CHANNEL_KEY;
+      if (!storeId || !channelKey) throw new Error("PORTONE_CONFIG_MISSING");
+      const { requestPayment } = await import("@portone/browser-sdk/v2");
+      const result = await requestPayment({ storeId, channelKey, paymentId: `kids_${orderId}`, orderName: "우리 아이 × 나 관계 사용설명서", totalAmount: amount, currency: "KRW", payMethod: "CARD", productType: "DIGITAL", redirectUrl: `${window.location.origin}/payment/success?provider=portone&orderId=${encodeURIComponent(orderId)}&reportId=${encodeURIComponent(reportId)}&amount=${amount}`, customData: { orderId } });
+      if (result?.paymentId) router.push(`/payment/success?provider=portone&paymentId=${encodeURIComponent(result.paymentId)}&orderId=${encodeURIComponent(orderId)}&reportId=${encodeURIComponent(reportId)}&amount=${amount}`);
+    } catch (e) { setError(e instanceof Error ? e.message : "PORTONE_PAYMENT_FAILED"); setPaying(false); }
+  }
+
   const cgLabel = resolveRoleLabel(caregiverProfile);
   const childName = child?.name || "우리 아이";
   const isTestPayment = PAYMENT_MODE === "toss_test" || IS_MOCK_PAYMENT;
@@ -269,6 +282,8 @@ export default function SignatureCheckoutPage() {
             <Button size="lg" disabled={loading || paying || !orderId || !Object.values(consents).every(Boolean)} onClick={handleMockPayment}>
               {SIGNATURE_PRICE_KRW.toLocaleString("ko-KR")}원 결제하기
             </Button>
+          ) : PAYMENT_MODE === "portone_test" ? (
+            <Button size="lg" disabled={loading || paying || !orderId || !Object.values(consents).every(Boolean)} onClick={handlePortOnePayment}>{SIGNATURE_PRICE_KRW.toLocaleString("ko-KR")}원 결제하기</Button>
           ) : PAYMENT_MODE === "toss_test" || PAYMENT_MODE === "live" ? (
             <Button size="lg" disabled={loading || paying || !orderId || !Object.values(consents).every(Boolean)} onClick={handleTossPayment}>
               {SIGNATURE_PRICE_KRW.toLocaleString("ko-KR")}원 결제하기
