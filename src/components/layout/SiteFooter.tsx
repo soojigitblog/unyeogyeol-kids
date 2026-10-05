@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Container } from "./Container";
+import { businessConfig } from "@/lib/commerce/businessConfig";
 
 export function SiteFooter() {
   return (
@@ -29,12 +30,15 @@ export function SiteFooter() {
             개인정보처리방침
           </Link>
           <span aria-hidden>·</span>
-          <Link href="/refund" className="hover:text-cocoa">
+          <Link href="/refund-policy" className="hover:text-cocoa">
             환불·취소 안내
           </Link>
           <span aria-hidden>·</span>
           <span>© {new Date().getFullYear()} 운의결 kids</span>
         </div>
+        {Object.values(businessConfig).some(Boolean) ? <div className="mt-4 space-y-1 text-xs text-cocoa-faint">
+          {[businessConfig.name && `상호: ${businessConfig.name}`, businessConfig.representative && `대표자: ${businessConfig.representative}`, businessConfig.registrationNo && `사업자등록번호: ${businessConfig.registrationNo}`, businessConfig.mailOrderNo && `통신판매업 신고번호: ${businessConfig.mailOrderNo}`, businessConfig.address && `주소: ${businessConfig.address}`, businessConfig.email && `이메일: ${businessConfig.email}`, businessConfig.support && `고객센터: ${businessConfig.support}`].filter(Boolean).map((line) => <p key={line}>{line}</p>)}
+        </div> : null}
       </Container>
     </footer>
   );

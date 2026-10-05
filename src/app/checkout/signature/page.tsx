@@ -51,6 +51,7 @@ export default function SignatureCheckoutPage() {
   const [orderId, setOrderId] = useState<string | null>(null);
   const [reportId, setReportId] = useState<string | null>(null);
   const [amount, setAmount] = useState(SIGNATURE_PRICE_KRW);
+  const [consents, setConsents] = useState({ terms: false, privacy: false, refund: false, product: false });
   const initStarted = useRef(false);
 
   const setupComplete = isSignatureSetupComplete({
@@ -142,7 +143,7 @@ export default function SignatureCheckoutPage() {
   }, [ready, setupComplete, initCheckout]);
 
   async function handleMockPayment() {
-    if (!orderId || !IS_MOCK_PAYMENT) return;
+    if (!orderId || !IS_MOCK_PAYMENT || !Object.values(consents).every(Boolean)) return;
     trackEvent("checkout_clicked", { method: "mock" });
     setPaying(true);
     setError(null);
@@ -160,7 +161,7 @@ export default function SignatureCheckoutPage() {
   }
 
   async function handleTossPayment() {
-    if (!orderId || !reportId || (PAYMENT_MODE !== "toss_test" && PAYMENT_MODE !== "live")) return;
+    if (!orderId || !reportId || !Object.values(consents).every(Boolean) || (PAYMENT_MODE !== "toss_test" && PAYMENT_MODE !== "live")) return;
     trackEvent("checkout_clicked", { method: "toss" });
     setPaying(true);
     setError(null);
@@ -257,12 +258,7 @@ export default function SignatureCheckoutPage() {
               <p className="mt-4 text-[13px] text-coral-deep">{error}</p>
             )}
 
-            <p className="mt-4 text-[11.5px] leading-relaxed text-cocoa-soft/80">
-              결제를 진행하면{" "}
-              <Link href="/terms" className="underline underline-offset-2">이용약관</Link>,{" "}
-              <Link href="/privacy" className="underline underline-offset-2">개인정보처리방침</Link>,{" "}
-              <Link href="/refund" className="underline underline-offset-2">환불·취소 안내</Link>에 동의하는 것으로 간주돼요.
-            </p>
+            <div className="mt-4 space-y-2 text-[11.5px] leading-relaxed text-cocoa-soft/80">{([['terms','이용약관','/terms'],['privacy','개인정보처리방침','/privacy'],['refund','환불·취소 안내','/refund-policy'],['product','상품명·가격·디지털 리포트 제공 시점 확인','']] as const).map(([key,label,href]) => <label key={key} className="flex gap-2"><input type="checkbox" checked={consents[key]} onChange={(e) => setConsents({ ...consents, [key]: e.target.checked })} />{href ? <Link href={href} className="underline">{label}</Link> : <span>{label}</span>} (필수)</label>)}</div>
           </Card>
         </Container>
       </main>
@@ -270,11 +266,11 @@ export default function SignatureCheckoutPage() {
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-milk/95 px-4 py-3 backdrop-blur-sm">
         <Container className="px-0 lg:max-w-[600px]">
           {IS_MOCK_PAYMENT ? (
-            <Button size="lg" disabled={loading || paying || !orderId} onClick={handleMockPayment}>
+            <Button size="lg" disabled={loading || paying || !orderId || !Object.values(consents).every(Boolean)} onClick={handleMockPayment}>
               {SIGNATURE_PRICE_KRW.toLocaleString("ko-KR")}원 결제하기
             </Button>
           ) : PAYMENT_MODE === "toss_test" || PAYMENT_MODE === "live" ? (
-            <Button size="lg" disabled={loading || paying || !orderId} onClick={handleTossPayment}>
+            <Button size="lg" disabled={loading || paying || !orderId || !Object.values(consents).every(Boolean)} onClick={handleTossPayment}>
               {SIGNATURE_PRICE_KRW.toLocaleString("ko-KR")}원 결제하기
             </Button>
           ) : (
