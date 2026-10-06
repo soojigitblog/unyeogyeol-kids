@@ -431,10 +431,18 @@ async function confirmPortOnePayment(paymentId: string, orderId: string, amount:
   const secret = process.env.PORTONE_API_SECRET?.trim();
   if (!secret) throw new CommerceError("PORTONE_KEYS_MISSING");
   const payment = await PaymentClient({ secret }).getPayment({ paymentId });
+  if (
+    isUnrecognizedPayment(payment) ||
+    payment.status !== "PAID" ||
+    payment.amount.total !== amount ||
+    payment.currency !== "KRW"
+  ) {
+    throw new CommerceError("PORTONE_CONFIRM_INVALID");
+  }
   const custom = typeof payment.customData === "string" ? payment.customData : "";
   let mappedOrderId = custom;
   try { const parsed = JSON.parse(custom) as { orderId?: unknown }; if (parsed.orderId) mappedOrderId = String(parsed.orderId); } catch { /* plain legacy string */ }
-  if (isUnrecognizedPayment(payment) || payment.status !== "PAID" || payment.amount.total !== amount || payment.currency !== "KRW" || mappedOrderId !== orderId) throw new CommerceError("PORTONE_CONFIRM_INVALID");
+  if (mappedOrderId !== orderId) throw new CommerceError("PORTONE_CONFIRM_INVALID");
 }
 
 async function confirmTossPayment(

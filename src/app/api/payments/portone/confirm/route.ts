@@ -6,8 +6,9 @@ export async function POST(request: NextRequest) {
   try {
     const guest = await requireGuestAuth(request);
     const body = (await request.json()) as { paymentKey?: string; orderId?: string; amount?: number };
-    if (!body.paymentKey || !body.orderId || typeof body.amount !== "number") return commerceErrorResponse("PAYMENT_KEY_REQUIRED");
-    return Response.json(await confirmPayment(guest.sessionId, body));
+    const { paymentKey, orderId, amount } = body;
+    if (!paymentKey || !orderId || typeof amount !== "number") return commerceErrorResponse("PAYMENT_KEY_REQUIRED");
+    return Response.json(await confirmPayment(guest.sessionId, { paymentKey, orderId, amount }));
   } catch (e) {
     if (e instanceof GuestAuthError) return guestAuthErrorResponse(e.message);
     if (e instanceof CommerceError) return commerceErrorResponse(e.message);

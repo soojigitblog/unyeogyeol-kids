@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import type { ReactNode } from "react";
 import { Gowun_Batang } from "next/font/google";
 import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import "./globals.css";
@@ -41,7 +42,7 @@ export const viewport: Viewport = {
   themeColor: "#fffcf8",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ko" className={`${gowunBatang.variable} antialiased`}>
       <body className="flex min-h-screen flex-col bg-milk text-cocoa">
