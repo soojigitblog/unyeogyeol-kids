@@ -70,6 +70,12 @@ export function SignatureProductCard({
       </div>
 
       <div className="mt-6 border-t border-coral-tint pt-5">
+        <div className="mb-4 rounded-xl bg-milk p-3 text-[12.5px] leading-relaxed text-cocoa-soft">
+          <p><b className="text-cocoa">상품 유형</b> · 개인 맞춤형 디지털 콘텐츠 (배송 상품이 아닙니다)</p>
+          <p className="mt-1"><b className="text-cocoa">제공 방식</b> · 결제 확인 후 웹사이트 결과 페이지에서 제공</p>
+          <p className="mt-1"><b className="text-cocoa">재열람</b> · 같은 브라우저 또는 결과 보관 코드로 다시 확인</p>
+          <p className="mt-1">아이의 성향과 보호자-아이 상호작용을 이해하기 위한 양육 참고 콘텐츠이며, 진단이나 발달 결과를 보장하지 않습니다.</p>
+        </div>
         <p className="text-center text-[13.5px] leading-relaxed text-cocoa-soft">
           아이를 바꾸기 위한 리포트가 아닙니다.
           <br />
@@ -102,6 +108,7 @@ export function SignatureProductCard({
           결제가 확인되면 같은 브라우저에서 다시 확인할 수 있고, 결과 보관 코드로도
           복구할 수 있어요.
         </p>
+        <p className="mt-2 text-center text-[12px] text-cocoa-faint"><a className="underline" href="/refund-policy">환불·취소 정책 확인</a></p>
       </div>
     </Card>
   );

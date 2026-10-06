@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -16,14 +14,10 @@ import { SignatureResultPreview } from "@/components/commerce/SignatureResultPre
 import { CommerceFaq } from "@/components/commerce/CommerceFaq";
 
 export default function ProductsPage() {
-  const router = useRouter();
   const { child, concern, ready } = useKids();
 
-  useEffect(() => {
-    if (ready && !child) router.replace("/free/child");
-  }, [ready, child, router]);
-
   const concernText = concern ? concernLabel(concern) : null;
+  // Public product disclosure must remain readable without a prior free result.
   const setupHref = child ? "/paid/signature/setup" : "/free/child";
 
   return (
