@@ -7,6 +7,8 @@ import { Heart, MessageCircleHeart, Sparkles, ShieldCheck } from "lucide-react";
 import { SampleResultShowcase } from "@/components/landing/SampleResultShowcase";
 import { VsGeneralSajuDiagram } from "@/components/landing/VsGeneralSajuDiagram";
 import { LandingViewBeacon } from "@/components/landing/LandingViewBeacon";
+import { getProduct, SIGNATURE_PRODUCT_ID } from "@/lib/commerce/products";
+import { formatKrw } from "@/lib/purchase/commerce";
 
 const DIFFERENTIATORS = [
   {
@@ -41,6 +43,8 @@ const DIFFERENTIATORS = [
 ];
 
 export default function Home() {
+  const signatureProduct = getProduct(SIGNATURE_PRODUCT_ID);
+
   return (
     <>
       <LandingViewBeacon />
@@ -119,6 +123,37 @@ export default function Home() {
             <div id="sample-preview">
               <SampleResultShowcase />
             </div>
+          </Container>
+        </section>
+
+        {/* Public, server-rendered product facts for visitors and PG review crawlers. */}
+        <section aria-labelledby="kids-product-title" className="pt-12">
+          <Container wide>
+            <Card tone="coral" className="p-6">
+              <p className="text-[12.5px] font-bold text-coral-deep">KIDS SIGNATURE REPORT</p>
+              <h2 id="kids-product-title" className="mt-2 text-[23px] font-bold leading-snug text-cocoa">
+                운의결 키즈 관계 리포트
+              </h2>
+              <p className="mt-1 text-[14px] font-semibold text-cocoa-soft">개인 맞춤형 디지털 콘텐츠</p>
+              <div className="mt-5 border-y border-coral-tint py-4">
+                <p className="text-[17px] font-bold text-cocoa">{signatureProduct.name}</p>
+                <p className="mt-2 text-[14px] leading-relaxed text-cocoa-soft">
+                  {signatureProduct.description}
+                </p>
+                <p className="mt-4 text-[26px] font-bold tracking-tight text-cocoa">
+                  {formatKrw(signatureProduct.amount).replace("₩", "")}
+                  <span className="text-[16px] font-semibold">원</span>
+                </p>
+                <p className="mt-3 text-[13.5px] leading-relaxed text-cocoa-soft">
+                  {signatureProduct.deliveryMethod}. {signatureProduct.reAccessMethod}.
+                </p>
+              </div>
+              <div className="mt-5">
+                <ButtonLink href="/products" size="lg">
+                  상품 상세 보기
+                </ButtonLink>
+              </div>
+            </Card>
           </Container>
         </section>
 

@@ -1,6 +1,9 @@
 import { Card } from "@/components/ui/Card";
 import { ButtonLink } from "@/components/ui/Button";
-import { formatKrw, SIGNATURE_PRICE_KRW } from "@/lib/purchase/commerce";
+import { formatKrw } from "@/lib/purchase/commerce";
+import { getProduct, SIGNATURE_PRODUCT_ID } from "@/lib/commerce/products";
+
+const signatureProduct = getProduct(SIGNATURE_PRODUCT_ID);
 
 const FOR_WHO = [
   "같은 장면에서 실랑이가 반복돼요",
@@ -38,14 +41,13 @@ export function SignatureProductCard({
         Signature
       </span>
       <h2 className="mt-3 text-[21px] font-bold leading-snug text-cocoa">
-        우리 아이 × 나 관계 사용설명서
+        {signatureProduct.name}
       </h2>
       <p className="mt-2 text-[15px] font-semibold text-coral-deep">
         왜 우리 둘은 같은 순간에 자꾸 부딪힐까요?
       </p>
       <p className="mt-2 text-[14px] leading-relaxed text-cocoa-soft">
-        아이의 실제 행동과 나의 반응, 요즘 반복되는 장면을 함께 보고 우리 둘이 어디서
-        엇갈리는지 풀어보는 관계 사용설명서예요.
+        {signatureProduct.description}
       </p>
 
       <div className="mt-5">
@@ -71,9 +73,9 @@ export function SignatureProductCard({
 
       <div className="mt-6 border-t border-coral-tint pt-5">
         <div className="mb-4 rounded-xl bg-milk p-3 text-[12.5px] leading-relaxed text-cocoa-soft">
-          <p><b className="text-cocoa">상품 유형</b> · 개인 맞춤형 디지털 콘텐츠 (배송 상품이 아닙니다)</p>
-          <p className="mt-1"><b className="text-cocoa">제공 방식</b> · 결제 확인 후 웹사이트 결과 페이지에서 제공</p>
-          <p className="mt-1"><b className="text-cocoa">재열람</b> · 같은 브라우저 또는 결과 보관 코드로 다시 확인</p>
+          <p><b className="text-cocoa">상품 유형</b> · {signatureProduct.contentType}</p>
+          <p className="mt-1"><b className="text-cocoa">제공 방식</b> · {signatureProduct.deliveryMethod}</p>
+          <p className="mt-1"><b className="text-cocoa">재열람</b> · {signatureProduct.reAccessMethod}</p>
           <p className="mt-1">아이의 성향과 보호자-아이 상호작용을 이해하기 위한 양육 참고 콘텐츠이며, 진단이나 발달 결과를 보장하지 않습니다.</p>
         </div>
         <p className="text-center text-[13.5px] leading-relaxed text-cocoa-soft">
@@ -86,7 +88,7 @@ export function SignatureProductCard({
           <div>
             <p className="text-[12px] text-cocoa-soft">가격</p>
             <p className="text-[26px] font-bold tracking-tight text-cocoa">
-              {formatKrw(SIGNATURE_PRICE_KRW).replace("₩", "")}
+              {formatKrw(signatureProduct.amount).replace("₩", "")}
               <span className="text-[16px] font-semibold">원</span>
             </p>
           </div>
